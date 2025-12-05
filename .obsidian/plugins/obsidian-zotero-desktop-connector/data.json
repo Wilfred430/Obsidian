@@ -14,8 +14,8 @@
   "exportFormats": [
     {
       "name": "Import #1",
-      "outputPathTemplate": "{{citekey}}.md",
-      "imageOutputPathTemplate": "{{citekey}}/",
+      "outputPathTemplate": "{{title}}.md",
+      "imageOutputPathTemplate": "images/{{title}}.md/",
       "imageBaseNameTemplate": "image"
     }
   ],

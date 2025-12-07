@@ -1,14 +1,14 @@
 {
 	"nodes":[
-		{"id":"aa86137599a7a166","x":140,"y":-540,"width":528,"height":533,"type":"group","label":"steady-state analysis"},
-		{"id":"bcaddc318d084fe3","type":"text","text":"FPGA Based System for Open, Short,  and RC Impedance Measurement","x":-480,"y":-320,"width":300,"height":100},
+		{"id":"aa86137599a7a166","x":120,"y":-540,"width":528,"height":533,"type":"group","label":"steady-state analysis"},
 		{"id":"614f170c037d34fb","x":-595,"y":-1160,"width":530,"height":320,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207033316768.png"},
 		{"id":"81c9efa15aac586c","x":-595,"y":-840,"width":530,"height":220,"type":"text","text":"說明 : 在這篇論文當中，作者使用RC delay的方式監測open、short電路產生。\n1. Rs 用來保護如果short發生時強電流造成的零件受損\n2. Rp 是用來防止 Z (high impedance)等邏輯miss產生，作為下拉電阻將訊號拉至 0\n3. Cs 用來調整 RC delay用\n4. Ru、Cu是待測的參數"},
 		{"id":"d57cc99ba3765ca7","x":100,"y":-1200,"width":348,"height":400,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207034326397.png"},
 		{"id":"c541496f4441d4cd","x":100,"y":-800,"width":348,"height":60,"type":"text","text":"內部電路的transfer function的關係式"},
-		{"id":"f88153a9218994a8","x":160,"y":-520,"width":488,"height":160,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207044920156.png"},
-		{"id":"6e9b3ded7abf8346","x":160,"y":-260,"width":488,"height":153,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207045011581.png"},
-		{"id":"1f809585b3b7ac2b","x":160,"y":-340,"width":488,"height":60,"type":"text","text":"再經過matlab暫態分析之後發現到(a)的方案會讓電路的測量電壓直接歸零(電容會變成 open) ; 解方 : 換成 (b) model 分析"}
+		{"id":"bcaddc318d084fe3","type":"text","text":"FPGA Based System for Open, Short,  and RC Impedance Measurement","x":-840,"y":-340,"width":300,"height":100},
+		{"id":"f88153a9218994a8","x":140,"y":-520,"width":488,"height":160,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207044920156.png"},
+		{"id":"6e9b3ded7abf8346","x":140,"y":-260,"width":488,"height":153,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207045011581.png"},
+		{"id":"1f809585b3b7ac2b","x":140,"y":-340,"width":488,"height":60,"type":"text","text":"再經過matlab暫態分析之後發現到(a)的方案會讓電路的測量電壓直接歸零(電容會變成 open) ; 解方 : 換成 (b) model 分析"}
 	],
 	"edges":[
 		{"id":"caaf06f08fa07740","fromNode":"bcaddc318d084fe3","fromSide":"top","toNode":"81c9efa15aac586c","toSide":"bottom"},

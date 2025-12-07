@@ -6,16 +6,17 @@
 		{"id":"bcaddc318d084fe3","type":"text","text":"FPGA Based System for Open, Short,  and RC Impedance Measurement","x":-840,"y":-340,"width":300,"height":100},
 		{"id":"1480aefe793a26de","type":"text","text":"Matlab 系統分析","x":-815,"y":-480,"width":250,"height":60},
 		{"id":"bdd92e9f9414e5c3","type":"text","text":"HDL 撰寫","x":-815,"y":-140,"width":250,"height":60},
-		{"id":"6ab859829ebd846f","type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207145423634.png","x":-1260,"y":-800,"width":180,"height":174},
-		{"id":"1f809585b3b7ac2b","type":"text","text":"再經過matlab暫態分析之後發現到(a)的方案會讓電路的測量電壓直接歸零(Cu會變成 open) ; 解方 : 換成 (b) model 分析","x":-940,"y":-1852,"width":488,"height":60},
 		{"id":"c541496f4441d4cd","type":"text","text":"內部電路的transfer function的關係式 Fig. 3(a)","x":-200,"y":-930,"width":380,"height":60},
 		{"id":"d57cc99ba3765ca7","type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207034326397.png","x":-184,"y":-1330,"width":348,"height":400},
 		{"id":"6ef5345727b0bc83","x":-160,"y":-1918,"width":935,"height":192,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207161751387.png"},
 		{"id":"6e9b3ded7abf8346","type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207045011581.png","x":-934,"y":-1480,"width":482,"height":151},
-		{"id":"4e8b97beb20b1692","type":"text","text":"再經過matlab暫態分析之後發現到(a)的方案會讓電路的測量電壓直接歸零(電容會變成 open) ; 解方 : 換成 (b) model 分析","x":-940,"y":-1560,"width":488,"height":60},
 		{"id":"f88153a9218994a8","type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207044920156.png","x":-940,"y":-1760,"width":488,"height":160},
 		{"id":"c64d9117890f8611","x":-1740,"y":-1069,"width":400,"height":60,"type":"text","text":"經過修改後的transfer function (Fig.3 (b))"},
-		{"id":"e761c211c553becf","x":-1740,"y":-1300,"width":400,"height":231,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207161537839.png"}
+		{"id":"e761c211c553becf","x":-1740,"y":-1300,"width":400,"height":231,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207161537839.png"},
+		{"id":"5d47eaf02a8bc34b","x":-2586,"y":-1852,"width":1416,"height":279,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207162806370.png"},
+		{"id":"1f809585b3b7ac2b","type":"text","text":"再經過matlab暫態分析之後發現到(a)的方案會讓電路的測量電壓直接歸零(Cu會變成 open) ; 解方 : 換成 (b) model 分析","x":-940,"y":-1822,"width":488,"height":60},
+		{"id":"4e8b97beb20b1692","type":"text","text":"改用(b)方案之後我們可以得到純電阻的steady-state result","x":-940,"y":-1540,"width":488,"height":60},
+		{"id":"6ab859829ebd846f","type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207145423634.png","x":-1220,"y":-1271,"width":180,"height":174}
 	],
 	"edges":[
 		{"id":"8cebf9a3a8847ce1","fromNode":"614f170c037d34fb","fromSide":"top","toNode":"aa86137599a7a166","toSide":"bottom"},
@@ -25,8 +26,9 @@
 		{"id":"f534a7e8bd7b1955","fromNode":"bcaddc318d084fe3","fromSide":"bottom","toNode":"bdd92e9f9414e5c3","toSide":"top"},
 		{"id":"d696cb3559d2b664","fromNode":"614f170c037d34fb","fromSide":"right","toNode":"d57cc99ba3765ca7","toSide":"left"},
 		{"id":"8b41ac0ac67057d9","fromNode":"6ab859829ebd846f","fromSide":"left","toNode":"e761c211c553becf","toSide":"right"},
-		{"id":"37498a6a535368a7","fromNode":"614f170c037d34fb","fromSide":"left","toNode":"e761c211c553becf","toSide":"right"},
+		{"id":"37498a6a535368a7","fromNode":"614f170c037d34fb","fromSide":"left","toNode":"c64d9117890f8611","toSide":"bottom"},
 		{"id":"89e9dd230b67f71f","fromNode":"e761c211c553becf","fromSide":"top","toNode":"6e9b3ded7abf8346","toSide":"left"},
-		{"id":"747593bb50f84a0a","fromNode":"6ef5345727b0bc83","fromSide":"left","toNode":"1f809585b3b7ac2b","toSide":"right"}
+		{"id":"747593bb50f84a0a","fromNode":"6ef5345727b0bc83","fromSide":"left","toNode":"1f809585b3b7ac2b","toSide":"right"},
+		{"id":"d30ad0008e1b1faa","fromNode":"5d47eaf02a8bc34b","fromSide":"right","toNode":"4e8b97beb20b1692","toSide":"left"}
 	]
 }

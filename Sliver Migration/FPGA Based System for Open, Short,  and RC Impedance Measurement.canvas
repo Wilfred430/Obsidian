@@ -1,18 +1,18 @@
 {
 	"nodes":[
-		{"id":"aa86137599a7a166","x":-960,"y":-1800,"width":528,"height":533,"type":"group","label":"steady-state analysis"},
-		{"id":"bcaddc318d084fe3","type":"text","text":"FPGA Based System for Open, Short,  and RC Impedance Measurement","x":-840,"y":-340,"width":300,"height":100},
-		{"id":"614f170c037d34fb","x":-955,"y":-1120,"width":530,"height":320,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207033316768.png"},
-		{"id":"81c9efa15aac586c","x":-955,"y":-800,"width":530,"height":220,"type":"text","text":"說明 : 在這篇論文當中，作者使用RC delay的方式監測open、short電路產生。\n1. Rs 用來保護如果short發生時強電流造成的零件受損\n2. Rp 是用來防止 Z (high impedance)等邏輯miss產生，作為下拉電阻將訊號拉至 0\n3. Cs 用來調整 RC delay用\n4. Ru、Cu是待測的參數"},
-		{"id":"6e9b3ded7abf8346","x":-940,"y":-1520,"width":488,"height":153,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207045011581.png"},
-		{"id":"f88153a9218994a8","x":-940,"y":-1760,"width":488,"height":160,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207044920156.png"},
-		{"id":"1480aefe793a26de","x":-815,"y":-480,"width":250,"height":60,"type":"text","text":"Matlab 系統分析"},
-		{"id":"bdd92e9f9414e5c3","type":"text","text":"HDL 撰寫","x":-815,"y":-140,"width":250,"height":60},
-		{"id":"6ab859829ebd846f","x":-1480,"y":-1443,"width":206,"height":200,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207145423634.png"},
-		{"id":"1f809585b3b7ac2b","x":-940,"y":-1600,"width":488,"height":60,"type":"text","text":"再經過matlab暫態分析之後發現到(a)的方案會讓電路的測量電壓直接歸零(Cu會變成 open) ; 解方 : 換成 (b) model 分析"},
+		{"id":"aa86137599a7a166","type":"group","x":-960,"y":-1800,"width":528,"height":533,"label":"steady-state analysis"},
+		{"id":"614f170c037d34fb","type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207033316768.png","x":-955,"y":-1120,"width":530,"height":320},
+		{"id":"81c9efa15aac586c","type":"text","text":"說明 : 在這篇論文當中，作者使用RC delay的方式監測open、short電路產生。\n1. Rs 用來保護如果short發生時強電流造成的零件受損\n2. Rp 是用來防止 Z (high impedance)等邏輯miss產生，作為下拉電阻將訊號拉至 0\n3. Cs 用來調整 RC delay用\n4. Ru、Cu是待測的參數","x":-955,"y":-800,"width":530,"height":220},
+		{"id":"6e9b3ded7abf8346","type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207045011581.png","x":-940,"y":-1520,"width":488,"height":153},
+		{"id":"f88153a9218994a8","type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207044920156.png","x":-940,"y":-1760,"width":488,"height":160},
+		{"id":"6ab859829ebd846f","type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207145423634.png","x":-1480,"y":-1443,"width":206,"height":200},
+		{"id":"1f809585b3b7ac2b","type":"text","text":"再經過matlab暫態分析之後發現到(a)的方案會讓電路的測量電壓直接歸零(Cu會變成 open) ; 解方 : 換成 (b) model 分析","x":-940,"y":-1600,"width":488,"height":60},
 		{"id":"4e8b97beb20b1692","type":"text","text":"再經過matlab暫態分析之後發現到(a)的方案會讓電路的測量電壓直接歸零(電容會變成 open) ; 解方 : 換成 (b) model 分析","x":-940,"y":-1367,"width":488,"height":60},
-		{"id":"d57cc99ba3765ca7","x":-300,"y":-1537,"width":348,"height":400,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207034326397.png"},
-		{"id":"c541496f4441d4cd","x":-300,"y":-1137,"width":380,"height":60,"type":"text","text":"內部電路的transfer function的關係式 Fig. 3(a)"}
+		{"id":"d57cc99ba3765ca7","type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207034326397.png","x":-300,"y":-1537,"width":348,"height":400},
+		{"id":"c541496f4441d4cd","type":"text","text":"內部電路的transfer function的關係式 Fig. 3(a)","x":-300,"y":-1137,"width":380,"height":60},
+		{"id":"bcaddc318d084fe3","type":"text","text":"FPGA Based System for Open, Short,  and RC Impedance Measurement","x":-840,"y":-340,"width":300,"height":100},
+		{"id":"1480aefe793a26de","type":"text","text":"Matlab 系統分析","x":-815,"y":-480,"width":250,"height":60},
+		{"id":"bdd92e9f9414e5c3","type":"text","text":"HDL 撰寫","x":-815,"y":-140,"width":250,"height":60}
 	],
 	"edges":[
 		{"id":"8cebf9a3a8847ce1","fromNode":"614f170c037d34fb","fromSide":"top","toNode":"aa86137599a7a166","toSide":"bottom"},

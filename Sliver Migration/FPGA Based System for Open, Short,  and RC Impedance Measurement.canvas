@@ -16,7 +16,7 @@
 		{"id":"5d47eaf02a8bc34b","x":-2586,"y":-1852,"width":1416,"height":279,"type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207162806370.png"},
 		{"id":"1f809585b3b7ac2b","type":"text","text":"再經過matlab暫態分析之後發現到(a)的方案會讓電路的測量電壓直接歸零(Cu會變成 open) ; 解方 : 換成 (b) model 分析","x":-940,"y":-1822,"width":488,"height":60},
 		{"id":"4e8b97beb20b1692","type":"text","text":"改用(b)方案之後我們可以得到純電阻的steady-state result","x":-940,"y":-1540,"width":488,"height":60},
-		{"id":"6ab859829ebd846f","type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207145423634.png","x":-1220,"y":-1271,"width":180,"height":174}
+		{"id":"6ab859829ebd846f","type":"file","file":"Sliver Migration/assets/FPGA Based System for Open, Short,  and RC Impedance Measurement/file-20251207145423634.png","x":-1260,"y":-1271,"width":180,"height":174}
 	],
 	"edges":[
 		{"id":"8cebf9a3a8847ce1","fromNode":"614f170c037d34fb","fromSide":"top","toNode":"aa86137599a7a166","toSide":"bottom"},

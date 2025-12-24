@@ -1,9 +1,11 @@
 {
 	"nodes":[
-		{"id":"950e1cf50ea7433b","x":-71,"y":-30,"width":250,"height":60,"type":"text","text":"Silver Migration"},
-		{"id":"3c1774805961d053","x":-420,"y":-180,"width":250,"height":80,"type":"text","text":"[FPGA Based System for Open, Short,  and RC Impedance Measurement](Sliver%20Migration/FPGA%20Based%20System%20for%20Open,%20Short,%20%20and%20RC%20Impedance%20Measurement.canvas)"}
+		{"id":"950e1cf50ea7433b","type":"text","text":"Silver Migration","x":-71,"y":-30,"width":250,"height":60},
+		{"id":"3c1774805961d053","type":"text","text":"[FPGA Based System for Open, Short,  and RC Impedance Measurement](Sliver%20Migration/FPGA%20Based%20System%20for%20Open,%20Short,%20%20and%20RC%20Impedance%20Measurement.canvas)","x":-420,"y":-180,"width":250,"height":80},
+		{"id":"796062abd7955a9a","x":-240,"y":-340,"width":250,"height":60,"type":"text","text":"[Mobaxterm Tool List](Mobaxterm%20Tool%20List.md)\n認識能用的工具清單"}
 	],
 	"edges":[
-		{"id":"3dbe431c480a74c6","fromNode":"950e1cf50ea7433b","fromSide":"left","toNode":"3c1774805961d053","toSide":"bottom"}
+		{"id":"3dbe431c480a74c6","fromNode":"950e1cf50ea7433b","fromSide":"left","toNode":"3c1774805961d053","toSide":"bottom"},
+		{"id":"86936c0f10d9c2fc","fromNode":"950e1cf50ea7433b","fromSide":"top","toNode":"796062abd7955a9a","toSide":"bottom"}
 	]
 }

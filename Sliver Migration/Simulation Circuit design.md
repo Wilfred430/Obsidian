@@ -46,7 +46,7 @@ $$TX \rightarrow R_L \rightarrow R_S \rightarrow Node (RX) \rightarrow (R_{film}
 
 既然確定了 Image 2，我們需要建立它的數學模型。這是一個 **RC 並聯負載的分壓電路**。
 
-#### 1. 數學模型 (The Math)
+#### 1. 數學模型
 
 我們要解 RX 點的節點電壓 (Node Voltage)。
 

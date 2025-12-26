@@ -12,7 +12,6 @@ $$TX \rightarrow R_L \rightarrow R_S \rightarrow Node (RX) \rightarrow (R_{film}
 ### 第一部分：架構分析與勝負判定
 
 我們正在處理的是「絕緣失效 (Insulation Failure)」問題。銀遷移意味著原本絕緣的兩個導體之間，長出了導電的樹枝狀結晶 (Dendrites)，導致**高阻抗 (Open) 變成 低阻抗 (Short)**。
-
 #### 1. Image 2: 並聯接地架構 (Shunt Topology) —— <font color="green">勝者 (Winner)</font>
 
 - **結構：** TX $\to$ 限流電阻 $\to$ RX $\to$ (銀遷移病灶) $\to$ GND。
@@ -54,14 +53,12 @@ $$TX \rightarrow R_L \rightarrow R_S \rightarrow Node (RX) \rightarrow (R_{film}
 - **流入電流 (Source):** $I_{in} = (V_{TX} - V_{RX}) / (R_L + R_s)$
     
 - **流出電流 (Leakage to GND):** $I_{leak} = V_{RX} \cdot G_{total} + C_{total} \cdot \frac{dV_{RX}}{dt}$
-    
 
 根據 KCL ($I_{in} = I_{leak}$)，並將微分項離散化，SystemVerilog 的核心公式為：
 
 $$V_{RX}[new] = \frac{\frac{V_{TX}}{R_{series}} + \frac{C_{total}}{\Delta t}V_{RX}[old]}{\frac{1}{R_{series}} + G_{total} + \frac{C_{total}}{\Delta t}}$$
 
 其中：
-
 - $R_{series} = R_L + R_s$
     
 - $G_{total} = \frac{1}{R_{film}} + \frac{1}{R_{ct}}$ (總電導)

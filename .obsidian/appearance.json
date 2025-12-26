@@ -3,5 +3,8 @@
   "nativeMenus": false,
   "cssTheme": "",
   "baseFontSizeAction": true,
-  "baseFontSize": 17
+  "baseFontSize": 17,
+  "enabledCssSnippets": [
+    "line-spacing"
+  ]
 }

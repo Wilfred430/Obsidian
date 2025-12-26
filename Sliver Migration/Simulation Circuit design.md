@@ -1,4 +1,6 @@
-![500](assets/Simulation%20Circuit%20design/file-20251226174910061.png)
+<div align="center">
+<img src="assets/Simulation%20Circuit%20design/file-20251226174910061.png" width="500">
+</div>
 根據 [Migration Behavior Model](Migration%20Behavior%20Model.md) 我們可以得知道描述 **silver migration** 的有以下五個變數 :
 
 $$Z_{total} = R_s + (R_{film} \parallel C_{film}) + (R_{ct} \parallel C_{dl})$$

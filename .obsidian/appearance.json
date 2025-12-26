@@ -2,5 +2,6 @@
   "theme": "obsidian",
   "nativeMenus": false,
   "cssTheme": "",
-  "baseFontSizeAction": true
+  "baseFontSizeAction": true,
+  "baseFontSize": 17
 }

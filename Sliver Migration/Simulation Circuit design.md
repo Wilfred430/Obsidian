@@ -30,7 +30,7 @@ $$TX \rightarrow R_L \rightarrow R_S \rightarrow Node (RX) \rightarrow (R_{film}
     - **符合直覺：** 這是「失效即短路」的標準模型。
         
 
-#### 2. Image 3: 串聯架構 (Series Topology) —— <font color="red">不推薦 (Not Recommended)</font>
+#### 2. Image 1: 串聯架構 (Series Topology) —— <font color="red">不推薦 (Not Recommended)</font>
 
 - **結構：** TX $\to R_L \to R_s \to$ (銀遷移病灶) $\to$ RX。
     
@@ -43,7 +43,7 @@ $$TX \rightarrow R_L \rightarrow R_S \rightarrow Node (RX) \rightarrow (R_{film}
 
 ---
 
-### 第二部分：SystemVerilog 實作教學 (針對 Image 2 架構)
+### 第二部分：SystemVerilog 實作 (針對圖二框架)
 
 既然確定了 Image 2，我們需要建立它的數學模型。這是一個 **RC 並聯負載的分壓電路**。
 
@@ -67,3 +67,4 @@ $$V_{RX}[new] = \frac{\frac{V_{TX}}{R_{series}} + \frac{C_{total}}{\Delta t}V_{R
 - $G_{total} = \frac{1}{R_{film}} + \frac{1}{R_{ct}}$ (總電導)
     
 - $C_{total} = C_{film} + C_{dl}$ (總電容)
+

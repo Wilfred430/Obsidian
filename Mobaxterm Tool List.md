@@ -9,7 +9,7 @@
 
 ### 前端設計與驗證 (Front-End)
 - **模擬 (Simulation):**
-    - `VCS` (Synopsys): 編譯與模擬引擎。 [[Industry Standard]]
+    - `VCS` (Synopsys): 編譯與模擬引擎。 [[Sliver Migration/Industry Standard]]
     - `Verdi` (Synopsys): 波形除錯 (Debug)、Trace Code 神器。
     - *Alternative:* `XCELIUM` (Cadence, evolved from NC-Verilog).
 - **語法與品質檢查 (Linting):**
@@ -30,7 +30,7 @@
 *適用於：類比電路、記憶體、Standard Cell 繪製、電晶體層級設計*
 
 ### 電路設計與模擬 (Schematic & Sim)
-- **設計平台:** `Virtuoso` (Cadence, listed as IC6/ICADVM). [[Industry Standard]]
+- **設計平台:** `Virtuoso` (Cadence, listed as IC6/ICADVM). [[Sliver Migration/Industry Standard]]
 - **模擬引擎:**
     - `SPECTRE` (Cadence): 與 Virtuoso 整合度最高的模擬器。
     - `HSPICE` (Synopsys): 傳統黃金標準，適合純 Netlist 模擬。

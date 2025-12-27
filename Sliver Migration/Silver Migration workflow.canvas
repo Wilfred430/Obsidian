@@ -1,15 +1,17 @@
 {
 	"nodes":[
 		{"id":"950e1cf50ea7433b","type":"text","text":"Silver Migration","x":-71,"y":-30,"width":250,"height":60},
-		{"id":"3c1774805961d053","type":"text","text":"[FPGA Based System for Open, Short,  and RC Impedance Measurement](Sliver%20Migration/FPGA%20Based%20System%20for%20Open,%20Short,%20%20and%20RC%20Impedance%20Measurement.canvas)","x":-420,"y":-180,"width":250,"height":80},
-		{"id":"796062abd7955a9a","type":"text","text":"[Mobaxterm Tool List](Mobaxterm%20Tool%20List.md)\n認識能用的工具清單","x":-240,"y":-340,"width":250,"height":60},
-		{"id":"e96782d6306288b2","type":"text","text":"[[Migration Behavior Model]]\n","x":231,"y":-262,"width":249,"height":50},
-		{"id":"4de96ac0f71aa1ca","x":380,"y":-11,"width":319,"height":60,"type":"text","text":"[[Simulation Circuit design]]"}
+		{"id":"3c1774805961d053","type":"text","text":"[FPGA Based System for Open, Short,  and RC Impedance Measurement](Sliver%20Migration/FPGA%20Based%20System%20for%20Open,%20Short,%20%20and%20RC%20Impedance%20Measurement.canvas)","x":-420,"y":-180,"width":250,"height":120},
+		{"id":"796062abd7955a9a","type":"text","text":"[Mobaxterm Tool List](Mobaxterm%20Tool%20List.md)\n認識能用的工具清單","x":-240,"y":-340,"width":250,"height":78},
+		{"id":"e96782d6306288b2","type":"text","text":"[[Migration Behavior Model]]\n","x":231,"y":-262,"width":249,"height":82},
+		{"id":"4de96ac0f71aa1ca","type":"text","text":"[[Simulation Circuit design]]","x":380,"y":-90,"width":319,"height":60},
+		{"id":"6ec084d3a30e34bc","x":150,"y":168,"width":250,"height":60,"type":"text","text":"[[How to compile file]]"}
 	],
 	"edges":[
 		{"id":"3dbe431c480a74c6","fromNode":"950e1cf50ea7433b","fromSide":"left","toNode":"3c1774805961d053","toSide":"bottom"},
 		{"id":"86936c0f10d9c2fc","fromNode":"950e1cf50ea7433b","fromSide":"top","toNode":"796062abd7955a9a","toSide":"bottom"},
 		{"id":"02581a0f8eed4993","fromNode":"950e1cf50ea7433b","fromSide":"right","toNode":"e96782d6306288b2","toSide":"left"},
-		{"id":"2a1c30b51433b498","fromNode":"950e1cf50ea7433b","fromSide":"right","toNode":"4de96ac0f71aa1ca","toSide":"left"}
+		{"id":"2a1c30b51433b498","fromNode":"950e1cf50ea7433b","fromSide":"right","toNode":"4de96ac0f71aa1ca","toSide":"left"},
+		{"id":"6136b5a65b803945","fromNode":"950e1cf50ea7433b","fromSide":"bottom","toNode":"6ec084d3a30e34bc","toSide":"top"}
 	]
 }

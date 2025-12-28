@@ -48,13 +48,13 @@ $$TX \rightarrow R_L \rightarrow R_S \rightarrow Node (RX) \rightarrow (R_{film}
 
 #### 1. 數學模型
 
-我們要解 RX 點的節點電壓 (Node Voltage)。
+要解 RX 點的節點電壓 (Node Voltage)。
 
 - **流入電流 (Source):** $I_{in} = (V_{TX} - V_{RX}) / (R_L + R_s)$
     
 - **流出電流 (Leakage to GND):** $I_{leak} = V_{RX} \cdot G_{total} + C_{total} \cdot \frac{dV_{RX}}{dt}$
 
-根據 KCL ($I_{in} = I_{leak}$)，並將微分項離散化，SystemVerilog 的核心公式為：
+根據 KCL ($I_{in} = I_{leak}$)，並將微分項離散化，核心公式為：
 
 $$V_{RX}[new] = \frac{\frac{V_{TX}}{R_{series}} + \frac{C_{total}}{\Delta t}V_{RX}[old]}{\frac{1}{R_{series}} + G_{total} + \frac{C_{total}}{\Delta t}}$$
 

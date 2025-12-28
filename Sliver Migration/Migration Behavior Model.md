@@ -1,5 +1,5 @@
 
-## Gemini 對話1
+## 物理變數
 為了讓您能快速理解並在電路模擬軟體（如 SPICE 或 SystemVerilog）中實作，我將銀遷移的 **雙時間常數（Two-Time Constant）改進型 Randles 模型** 簡化為最核心的結構。
 
 ### 1. 電路結構與元件清單

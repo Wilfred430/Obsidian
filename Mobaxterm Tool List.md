@@ -1,6 +1,6 @@
 ![](assets/Mobaxterm%20Tool%20List/file-20251224205906777.png)
-# 🧰 EDA Server Environment & Toolchain Strategy
-**Context:** #VLSI #EDA #Research #PhD_Roadmap
+#  EDA Server Environment & Toolchain Strategy
+**Context:** #VLSI #EDA 
 
 ---
 
@@ -50,7 +50,7 @@
 
 ---
 
-## 💡 Engineering PhD Insights (博學工程師視角)
+##  Engineering PhD Insights (博學工程師視角)
 
 > [!TIP] Tool Selection Strategy
 > 1. **數位設計 (Digital):** 推薦全套 **Synopsys Flow** (VCS -> DC -> ICC2 -> PT)，資料格式 (`.ndm`, `.upf`) 轉換最少，除錯最快。唯獨 P&R 如果追求極致效能，可考慮 **Innovus**。

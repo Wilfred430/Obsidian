@@ -16,11 +16,12 @@
       "name": "Import #1",
       "outputPathTemplate": "{{title}}.md",
       "imageOutputPathTemplate": "images/{{title}}.md/",
-      "imageBaseNameTemplate": "image"
+      "imageBaseNameTemplate": "image",
+      "templatePath": "Zotero Template.md"
     }
   ],
   "citeSuggestTemplate": "[[{{citekey}}]]",
   "openNoteAfterImport": true,
-  "whichNotesToOpenAfterImport": "first-imported-note",
+  "whichNotesToOpenAfterImport": "all-imported-notes",
   "shouldConcat": true
 }

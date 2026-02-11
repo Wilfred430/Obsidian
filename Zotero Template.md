@@ -1,13 +1,3 @@
-﻿---
-citekey: {{citekey}}
-status: #reading
-tags:
-  - literature-note
-{%- for tag in tags %}
-  - {{tag.tag}}
-{%- endfor %}
----
-
 # {{title}}
 
 **Authors:** {{authors}}

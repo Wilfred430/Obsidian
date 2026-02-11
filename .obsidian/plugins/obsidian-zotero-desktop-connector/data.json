@@ -14,8 +14,8 @@
   "exportFormats": [
     {
       "name": "Import #1",
-      "outputPathTemplate": "{{title}}.md",
-      "imageOutputPathTemplate": "images/{{title}}.md/",
+      "outputPathTemplate": "Zotero/{{title}}.md",
+      "imageOutputPathTemplate": "Zotero/assets/{{title}}",
       "imageBaseNameTemplate": "image",
       "templatePath": "Zotero Template.md"
     }

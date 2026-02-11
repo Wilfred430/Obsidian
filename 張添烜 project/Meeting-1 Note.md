@@ -1,4 +1,4 @@
-```verilog
+```systemverilog
 module top_module(
 
     input clk,
@@ -10,7 +10,6 @@ module top_module(
   reg state, next_state;
 
   always @(*)
-
   begin    // This is a combinational always block
     // State transition logic
     case(state)

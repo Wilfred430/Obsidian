@@ -32,3 +32,4 @@
 ---
 ## 3. 可行的專題方向
 In-memory Computing (CIM)
+digital CIM LLM Transformer

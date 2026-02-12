@@ -34,3 +34,5 @@
 In-memory Computing (CIM)
 digital CIM LLM Transformer
 先了解CIM(選一種)
+mapping
+優化論文

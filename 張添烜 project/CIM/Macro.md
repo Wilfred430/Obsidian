@@ -1,7 +1,7 @@
 # CIM 中的 Macro 概念
 
 ## 定義
-- **Macro**：在 Compute-In-Memory (CIM) 中，指一個可重複使用的電路模組。
+- **Macro**：在 Compute-In-Memory (CIM) 中，指一個可重複使用( reuse )的電路模組。
 - 封裝了記憶體陣列 + 周邊電路（sense amplifier、ADC/DAC、控制邏輯）。
 - 能在記憶體內直接執行計算（如乘加運算）。
 ## 特點

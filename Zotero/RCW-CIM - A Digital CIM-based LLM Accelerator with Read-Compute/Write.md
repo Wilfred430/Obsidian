@@ -19,6 +19,9 @@ Digital computing-in-memory (DCIM) has emerged as a promising solution for large
 ---
 ## Zotero Notes & Highlights
 
+
+
+---
 > Digital computing-in-memory (DCIM) (p. 1)
 
 ---
@@ -56,5 +59,44 @@ Digital computing-in-memory (DCIM) has emerged as a promising solution for large
 
 ---
 > combines computation and memory to reduce the weight transfer overhead while minimizing computational loss and preserving high precision. (p. 1)
+
+---
+
+
+---
+
+
+---
+
+
+---
+
+
+---
+> weight update latency on the CIM—a critical performance bottleneck (p. 1)
+
+---
+
+
+---
+> but does not account for global latency of nonlinear operations and supports only 8-bit precision (p. 1)
+
+---
+
+
+---
+
+
+---
+![[Zotero/assets/RCW-CIM - A Digital CIM-based LLM Accelerator with Read-Compute/Write/image-undefined-x304-y363.png]]
+
+---
+> Section II presents the RCW-CIM architecture and dataflow (p. 1)
+
+---
+
+
+---
+> which integrates a WS-OCS scheduling unit (p. 1)
 
 ---

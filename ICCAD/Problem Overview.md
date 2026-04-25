@@ -21,8 +21,8 @@
 * [cite_start]**嚴格限制**：所有修改絕對不能改變電路原有的邏輯功能（Functional Equivalence） [cite: 1091][cite_start]。單一基礎請求需在 60 秒內完成，其餘請求限制為 300 秒 [cite: 903]。
 
 ### 3. 博士級優化思路
-* [cite_start]**API 抽象化與 Schema 設計**：LLM 本身不懂底層程式碼 [cite: 836][cite_start]。需設計一套極度簡潔且具備防呆機制的 API，並在 Prompt 中清晰定義 Schema，讓 LLM 扮演「規劃者」，程式扮演「執行者」 [cite: 894]。
-* [cite_start]**Verification-in-the-loop**：必須在系統內部實作輕量級的等效性檢查演算法 [cite: 874]。當 LLM 提出修改建議時，先在沙盒中驗證邏輯等效後再正式修改。
+* [cite_start]**API 抽象化與 Schema 設計**：[[HW3-Hallucination-Detection|LLM]] 本身不懂底層程式碼 [cite: 836][cite_start]。需設計一套極度簡潔且具備防呆機制的 API，並在 Prompt 中清晰定義 Schema，讓 [[HW3-Hallucination-Detection|LLM]] 扮演「規劃者」，程式扮演「執行者」 [cite: 894]。
+* [cite_start]**Verification-in-the-loop**：必須在系統內部實作輕量級的等效性檢查演算法 [cite: 874]。當 [[HW3-Hallucination-Detection|LLM]] 提出修改建議時，先在沙盒中驗證邏輯等效後再正式修改。
 
 ---
 

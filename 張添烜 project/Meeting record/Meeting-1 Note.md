@@ -31,8 +31,8 @@
         - 問題介紹，相關工作，一頁說明總結遇到ˇ的問題與解決方法，採用方法，實驗結果，結論，參考資料
 ---
 ## 3. 可行的專題方向
-In-memory Computing (CIM)
-digital CIM LLM Transformer
-先了解CIM(選一種)
+In-memory Computing ([[Macro|CIM]])
+digital [[Macro|CIM]] [[HW3-Hallucination-Detection|LLM]] [[Attention|Transformer]]
+先了解[[Macro|CIM]](選一種)
 mapping
 優化論文(先找到問題點)

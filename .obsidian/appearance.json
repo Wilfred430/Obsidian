@@ -1,7 +1,7 @@
 {
   "theme": "obsidian",
   "nativeMenus": false,
-  "cssTheme": "GitHub Theme",
+  "cssTheme": "",
   "baseFontSizeAction": true,
   "baseFontSize": 17,
   "enabledCssSnippets": [

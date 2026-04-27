@@ -48,6 +48,7 @@
 [cite_start]傳統 SoC Floorplanning 是 NP-Complete 問題，面對龐大區塊與複雜限制往往難以快速收斂 [cite: 190, 198][cite_start]。此題旨在利用機器學習技術，將探索最佳解的時間從數天縮短至數分鐘內 [cite: 200, 201]。
 
 ### 2. 具體內容與挑戰
+* **基礎知識**：[[ICCAD/Floorplanning/Outline-Characteristics|VLSI 平面規劃：Outline 種類與特性]]
 * [cite_start]**輸入限制**：處理具有面積預算的軟性區塊 (Soft blocks)、固定形狀區塊與預先放置的區塊 [cite: 235, 249, 252]。
 * [cite_start]**硬性限制 (Hard Constraints)**：必須嚴格遵守「零重疊 (Zero Overlap)」以及「面積誤差 $\le 0.01$」的幾何限制，違規即視為無效解並給予重罰 [cite: 258, 262, 266]。
 * [cite_start]**多目標最佳化**：成本函數需同時最小化半周長線長 (HPWL)、邊界框面積 (Bounding-box Area)，並考量軟性限制違規次數與程式執行時間 [cite: 196, 282]。

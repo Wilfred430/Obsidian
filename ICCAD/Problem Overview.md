@@ -44,18 +44,23 @@
 
 ## [cite_start]問題 C：Data-Driven SoC Floorplanning [cite: 184, 190, 191]
 
-### 1. 核心方向：打破古典演算法極限的機器學習佈局
-[cite_start]傳統 SoC Floorplanning 是 NP-Complete 問題，面對龐大區塊與複雜限制往往難以快速收斂 [cite: 190, 198][cite_start]。此題旨在利用機器學習技術，將探索最佳解的時間從數天縮短至數分鐘內 [cite: 200, 201]。
+### 1. 核心挑戰：Agentic AI 驅動的自動化佈局
+[cite_start]傳統佈局需數天人工迭代，此題要求利用 Intel 提供之 **FloorSet**（100 萬個樣本）訓練 ML 模型，在數分鐘內達成高品質佈局 [cite: 363, 386]。
 
-### 2. 具體內容與挑戰
-* **基礎知識**：[[ICCAD/Floorplanning/Outline-Characteristics|VLSI 平面規劃：Outline 種類與特性]]
-* [cite_start]**輸入限制**：處理具有面積預算的軟性區塊 (Soft blocks)、固定形狀區塊與預先放置的區塊 [cite: 235, 249, 252]。
-* [cite_start]**硬性限制 (Hard Constraints)**：必須嚴格遵守「零重疊 (Zero Overlap)」以及「面積誤差 $\le 0.01$」的幾何限制，違規即視為無效解並給予重罰 [cite: 258, 262, 266]。
-* [cite_start]**多目標最佳化**：成本函數需同時最小化半周長線長 (HPWL)、邊界框面積 (Bounding-box Area)，並考量軟性限制違規次數與程式執行時間 [cite: 196, 282]。
+### 2. 核心架構：[[ICCAD/FloorSet-Challenge-2026|FloorSet 挑戰賽深層解析 (一目標、兩邊界、三關鍵)]]
+* **一核心目標**：從「天」到「分鐘」的轉化（Agentic AI）。
+* **兩大邊界鐵律**：
+    * **硬約束**：嚴格禁重疊 (Overlap-Free)、面積誤差 $\le 1\%$。
+    * **軟約束**：邊界 (Boundary)、成組 (Grouping)、多實例模組 (MIB)。
+* **三組優化關鍵**：
+    * **品質**：線長 (HPWL) 與面積間隙 (Area Gap)。
+    * **處罰**：指數級扣分機制。
+    * **效率**：時間係數 (Runtime Factor)，跑得快可享 30% 分數獎勵。
 
 ### 3. 博士級優化思路
-* [cite_start]**混合式架構 (Hybrid Solver)**：純神經網路難以保證剛性幾何限制 [cite: 224][cite_start]。可考慮使用圖神經網路 (GNN) 或強化學習決定區塊的「相對拓樸關係」（如 Sequence-Pair），再將初始解交給解析法或線性規劃 (LP) 進行合法化 (Legalization) [cite: 232]。
-* **極速碰撞偵測**：實作基於掃描線 (Sweep-line) 或區間樹 (Interval Tree) 的 $O(n \log n)$ 重疊偵測機制，大幅提升演算法迭代速度。
+* [cite_start]**混合式架構 (Hybrid Solver)**：純神經網路難以保證剛性幾何限制 [cite: 224][cite_start]。可考慮使用圖神經網路 (GNN) 或強化學習決定區塊的「相對拓樸關係」，再將初始解交給解析法或線性規劃 (LP) 進行合法化 [cite: 232]。
+* **極速碰撞偵測**：實作基於掃描線 (Sweep-line) 或區間樹 (Interval Tree) 的重疊偵測機制。
+
 
 ---
 

@@ -1,13 +1,15 @@
-﻿---
-Field: EDA / Physical Design
-Type: Competition Specification
+---
+Field: "EDA / Physical Design"
+Type: "Competition Specification"
 Confidence: 4
-Cross-Domain: [[Machine Learning]], [[Optimization Theory]]
+Cross_Domain: "Machine Learning, Optimization Theory"
 ---
 
 > [!abstract] **導航**：[[ICCAD/FloorSet-Summary|⚡ 快速複習 (口訣版)]] | [[ICCAD/FloorSet-Detailed|📚 規格詳解 (完整版)]]
 
 # 📚 ICCAD 2026 Problem C：FloorSet 挑戰賽完整規格
+
+> [!info] 相關領域：[[Machine Learning]], [[Optimization Theory]]
 
 > [!info] 競賽核心
 > 這是一場關於「算力與數據博弈」的競賽，旨在解決傳統 EDA 演算法在現代 SoC 複雜約束下的效率瓶頸。

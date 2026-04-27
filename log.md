@@ -16,5 +16,11 @@
     - [[ICCAD/EDA-Paradigm-Shift|EDA 範式轉移理論]]
 - **Update**: 在 `Problem Overview.md` 中建立雙向連結。
 
+## [2026-04-28] Refactor | 知識庫清理與格式修正
+- **Action**: 修正 `ICCAD/FloorSet-Detailed.md` 的 YAML 格式位移問題。
+- **Action**: 清理根目錄冗餘檔案，刪除空檔案 `FloorSet 挑戰賽.md`。
+- **歸位**: 將 `llm-wiki.md` 與 `Zotero Template.md` 移至 `Tool & Essay/` 目錄。
+- **恢復**: 恢復遺失的 `ICCAD/Problem Overview.md`。
+
 ---
 **回到索引**：[[index|🌐 全域索引 >>]]

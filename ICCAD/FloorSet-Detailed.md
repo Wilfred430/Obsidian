@@ -28,7 +28,7 @@ Cross-Domain: [[Machine Learning]], [[Optimization Theory]]
 
 > [!danger] 硬約束 (Hard Constraints) —— 違規即判無效
 > - **Overlap-free**：塊與塊之間絕對不能有物理交疊。
-> - **Fixed-outline**：所有組件必須嚴格限制在 $(W, H)$ 邊界內。
+> - **Fixed-outline**：所有組件必須嚴格限制在 $(W, H)$邊界內。
 > - **Fixed-shape / Preplaced**：I/O 或記憶體等硬核位置與形狀鎖定。
 > - **Area Budget**：軟模組實作面積與目標面積誤差須 $< 1\%$。
 

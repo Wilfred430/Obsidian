@@ -40,7 +40,8 @@ Cross_Domain: "Machine Learning, Optimization Theory"
 > - **Grouping**：指定模組集合必須形成物理上的鄰接群組。
 
 ## 4. 評分機制 (Scoring Function)
-Score = (\text{Quality Cost}) \times (\text{Penalty Factor}) \times (\text{Runtime Factor})
+
+$$Score = (\text{Quality Cost}) \times (\text{Penalty Factor}) \times (\text{Runtime Factor})$$
 
 - **Quality Cost**：
     - **HPWL**：所有連線的半周長總和。

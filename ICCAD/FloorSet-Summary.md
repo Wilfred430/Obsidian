@@ -1,6 +1,7 @@
 > [!abstract] **導航**：[[ICCAD/FloorSet-Summary|⚡ 快速複習 (口訣版)]] | [[ICCAD/FloorSet-Detailed|📚 規格詳解 (完整版)]]
 
 # ⚡ ICCAD 2026 FloorSet：一、二、三 框架 (口訣版)
+> [!info] 背景知識：[[ICCAD/EDA-Paradigm-Shift|EDA 範式轉移 (從傳統規則到 AI 驅動)]]
 
 ## 1. 一個核心目標
 - **Agentic AI**：從「天」到「分鐘」的自動化佈局革命。

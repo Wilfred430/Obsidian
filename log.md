@@ -29,5 +29,10 @@
     - [[ICCAD/Problem-D-Timing-Fixing|Problem D: Timing Fixing]]
 - **Update**: `index.md` 現在直接連結至各競賽問題，達成「直達核心」效果。
 
+## [2026-04-28] Refactor | 樣式優化與引用清理
+- **Action**: 移除所有筆記中的 `[cite_start]` 與 `[cite: ...]` 等干擾字樣。
+- **Style**: 將 Problem A 與 Problem D 升級為 Callout 視覺化樣式。
+- **Status**: 知識庫目前具備高度的一致性與視覺舒適度。
+
 ---
 **回到索引**：[[index|🌐 全域索引 >>]]

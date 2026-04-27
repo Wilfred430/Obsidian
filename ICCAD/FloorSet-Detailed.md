@@ -1,4 +1,4 @@
----
+﻿---
 Field: EDA / Physical Design
 Type: Competition Specification
 Confidence: 4
@@ -19,38 +19,38 @@ Cross-Domain: [[Machine Learning]], [[Optimization Theory]]
 - **目標**：在「分鐘級」時間內達成高品質的工業級佈局。
 
 ## 2. 問題定義 (Problem Definition)
-- **輸入**：固定畫布尺寸 $(W, H)$、模組集合 $B$、連線網表 $N$。
+- **輸入**：固定畫布尺寸 (W, H)、模組集合 B、連線網表 N。
 - **輸出**：
-    1. 每個模組的左下角座標 $(x_i, y_i)$。
-    2. 每個模組的實體尺寸 $(w_i, h_i)$。
+    1. 每個模組的左下角座標 (x, y)。
+    2. 每個模組的實體尺寸 (w, h)。
 
 ## 3. 模組類型與約束 (Detailed Constraints)
 
 > [!danger] 硬約束 (Hard Constraints) —— 違規即判無效
 > - **Overlap-free**：塊與塊之間絕對不能有物理交疊。
-> - **Fixed-outline**：所有組件必須嚴格限制在 $(W, H)$邊界內。
+> - **Fixed-outline**：所有組件必須嚴格限制在 (W, H) 邊界內。
 > - **Fixed-shape / Preplaced**：I/O 或記憶體等硬核位置與形狀鎖定。
-> - **Area Budget**：軟模組實作面積與目標面積誤差須 $< 1\%$。
+> - **Area Budget**：軟模組實作面積與目標面積誤差須 < 1%。
 
 > [!warning] 設計規則 (Design Rules) —— 指數級懲罰
-> - **MIB (Multi-Instantiation Blocks)**：同組模組的 $w, h$ 最終必須完全一致。
+> - **MIB (Multi-Instantiation Blocks)**：同組模組的 w, h 最終必須完全一致。
 > - **Boundary Constraints**：指定模組必須貼住畫布特定邊 (Edge) 或角 (Corner)。
 > - **Grouping**：指定模組集合必須形成物理上的鄰接群組。
 
 ## 4. 評分機制 (Scoring Function)
-$$Score = (\text{Quality Cost}) \times (\text{Penalty Factor}) \times (\text{Runtime Factor})$$
+Score = (\text{Quality Cost}) \times (\text{Penalty Factor}) \times (\text{Runtime Factor})
 
 - **Quality Cost**：
     - **HPWL**：所有連線的半周長總和。
     - **Area Gap**：畫布邊界與最外圍模組間的剩餘空間。
-- **Penalty Factor**：軟約束違規採指數級 ($e^v$) 扣分。
+- **Penalty Factor**：軟約束違規採指數級 (e^v) 扣分。
 - **Runtime Factor**：
-    - 快於中位數：獲得 $0.7 \sim 1.0$ 的獎勵乘數。
+    - 快於中位數：獲得 0.7 ~ 1.0 的獎勵乘數。
     - 慢於中位數：分數將被加倍懲罰。
 
 ## 5. 數據集分級
 - **Lite Dataset**：全矩形 (Rectangular) 模組，適合基礎開發。
-- **Prime Dataset**：引入**非矩形 (Rectilinear)** 模組 (L型、T型)，考驗零白空間堆疊能力。
+- **Prime Dataset**：引入非矩形 (Rectilinear) 模組 (L型、T型)，考驗零白空間堆疊能力。
 
 ## 6. 核心策略建議
 - **Agentic Flow**：利用 LLM 閱讀規格、生成 Seed。

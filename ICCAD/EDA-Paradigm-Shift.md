@@ -4,6 +4,17 @@
 
 ## 1. 核心定義：從「寫演算法」變成「教 AI」
 
+```mermaid
+graph TD
+    A[RTL Netlist] --> B{Floorplan Mode}
+    B -- Data-Driven --> C[ML Model Prediction]
+    B -- Heuristic --> D[Simulated Annealing SA]
+    C --> E[Legalization phase]
+    D --> E
+    E --> F[PPA Evaluation & Score]
+    F -- Feedback --> C
+```
+
 - **傳統方式 (Heuristics-based)**：
     - 依賴工程師編寫複雜的啟發式演算法（如模擬退火 SA）。
     - 邏輯：工程師告訴電腦：「如果 A 發生，就移動模組到 B 位置」。

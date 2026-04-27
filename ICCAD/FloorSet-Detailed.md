@@ -1,3 +1,10 @@
+---
+Field: EDA / Physical Design
+Type: Competition Specification
+Confidence: 4
+Cross-Domain: [[Machine Learning]], [[Optimization Theory]]
+---
+
 > [!info] **導航**：[[ICCAD/FloorSet-Summary|⚡ 快速複習 (口訣版)]] | [[ICCAD/FloorSet-Detailed|📚 規格詳解 (完整版)]]
 
 # 📚 ICCAD 2026 Problem C：FloorSet 挑戰賽完整規格
@@ -18,16 +25,16 @@
 
 ## 3. 模組類型與約束 (Detailed Constraints)
 
-### 硬約束 (Hard Constraints) —— 違規即判無效
-- **Overlap-free**：塊與塊之間絕對不能有物理交疊。
-- **Fixed-outline**：所有組件必須嚴格限制在 $(W, H)$ 邊界內。
-- **Fixed-shape / Preplaced**：I/O 或記憶體等硬核位置與形狀鎖定。
-- **Area Budget**：軟模組實作面積與目標面積誤差須 $< 1\%$。
+> [!danger] 硬約束 (Hard Constraints) —— 違規即判無效
+> - **Overlap-free**：塊與塊之間絕對不能有物理交疊。
+> - **Fixed-outline**：所有組件必須嚴格限制在 $(W, H)$ 邊界內。
+> - **Fixed-shape / Preplaced**：I/O 或記憶體等硬核位置與形狀鎖定。
+> - **Area Budget**：軟模組實作面積與目標面積誤差須 $< 1\%$。
 
-### 設計規則 (Design Rules) —— 指數級懲罰
-- **MIB (Multi-Instantiation Blocks)**：同組模組的 $w, h$ 最終必須完全一致。
-- **Boundary Constraints**：指定模組必須貼住畫布特定邊 (Edge) 或角 (Corner)。
-- **Grouping**：指定模組集合必須形成物理上的鄰接群組。
+> [!warning] 設計規則 (Design Rules) —— 指數級懲罰
+> - **MIB (Multi-Instantiation Blocks)**：同組模組的 $w, h$ 最終必須完全一致。
+> - **Boundary Constraints**：指定模組必須貼住畫布特定邊 (Edge) 或角 (Corner)。
+> - **Grouping**：指定模組集合必須形成物理上的鄰接群組。
 
 ## 4. 評分機制 (Scoring Function)
 $$Score = (\text{Quality Cost}) \times (\text{Penalty Factor}) \times (\text{Runtime Factor})$$

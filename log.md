@@ -22,5 +22,12 @@
 - **歸位**: 將 `llm-wiki.md` 與 `Zotero Template.md` 移至 `Tool & Essay/` 目錄。
 - **恢復**: 恢復遺失的 `ICCAD/Problem Overview.md`。
 
+## [2026-04-28] Refactor | ICCAD 知識原子化拆分
+- **Action**: 刪除 `Problem Overview.md`，減少導航層級。
+- **Split**: 將原內容拆分為獨立筆記：
+    - [[ICCAD/Problem-A-Bug-Classification|Problem A: RTL Bug Classification]]
+    - [[ICCAD/Problem-D-Timing-Fixing|Problem D: Timing Fixing]]
+- **Update**: `index.md` 現在直接連結至各競賽問題，達成「直達核心」效果。
+
 ---
 **回到索引**：[[index|🌐 全域索引 >>]]

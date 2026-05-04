@@ -177,16 +177,14 @@
     "display"
   ],
   "writeFileProductMenuConfig": [
-    "color",
-    "copy-format",
-    "display"
+    "color"
   ],
   "annotationProductMenuConfig": [
     "copy-format",
     "display"
   ],
-  "updateColorPaletteStateFromContextMenu": true,
-  "mobileCopyAction": "pdf-plus",
+  "updateColorPaletteStateFromContextMenu": false,
+  "mobileCopyAction": "obsidian",
   "showContextMenuOnTablet": false,
   "executeBuiltinCommandForOutline": true,
   "executeBuiltinCommandForZoom": true,
@@ -288,7 +286,7 @@
   "scrollModeOnLoad": 0,
   "spreadModeOnLoad": 0,
   "usePageUpAndPageDown": true,
-  "hoverableDropdownMenuInToolbar": true,
+  "hoverableDropdownMenuInToolbar": false,
   "zoomLevelInputBoxInToolbar": true,
   "popoverPreviewOnExternalLinkHover": true,
   "actionOnCitationHover": "pdf-plus-bib-popover",

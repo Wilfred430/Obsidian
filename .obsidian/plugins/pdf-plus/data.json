@@ -111,7 +111,7 @@
   "alwaysRecordHistory": true,
   "renderMarkdownInStickyNote": false,
   "enablePDFEdit": true,
-  "author": "wilfred",
+  "author": "wilfredEE",
   "writeHighlightToFileOpacity": 0.2,
   "defaultWriteFileToggle": false,
   "syncWriteFileToggle": true,
@@ -128,11 +128,11 @@
   "contextMenuConfig": [
     {
       "id": "action",
-      "visible": true
+      "visible": false
     },
     {
       "id": "selection",
-      "visible": true
+      "visible": false
     },
     {
       "id": "write-file",
@@ -211,8 +211,8 @@
   "useCallout": true,
   "calloutType": "PDF",
   "calloutIcon": "highlighter",
-  "highlightBacklinksInEmbed": false,
-  "highlightBacklinksInHoverPopover": false,
+  "highlightBacklinksInEmbed": true,
+  "highlightBacklinksInHoverPopover": true,
   "highlightBacklinksInCanvas": true,
   "clickPDFInternalLinkWithModifierKey": true,
   "clickOutlineItemWithModifierKey": true,

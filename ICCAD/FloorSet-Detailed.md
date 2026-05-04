@@ -62,18 +62,20 @@ $$Cost = \begin{cases} \left(1 + \alpha \cdot (HPWL^{gap} + Area^{gap}_{bbox})\r
 用來衡量您的方案與「基準最優解 (Baseline)」的差距。
 - **$HPWL^{gap}$**：連線長度差距比。
     - 公式：$\frac{(HPWLint + HPWLext) - HPWL^{baseline}}{HPWL^{baseline}}$
-    - $HPWL_{int}$ (模組間)：$\sum_{i=1}^k \sum_{j>i} W^{(int)}_{ij} (\Delta x_{ij} + \Delta y_{ij})$，其中 $\Delta x$ 為兩塊 Bounding Box 的最小水平間距。
-    - $HPWL_{ext}$ (與引腳)：$\sum_{i=1}^k \sum_{j=1}^r W^{(ext)}_{ij} (|x_{i,center} - x_{t_j}| + |y_{i,center} - y_{t_j}|)$。
+    - **$HPWL_{int}$ (模組間)**：**[V9 重大變更]** 改採中心點 (Centroid) 曼哈頓距離計算。
+      $$HPWL_{int} = \sum_{i=1}^k \sum_{j>i} W^{(int)}_{ij} (|c_i^x - c_j^x| + |c_i^y - c_j^y|)$$
+      其中 $c_i^x = x_i + w_i/2$，$c_i^y = y_i + h_i/2$。
+    - **$HPWL_{ext}$ (與引腳)**：$\sum_{i=1}^k \sum_{j=1}^r W^{(ext)}_{ij} (|c_i^x - x_{t_j}| + |c_i^y - y_{t_j}|)$。
 - **$Area^{gap}_{bbox}$**：畫布利用率差距比。
     - 公式：$\frac{Area_{bbox} - Area^{baseline}_{bbox}}{Area^{baseline}_{bbox}}$
-    - $Area_{bbox}$ 是由所有放置塊定義的最小外接矩形面積。
 
 #### B. 軟約束違規 ($Violations^{relative}$)
-這是一個歸一化到 $[0, 1]$ 區間的數值，計算方式如下：
-$$Violations^{relative} = \frac{V_{fixed} + V_{preplaced} + V_{grouping} + V_{boundary} + V_{mib}}{N_{soft}}$$
+**[V9 更新]** 僅包含邊界、群組與 MIB 違規（Fixed/Preplaced 已移至硬約束）：
+$$Violations^{relative} = \frac{V_{grouping} + V_{boundary} + V_{mib}}{N_{soft}}$$
 
-**歸一化因子 ($N_{soft}$)** 是關鍵的估計基礎：
-$$N_{soft} = |B_{fixed}| + |B_{preplaced}| + |B_{boundary}| + \sum_{p=1}^P (|G_p| - 1) + \sum_{q=1}^Q (|M_q| - 1)$$
+**歸一化因子 ($N_{soft}$)**：
+$$N_{soft} = |B_{boundary}| + \sum_{p=1}^P (|G_p| - 1) + \sum_{q=1}^Q (|M_q| - 1)$$
+
 - **解釋**：這代表了系統中「所有可能出錯的點」的總數。例如，一個包含 5 個模組的 Grouping 約束，其最大違規數為 4（當 5 塊完全分離時）。
 
 **各項違規判定 ($V_{type}$)：**

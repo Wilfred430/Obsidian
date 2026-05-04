@@ -28,16 +28,17 @@ Cross_Domain: "Machine Learning, Optimization Theory"
 
 ## 3. 模組類型與約束 (Detailed Constraints)
 
-> [!danger] 硬約束 (Hard Constraints) —— 違規即判無效
+> [!danger] 硬約束 (Hard Constraints) —— 違規即判無效 ($M=10$)
 > - **Overlap-free**：塊與塊之間絕對不能有物理交疊。
 > - **Fixed-outline**：所有組件必須嚴格限制在 (W, H) 邊界內。
-> - **Fixed-shape / Preplaced**：I/O 或記憶體等硬核位置與形狀鎖定。
-> - **Area Budget**：軟模組實作面積與目標面積誤差須 < 1%。
+> - **Fixed-shape Immutability**：**[V9 更新]** 模組尺寸必須精確匹配輸入，不可縮放。
+> - **Preplaced Immutability**：**[V9 更新]** 模組的位置 $(x, y)$ 與尺寸 $(w, h)$ 必須精確匹配輸入，不可移動。
+> - **Area Budget**：軟模組 (Soft blocks) 實作面積與目標面積誤差須 $\le 1\%$。
 
 > [!warning] 設計規則 (Design Rules) —— 指數級懲罰
-> - **MIB (Multi-Instantiation Blocks)**：同組模組的 w, h 最終必須完全一致。
 > - **Boundary Constraints**：指定模組必須貼住畫布特定邊 (Edge) 或角 (Corner)。
-> - **Grouping**：指定模組集合必須形成物理上的鄰接群組。
+> - **Grouping**：指定模組集合必須形成物理上的鄰接群組（連通分量為 1）。
+> - **MIB (Multi-Instantiation Blocks)**：同組模組的尺寸 $(w, h)$ 最終必須完全一致。
 
 ## 4. 評分機制與目標函數 (Objective Function)
 

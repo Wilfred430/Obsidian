@@ -5,7 +5,7 @@ Confidence: 5
 Cross_Domain: "Optimization, Simulated Annealing"
 ---
 
-> [!abstract] **導航**：[[index|🌐 全域索引]] | [[ICCAD/FloorSet-Detailed|📚 FloorSet 規格同步]]
+> [!abstract] **導航**：[[index|🌐 全域索引]] | [[../Problem/FloorSet-Detailed|📚 FloorSet 規格同步]]
 
 # Wong-Liu Floorplanning Algorithm (1986)
 
@@ -46,7 +46,7 @@ $$Cost = Area + \lambda_w \cdot Wirelength$$
 
 - **Area (面積)**：利用 **Bounding Curve (包絡曲線)** 進行計算。對於 Flexible Blocks，透過 Bottom-up 遞迴合併子樹的長寬組合曲線。
 - **Wirelength (線長)**：採用中心點間的曼哈頓距離 (Centroid-based Manhattan Distance)。
-    - **注意**：這與 [[ICCAD/FloorSet-Detailed|ICCAD 2026 V9]] 規格中的 $HPWL_{int}$ 計算邏輯完全一致。
+    - **注意**：這與 [[../Problem/FloorSet-Detailed|ICCAD 2026 V9]] 規格中的 $HPWL_{int}$ 計算邏輯完全一致。
 
 ---
 

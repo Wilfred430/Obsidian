@@ -5,7 +5,7 @@ Confidence: 4
 Cross_Domain: "Machine Learning, Optimization Theory"
 ---
 
-> [!abstract] **導航**：[[ICCAD/FloorSet-Summary|⚡ 快速複習 (口訣版)]] | [[ICCAD/FloorSet-Detailed|📚 規格詳解 (完整版)]]
+> [!abstract] **導航**：[[FloorSet-Summary|⚡ 快速複習 (口訣版)]] | [[FloorSet-Detailed|📚 規格詳解 (完整版)]]
 
 # 📚 ICCAD 2026 Problem C：FloorSet 挑戰賽完整規格
 
@@ -15,7 +15,7 @@ Cross_Domain: "Machine Learning, Optimization Theory"
 > 這是一場關於「算力與數據博弈」的競賽，旨在解決傳統 EDA 演算法在現代 SoC 複雜約束下的效率瓶頸。
 
 ## 1. 競賽背景與動機
-- **技術趨勢**：本競賽體現了 [[ICCAD/EDA-Paradigm-Shift|EDA 範式轉移：從規則導向轉向數據驅動]] 的重大變革。
+- **技術趨勢**：本競賽體現了 [[../EDA-Paradigm-Shift|EDA 範式轉移：從規則導向轉向數據驅動]] 的重大變革。
 - **現狀**：傳統方法 (SA) 處理 60+ 模組時收斂緩慢 (數小時)。
 - **突破**：利用 Intel 提供之 **FloorSet 數據集** (100 萬樣本) 開發 AI 模型。
 - **目標**：在「分鐘級」時間內達成高品質的工業級佈局。
@@ -114,4 +114,4 @@ $$RuntimeFactor = \frac{\text{Your Runtime}}{\text{Median Runtime of All Submiss
 - **算力優化**：使用 CUDA 加速 HPWL 計算或 GNN 網路。
 
 ---
-**連結**：[[ICCAD/FloorSet-Summary|<< 回到快速複習 (口訣版)]]
+**連結**：[[FloorSet-Summary|<< 回到快速複習 (口訣版)]]

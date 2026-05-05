@@ -4,11 +4,11 @@ Type: Review Summary
 Confidence: 5
 ---
 
-> [!abstract] **導航**：[[ICCAD/FloorSet-Summary|⚡ 快速複習 (口訣版)]] | [[ICCAD/FloorSet-Detailed|📚 規格詳解 (完整版)]]
+> [!abstract] **導航**：[[FloorSet-Summary|⚡ 快速複習 (口訣版)]] | [[FloorSet-Detailed|📚 規格詳解 (完整版)]]
 
 # ⚡ ICCAD 2026 FloorSet：一、二、三 框架 (口訣版)
 
-> [!info] 背景知識：[[ICCAD/EDA-Paradigm-Shift|EDA 範式轉移 (從傳統規則到 AI 驅動)]]
+> [!info] 背景知識：[[../EDA-Paradigm-Shift|EDA 範式轉移 (從傳統規則到 AI 驅動)]]
 
 ## 1. 一個核心目標
 > [!abstract] **Agentic AI**
@@ -36,4 +36,4 @@ Confidence: 5
 > 「快跑享七折，代理換人工。」
 
 ---
-**連結**：[[ICCAD/FloorSet-Detailed|查看完整競賽規格與開發建議 >>]]
+**連結**：[[FloorSet-Detailed|查看完整競賽規格與開發建議 >>]]

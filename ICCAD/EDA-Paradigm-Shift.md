@@ -20,7 +20,7 @@ graph TD
     - 邏輯：工程師告訴電腦：「如果 A 發生，就移動模組到 B 位置」。
     - 瓶頸：當模組數 > 60 且約束極多時，計算難以收斂且速度極慢。
 - **數據驅動 (Data-Driven)**：
-    - 工程師提供百萬計的最佳佈局樣本（如 [[ICCAD/FloorSet-Detailed|FloorSet 數據集]]）。
+    - 工程師提供百萬計的最佳佈局樣本（如 [[Problem/FloorSet-Detailed|FloorSet 數據集]]）。
     - 邏輯：讓 AI 模型（如 GNN 或 Transformers）自動學習模組、連線與邊界間的「空間關係」。
 
 ## 2. 技術革命：解決 NP-complete 障礙
@@ -41,9 +41,9 @@ graph TD
 | **邏輯來源**     | 數學模型、物理規則                      | 歷史數據、神經網絡                   |                          |
 | **運算時間**     | 隨複雜度指數增長 (數小時)                 | 推論時間固定且極快 (數秒/分)            |                          |
 | **泛化能力**     | 需針對每個設計手動調參 (Tuning)           | 訓練一次，可應用於多個類似設計             |                          |
-| **ICCAD 角色** | 傳統 SA / B*-tree 演算法            | [[ICCAD/FloorSet-Detailed]] | [[FloorSet 挑戰賽]] 的 AI 模型 |
+| **ICCAD 角色** | 傳統 SA / B*-tree 演算法            | [[Problem/FloorSet-Detailed]] | [[FloorSet 挑戰賽]] 的 AI 模型 |
 
 ---
 **相關連結**：
-- [[ICCAD/FloorSet-Summary|⚡ 快速複習：FloorSet 挑戰賽]]
-- [[ICCAD/FloorSet-Detailed|📚 規格詳解：FloorSet 挑戰賽]]
+- [[Problem/FloorSet-Summary|⚡ 快速複習：FloorSet 挑戰賽]]
+- [[Problem/FloorSet-Detailed|📚 規格詳解：FloorSet 挑戰賽]]

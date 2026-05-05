@@ -11,8 +11,8 @@
 ## [2026-04-28] Ingest | ICCAD 2026 FloorSet 競賽資料
 - **Source**: `@Paper/ICCAD_C_2026.pdf` (規格書)。
 - **Output**: 
-    - [[ICCAD/FloorSet-Summary|FloorSet 快速複習 (口訣版)]]
-    - [[ICCAD/FloorSet-Detailed|FloorSet 規格詳解 (完整版)]]
+    - [[ICCAD/Problem/FloorSet-Summary|FloorSet 快速複習 (口訣版)]]
+    - [[ICCAD/Problem/FloorSet-Detailed|FloorSet 規格詳解 (完整版)]]
     - [[ICCAD/EDA-Paradigm-Shift|EDA 範式轉移理論]]
 - **Update**: 在 `Problem Overview.md` 中建立雙向連結。
 

@@ -8,7 +8,7 @@
 
 ### 1. 核心專案 (Active Projects)
 - [[張添烜 project/CIM/Macro|CIM 運算儲存矩陣]]
-- [[ICCAD/FloorSet-Detailed|ICCAD 2026 FloorSet 挑戰賽]]
+- [[ICCAD/Problem/FloorSet-Detailed|ICCAD 2026 FloorSet 挑戰賽]]
 - [[Sliver Migration/教授回答|銀遷移行為模型與模擬]]
 
 ### 2. 知識領域 (Domains)

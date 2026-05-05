@@ -10,9 +10,11 @@ Confidence: 5
 
 ## 📌 ICCAD 2026 競賽專區
 - [[ICCAD/Problem-A-Bug-Classification|🏆 問題 A：RTL Bug Classification (ML 分群)]]
-- [[ICCAD/Problem/FloorSet-Detailed|🏆 問題 C：FloorSet 挑戰賽 (📚 完整詳解版)]]
-    - [[ICCAD/Problem/FloorSet-Summary|⚡ 快速複習：口訣版 (已更新至 V9)]]
+- [[ICCAD/FloorSet-Detailed|🏆 問題 C：FloorSet 挑戰賽 (📚 完整詳解版)]]
+    - [[ICCAD/FloorSet-Summary|⚡ 快速複習：口訣版 (已更新至 V9)]]
+    - [[ICCAD/Algorithms/Fixed-Outline-Floorplanning|🧠 核心概念：固定輪廓與餘裕管理]]
     - [[ICCAD/Algorithms/Wong-Liu-Algorithm|📑 經典算法：Wong-Liu Floorplanning (SA+NPE)]]
+
     - [[ICCAD/EDA-Paradigm-Shift|🧬 背景：EDA 範式轉移 (傳統 vs. AI)]]
     - [[ICCAD/Floorplanning/Outline-Characteristics|📐 基礎：VLSI Outline 種類與特性]]
 - [[ICCAD/Problem-D-Timing-Fixing|🏆 問題 D：Timing Fixing by Useful Skew]]

@@ -45,5 +45,10 @@
 - **Output**: [[ICCAD/Algorithms/Wong-Liu-Algorithm|Wong-Liu Algorithm 詳解筆記]]。
 - **Insight**: 識別出 1986 年論文中的 HPWL 計算方式與 ICCAD 2026 V9 規格的高度一致性，為後續優化提供理論基礎。
 
+## [2026-05-05] Ingest | Fixed-Outline Floorplanning: Enabling Hierarchical Design
+- **Source**: `@ICCAD/Paper/Fixed-Outline Floorplanning- Enabling Hierarchical Design.pdf` (2003)。
+- **Output**: [[ICCAD/Algorithms/Fixed-Outline-Floorplanning|固定輪廓佈局核心概念]]。
+- **Key Insight**: 釐清了 Whitespace 在 Fixed-die 流程中作為「約束」而非「優化目標」的本質轉換，並確立了 Penalty-based Cost Function 的重要性。
+
 ---
 **回到索引**：[[index|🌐 全域索引 >>]]

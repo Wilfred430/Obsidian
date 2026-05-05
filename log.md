@@ -40,5 +40,10 @@
 - **Maintenance**: 將 `SCHEMA.md` 移入 `Tool/LLM_Rules/`，修正全域路徑連結。
 - **Rule**: 儲存 `log.md` 與 `README.md` 的連動操作記憶。
 
+## [2026-05-05] Ingest | Wong-Liu Floorplanning Algorithm (1986)
+- **Source**: `@ICCAD/Paper/A New Algorithm for Floorplan Design.pdf` (經典論文)。
+- **Output**: [[ICCAD/Algorithms/Wong-Liu-Algorithm|Wong-Liu Algorithm 詳解筆記]]。
+- **Insight**: 識別出 1986 年論文中的 HPWL 計算方式與 ICCAD 2026 V9 規格的高度一致性，為後續優化提供理論基礎。
+
 ---
 **回到索引**：[[index|🌐 全域索引 >>]]

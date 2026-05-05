@@ -24,7 +24,7 @@ Confidence: 5
 - [[張添烜 project/CIM/Latency & Throughput|CIM (Computing In Memory)]]
 
 ## 🛠 工具與規範
-- [[Tool & Essay/Obsidian/Memory-Techniques.md|Obsidian 記憶增強技術規範]]
+- [[Tool/Obsidian/Memory-Techniques|Obsidian 記憶增強技術規範]]
 - [[Tool & Essay/Obsidian 論文使用規則|Obsidian 論文管理規則]]
 - [[SCHEMA|📜 Wiki 維護規範 (Schema)]]
 

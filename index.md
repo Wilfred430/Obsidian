@@ -18,9 +18,9 @@ Confidence: 5
 
 ## 🛠 工具與系統管理
 - [[log|📜 操作日誌 (System Log)]]
-- [[Tool & Essay/LLM_Rules/System_Instructions|🤖 LLM 操作規範 (最高準則)]]
-- [[Tool & Essay/Zotero Template|📝 Zotero 筆記模板]]
-- [[SCHEMA|📜 Wiki 維護規範 (Schema)]]
+- [[Tool/LLM_Rules/System_Instructions|🤖 LLM 操作規範 (最高準則)]]
+- [[Tool/Zotero Template|📝 Zotero 筆記模板]]
+- [[Tool/LLM_Rules/SCHEMA|📜 Wiki 維護規範 (Schema)]]
 
 ---
 **最近更新日誌**：[[log|📜 查看操作日誌 >>]]

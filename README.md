@@ -17,7 +17,7 @@
 - **Data Science**：[[AI/Data/Evaluation-Metrics|評分指標]]、[[AI/Data/Imbalance-Strategies|數據不平衡策略]]。
 
 ### 3. 工具與規範 (Tools & Rules)
-- **維護規則**：[[Tool & Essay/LLM_Rules/System_Instructions|🤖 LLM 指令集]]
+- **維護規則**：[[Tool/LLM_Rules/System_Instructions|🤖 LLM 指令集]] | [[Tool/LLM_Rules/SCHEMA|📜 Wiki 維護規範]]
 - **日常操作**：[[index|🌐 全域索引]] | [[log|📜 操作日誌]]
 
 ---

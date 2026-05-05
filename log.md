@@ -35,9 +35,9 @@
 - **Status**: 知識庫目前具備高度的一致性與視覺舒適度。
 
 ## [2026-05-05] Update | ICCAD 2026 V9 規格同步與規則重構
-- **Feature**: 建立 `Tool & Essay/LLM_Rules/` 規則夾。
+- **Feature**: 建立 `Tool/LLM_Rules/` 規則夾。
 - **Update**: 同步 ICCAD Problem C V9 變動（Fixed-shape/Preplaced 轉硬約束、中心點 HPWL）。
-- **Maintenance**: 更新 `README.md` 與 `index.md` 的導航架構。
+- **Maintenance**: 將 `SCHEMA.md` 移入 `Tool/LLM_Rules/`，修正全域路徑連結。
 - **Rule**: 儲存 `log.md` 與 `README.md` 的連動操作記憶。
 
 ---

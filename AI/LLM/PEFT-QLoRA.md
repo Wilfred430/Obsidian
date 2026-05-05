@@ -1,7 +1,6 @@
 # PEFT 與 QLoRA 技術筆記
 
-## 技術核心概念
-由於 Full Fine-tuning 對顯存要求極高，對於一般 GPU 資源，採用參數高效微調（Parameter-Efficient Fine-Tuning, PEFT）是必要手段。
+## 技由於 Full Fine-tuning 對顯存要求極高，對於一般 GPU 資源，採用參數高效微調（Parameter-Efficient Fine-Tuning, PEFT）是必要手段。
 
 ## QLoRA (Low-Rank Adaptation with Quantization)
 1. 量化 (Quantization)：

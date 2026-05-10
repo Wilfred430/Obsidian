@@ -1,117 +1,108 @@
-# TMS320C6000 核心架構與 Pipeline
-
-> [!info] 核心概念：VLIW (Very Long Instruction Word)
-> [[TMS320C6000]] 系列採用 TI 開發的 [[VelociTI]] 架構，這是一種進階的 [[VLIW]] 設計。與傳統超純量 (Superscalar) 架構不同，[[VLIW]] 將「指令排程」與「資源分配」的複雜度從硬體移轉到了編譯器 (Compiler)。
-> **優勢：**
-> 1. **簡化硬體設計**：無需複雜的指令亂序執行 (Out-of-order execution) 邏輯，大幅降低功耗與晶片面積。
-> 2. **可預測性 (Determinism)**：Pipeline 的行為在編譯時即確定，對於即時 (Real-time) 系統至關重要。
-> 3. **極高並行度**：單個時鐘週期最多可執行 8 條 32-bit 指令，達成強大的運算吞吐量。
-
+---
+tags: [DSP, Architecture, TMS320C6000, Pipeline, VLIW]
+type: Technical-Deep-Dive
+status: Completed
+updated: 2026-05-11
 ---
 
-## 1. 運算單元與資料路徑 (Data Paths)
+# DSP 核心架構與 Pipeline 機制
 
-[[TMS320C6000]] 核心分為兩個對稱的側邊：**Path A** 與 **Path B**。每個路徑包含四個運算單元與一個 [[Register File]] (32 個 32-bit 暫存器)。
+在本章節中，我們將深入探討 [[TMS320C6000]] 系列（特別是 C67x 與 C64x 核心）的底層硬體架構。這是一個典型的 [[VLIW]] (Very Long Instruction Word) 結構，其性能核心在於編譯器與硬體管線的完美契合。
 
-### 八個運算單元分工表
+## 1. VelociTI VLIW 架構與 Data Path 分工
 
-| 單元名稱 | 主要功能 | 關鍵操作 |
+[[TMS320C6000]] 的 CPU 核心分為兩個幾乎對稱的資料通道：**Data Path A** 與 **Data Path B**。每個通道各包含 16 個（C67x）或 32 個（C64x）通用暫存器（[[Register_File]]），以及 4 個專屬的功能單元。
+
+### 8 個功能單元 (`.L`, `.S`, `.M`, `.D`) 的具體分工
+
+每個 Data Path 都有四類功能單元，總共 8 個，支援在一個時鐘週期內同時發射 8 條指令。
+
+| 功能單元 | 主要職責 (Responsibility) | 支援操作類型 |
 | :--- | :--- | :--- |
-| **.L1 / .L2** | 算術邏輯單元 (ALU) | 整數/浮點算術、邏輯運算、[[Doubleword]] 操作。 |
-| **.S1 / .S2** | 輔助 ALU / 移位器 | 位元移位、分支指令 (Branch)、比較運算、常數生成。 |
-| **.M1 / .M2** | 乘法器 (Multiplier) | 16x16 或 32x32 位元乘法、複數乘法運算。 |
-| **.D1 / .D2** | 資料處理單元 | 加載 (Load)、儲存 (Store)、位址計算、整數加減法。 |
+| **`.L` (ALU)** | 整數/浮點運算、邏輯運算 | `ADD`, `SUB`, `AND`, `OR`, `XOR`, `CMP` |
+| **`.S` (Shift)** | 移位、分支、位元操作 | `B` (Branch), `SHL`, `SHR`, `SET`, `CLR`, `EXT` |
+| **`.M` (Multiply)** | 硬體乘法器 | `MPY`, `MPYH` (浮點乘法在 C67x 的 .M 中執行) |
+| **`.D` (Data)** | 記憶體存取、資料搬移 | `LDW` (Load), `STW` (Store), `ADD` (位址計算) |
 
-### 資料交叉路徑 (Cross Paths)
-為了讓 Path A 的單元能存取 Path B 的暫存器，硬體設計了 **1X** 與 **2X** 交叉路徑。
-> [!warning] 隱藏陷阱
-> 每路徑在單一時鐘週期內僅能支援一個交叉存取 (Cross-path Read)。若編譯器嘗試同時讓兩個單元從對側讀取，將產生編譯錯誤或資源衝突 (Resource Conflict)。
+> [!important] 跨通道路徑 (Cross Paths)
+> 雖然 A 與 B 通道相對獨立，但硬體提供 `1X` 與 `2X` 跨通道存取路徑，允許例如 Side A 的單元存取 Side B 的暫存器，但每個週期僅能進行一次跨通道存取。
 
----
+## 2. Pipeline 的三個大階段與細分時相
 
-## 2. Pipeline 階段流程詳解
+[[TMS320C6000]] 的指令管線非常深，這保證了高時鐘頻率，但也帶來了延遲處理的挑戰。
 
-[[TMS320C6000]] 的流水線非常深，這使得時脈頻率能大幅提升。整體分為三個大階段：擷取、解碼、執行。
+### Fetch 階段 (提取)
+1. **PG (Program Generate)**：計算下一個 [[Fetch_Packet]] 的位址。
+2. **PS (Program Send)**：將位址送往程式記憶體。
+3. **PW (Program Wait)**：等待記憶體回應（存取延遲）。
+4. **PR (Program Ready)**：指令進入 CPU 內部快取。
 
-### 階段定義
-1. **擷取 (Fetch, 4 stages)**：
-   - **PG (Program Generate)**：產生程式計數器 (PC) 位址。
-   - **PS (Program Send)**：將位址發送到記憶體系統。
-   - **PW (Program Wait)**：等待記憶體回應。
-   - **PR (Program Ready)**：指令到達 [[Fetch Packet]] 暫存器。
-2. **解碼 (Decode, 2 stages)**：
-   - **DP (Dispatch)**：將 [[Fetch Packet]] 分配為多個 [[Execute Packet]]。
-   - **DC (Decode)**：解析指令指令，指派到對應的運算單元。
-3. **執行 (Execute, 5+ stages)**：
-   - **E1~E5**：指令實際執行的階段。注意，並非所有指令都需要 E5 才能完成。例如整數加法在 E1 即可完成，而 [[Load]] 指令則需到 E5 才能獲取資料。
+### Decode 階段 (解碼)
+1. **DP (Dispatch)**：將指令分派給對應的功能單元（.L/.S/.M/.D）。
+2. **DC (Decode)**：解析指令操作碼（Opcode）並讀取暫存器。
 
-### Pipeline 流程圖 (Mermaid)
+### Execute 階段 (執行)
+- **E1 ~ E5**：大部份整數與跳躍指令在 E1 結束；`LDW` 需要到 E5 才完成資料載入。
+- **C67x 特殊性**：某些複雜浮點運算可能延伸至 **E10**。
 
 ```mermaid
 graph LR
-    subgraph Fetch_Phase [擷取階段]
-        PG[PG: 位址產生] --> PS[PS: 位址發送]
-        PS --> PW[PW: 等待]
-        PW --> PR[PR: 指令就緒]
+    subgraph Fetch
+        PG --> PS --> PW --> PR
     end
-
-    subgraph Decode_Phase [解碼階段]
-        PR --> DP[DP: 指令分配]
-        DP --> DC[DC: 指令解碼]
+    subgraph Decode
+        PR --> DP --> DC
     end
-
-    subgraph Execute_Phase [執行階段]
-        DC --> E1[E1: 開始執行]
-        E1 --> E2[E2]
-        E2 --> E3[E3]
-        E3 --> E4[E4]
-        E4 --> E5[E5: 結果寫回]
+    subgraph Execute
+        DC --> E1 --> E2 --> E3 --> E4 --> E5
     end
-
-    style Fetch_Phase fill:#f9f,stroke:#333
-    style Decode_Phase fill:#bbf,stroke:#333
-    style Execute_Phase fill:#bfb,stroke:#333
+    style PG fill:#f9f,stroke:#333
+    style DC fill:#bbf,stroke:#333
+    style E1 fill:#bfb,stroke:#333
 ```
 
----
+## 3. Pipeline 延遲 (Delay Slots) 與 拖延 (Stall)
 
-## 3. Memory Stall 機制
+在深管線架構中，「發出指令」與「結果生效」之間存在時間差，這就是 [[Delay_Slots]]。
 
-### 什麼是 [[Memory Stall]]？
-當 CPU 需要資料進行運算，但資料尚未從記憶體（如 L2 SRAM 或外部 SDRAM）準備好時，Pipeline 就會強行停止，稱為 **Stall**。
+### 核心延遲定義
+1. **Branch Delay (5 Slots)**：分支指令（如 `B`）在 E1 執行後，實際跳躍發生在 5 個週期後。因此分支指令後通常緊跟著 5 個 [[NOP]] 指令或無關指令。
+2. **Load Delay (4 Slots)**：`LDW` 指令在 E1 啟動，資料直到 E5 才會進入目標暫存器。
+    - **死角陷阱**：若在 E2 立即讀取該暫存器，讀到的是「舊值」而非 `LDW` 的結果。
+3. **Multiply Delay (1 Slot)**：整數乘法結果在 E2 生效，因此需要 1 個 Delay Slot。
 
-### 為什麼會發生？
-1. **Cache Miss**：資料不在 L1D 快取中，需向 L2 或外部存取。
-2. **Bank Conflict**：當多個單元（如 .D1 與 .D2）同時存取同一記憶體 Bank 的不同位址時。
-3. **資源衝突**：如上述的交叉路徑存取限制。
+### Memory Stall (記憶體拖延)
+當 CPU 存取外部記憶體（如透過 [[EMIF]]）遇到快取缺失（Cache Miss）或資源衝突時，硬體會自動暫停管線執行，直到資料準備就緒。
 
-> [!warning] 設計考量
-> C6000 是一台「強時序性」機器。如果發生 Stall，整個硬體 Pipeline 會「凍結」，直到資料就緒。這會嚴重破壞編譯器預測的效能。
+## 4. 視覺化：Fetch Packet 與 Execute Packet 運作
 
----
+一個 **[[Fetch_Packet]]** 始終是 8 條指令（256-bit）。而 **[[Execute_Packet]]** 則是其中可以同時並行執行的指令組合。
 
-## 4. Single vs. Multiple Assignment
+```mermaid
+gantt
+    title Pipeline 執行流程示例
+    dateFormat  YYYY-MM-DD
+    section 指令 A (Execute Packet 1)
+    PG :a1, 2026-05-01, 1d
+    PS :a2, after a1, 1d
+    PW :a3, after a2, 1d
+    PR :a4, after a3, 1d
+    DP :a5, after a4, 1d
+    DC :a6, after a5, 1d
+    E1 (執行完成) :a7, after a6, 1d
+    section 指令 B (Load, 需 4 Delay Slots)
+    PG :b1, 2026-05-01, 1d
+    DC :b6, 2026-05-06, 1d
+    E1 (開始載入) :b7, after b6, 1d
+    E5 (資料寫回暫存器) :b8, 2026-05-11, 1d
+```
 
-在編寫 [[DSP]] 組合語言或進行編譯優化時，暫存器的賦值模式至關重要。
-
-### Single Assignment (單次賦值)
-- **定義**：在一個指令的 [[Delay Slot]] 期間，不對目標暫存器進行第二次寫入。
-- **優點**：程式行為易於理解，Pipeline 不會發生寫回衝突 (Write-back Conflict)。
-
-### Multiple Assignment (多次賦值)
-- **定義**：在一個長週期指令（如 Load, E5 完成）尚未寫回暫存器前，另一個短週期指令（如 ADD, E1 完成）已經嘗試寫入同一個暫存器。
-- **後果**：舊的指令結果（原本該在較晚時間點到達）會覆蓋掉新的指令結果，造成邏輯錯誤。
-
-> [!example] 為什麼 ISTP 要對齊 1KB？
-> 在 [[TMS320C6000]] 中，中斷服務表指標 ([[ISTP]]) 必須 1KB 對齊。
-> **原因**：
-> 1. 每個中斷向量由一個 [[Fetch Packet]] 組成 (8 條指令 = 32 bytes)。
-> 2. 系統共支援 32 個中斷。
-> 3. 總空間 = $32 \times 32 = 1024$ Bytes (1KB)。
-> 為了讓硬體能透過簡單的位元拼接（中斷編號左移 5 位元）來定位跳躍位址，而不需要複雜的加法器，將基底位址對齊 1KB 是最優化的硬體設計。
+> [!warning] 陷阱提示：組合語言排程
+> 在手寫組合語言或進行核心迴圈最佳化時，必須手動計算所有指令的 Delay Slots。如果編譯器沒有開啟最佳化，它會插入大量的 `NOP`，導致代碼體積膨脹且效率低下。
 
 ---
 **相關連結：**
 - [[Memory_Map與EMIF]]
-- [[EDMA_控制器原理]]
-- [[DSP_最佳化技巧]]
+- [[中斷機制_Interrupt]]
+- [[EDMA_背景搬運]]
+- [[CCS_開發與Debug實務]]

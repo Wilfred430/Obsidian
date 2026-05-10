@@ -25,6 +25,7 @@ Confidence: 5
 - [[DCS/TMS320C6000/中斷機制_Interrupt|⚡ 非同步處理：中斷機制 (Interrupt)]]
 - [[DCS/TMS320C6000/Timer計時器|⏲️ 定時器：Timer 控制]]
 - [[DCS/TMS320C6000/EDMA_背景搬運|📦 資料傳輸：EDMA 背景搬運]]
+- [[DCS/TMS320C6000/CCS_開發與Debug實務|🛠️ 開發實務：CCS 工具與 Debug 陷阱]]
 
 ## 🛠 工具與系統管理
 - [[log|📜 操作日誌 (System Log)]]

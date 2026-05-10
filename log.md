@@ -50,5 +50,15 @@
 - **Output**: [[ICCAD/Algorithms/Fixed-Outline-Floorplanning|固定輪廓佈局核心概念]]。
 - **Key Insight**: 釐清了 Whitespace 在 Fixed-die 流程中作為「約束」而非「優化目標」的本質轉換，並確立了 Penalty-based Cost Function 的重要性。
 
+## [2026-05-11] Refactor | 簡化 DCS 檔案命名
+- **Action**: 移除 `DCS/TMS320C6000/` 資料夾下所有檔案的 `TMS320C6000_` 前綴，以縮短檔名並提升閱讀效率。
+- **Updated Files**:
+    - `中斷機制_Interrupt.md`
+    - `核心架構與Pipeline.md`
+    - `EDMA_背景搬運.md`
+    - `Memory_Map與EMIF.md`
+    - `Timer計時器.md`
+- **Link Maintenance**: 同步更新所有筆記內的雙向連結，確保 Wiki 結構完整性。
+
 ---
 **回到索引**：[[index|🌐 全域索引 >>]]

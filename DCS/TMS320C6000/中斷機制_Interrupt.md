@@ -122,6 +122,6 @@ flowchart TD
 
 ---
 **相關連結：**
-- [[TMS320C6000_核心架構與Pipeline]]
-- [[TMS320C6000_Memory_Map與EMIF]]
+- [[核心架構與Pipeline]]
+- [[Memory_Map與EMIF]]
 - [[Timers_與_PWM_控制]]

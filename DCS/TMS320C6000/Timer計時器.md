@@ -110,6 +110,6 @@ Timer 的控制空間位於記憶體映射的 [[Config_Registers]] 區。
 
 ---
 **相關連結：**
-- [[TMS320C6000_中斷機制_Interrupt]]
-- [[TMS320C6000_核心架構與Pipeline]]
+- [[中斷機制_Interrupt]]
+- [[核心架構與Pipeline]]
 - [[EDMA_控制器原理]]

@@ -104,6 +104,6 @@ graph TD
 
 ---
 **相關連結：**
-- [[TMS320C6000_核心架構與Pipeline]]
+- [[核心架構與Pipeline]]
 - [[EDMA_控制器原理]]
 - [[Boot_Process_與自舉加載]]

@@ -121,6 +121,6 @@ sequenceDiagram
 
 ---
 **相關連結：**
-- [[TMS320C6000_核心架構與Pipeline]]
-- [[TMS320C6000_Timer計時器]]
-- [[TMS320C6000_中斷機制_Interrupt]]
+- [[核心架構與Pipeline]]
+- [[Timer計時器]]
+- [[中斷機制_Interrupt]]

@@ -11,6 +11,26 @@ Confidence: 4
 
 ## 📌 具體內容與挑戰
 
+```mermaid
+graph TD
+    Data[Raw Logs: regr, sim, trace] --> Extraction[Feature Extraction]
+    subgraph Features [Feature Domains]
+        Extraction --> KW[Keyword Patterns: UVM_FATAL]
+        Extraction --> PC[PC Sequence: N-gram]
+        Extraction --> Diff[Register State Diffs]
+    end
+    
+    Features --> Clustering[Clustering Engine]
+    Clustering -- Step 1 --> Coarse[Coarse Clustering: Rule-based]
+    Coarse -- Step 2 --> Fine[Fine Clustering: DBSCAN / K-Means]
+    
+    Fine --> Output[Bucket ID Allocation]
+
+    style Data fill:#f9f9f9,stroke:#333
+    style Features fill:#e1f5fe,stroke:#01579b
+    style Clustering fill:#fff9c4,stroke:#fbc02d
+```
+
 > [!info] **輸入特徵 (Input)**
 > 每個失敗案例提供三個檔案：
 > 1. regr.log：RTL 與 ISS 比對的錯誤紀錄。

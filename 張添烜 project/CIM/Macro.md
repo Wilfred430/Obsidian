@@ -2,6 +2,28 @@
 
 ## 定義
 - **Macro**：在 Compute-In-Memory (CIM) 中，指一個可重複使用( reuse )的電路模組。
+
+```mermaid
+graph TD
+    subgraph CIM_Macro [CIM Macro Architecture]
+        subgraph Array [Memory Array]
+            W[Weight Storage]
+        end
+        Peripheral[Peripherals: Sense Amp, ADC/DAC]
+        Logic[Control Logic & Registers]
+        
+        Input --> Logic
+        Logic --> Array
+        Logic --> Peripheral
+        Array --> Peripheral
+        Peripheral --> Output[Compute Result]
+    end
+
+    style CIM_Macro fill:#f9f9f9,stroke:#333
+    style Array fill:#fff9c4,stroke:#fbc02d
+    style Peripheral fill:#e1f5fe,stroke:#01579b
+```
+
 - 封裝了記憶體陣列 + 周邊電路（sense amplifier、ADC/DAC、控制邏輯）。
 - 能在記憶體內直接執行計算（如乘加運算）。
 ## 特點

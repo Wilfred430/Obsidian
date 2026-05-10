@@ -15,6 +15,26 @@
 2. 分類決策樹：在 System Prompt 中內嵌判別邏輯，幫助模型精準區分 5 種幻覺。
 
 ## 技術對比：RAG vs. Fine-tuning
+
+```mermaid
+graph LR
+    subgraph RAG_Flow [RAG: 查書模式]
+        Query --> Search[外部檢索]
+        Search --> Prompt[拼裝 Prompt]
+        Prompt --> LLM_R[LLM 生成]
+    end
+
+    subgraph FT_Flow [Fine-tuning: 內化模式]
+        Data --> Train[權重更新/Adapter]
+        Train --> Model[微調後的模型]
+        Q_FT[Query] --> Model
+        Model --> LLM_FT[生成答案]
+    end
+
+    style RAG_Flow fill:#f9f9f9,stroke:#333
+    style FT_Flow fill:#e1f5fe,stroke:#01579b
+```
+
 - RAG (檢索增強生成)：
     - 本質：外部檢索，類似「查書」。
     - 特點：模型權重不變，透過將檢索到的文本貼入 Prompt 解決知識短缺。

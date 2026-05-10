@@ -41,6 +41,43 @@
 
 ---
 
-## 6. 圖解建議
-- **流程圖**：Q/K/V → 相似度 → softmax → 加權 V → 輸出
-- **多頭注意力**：多組 Q/K/V 並行 → 拼接 → 線性轉換
+## 6. 圖解與架構 (Visuals)
+
+### 6.1 Attention 運作流程
+```mermaid
+graph TD
+    Input[Input Vector] --> QKV[Linear Projections]
+    QKV --> Q[Query Q]
+    QKV --> K[Key K]
+    QKV --> V[Value V]
+    
+    Q -- Dot Product --> Score[Attention Score]
+    K -- Dot Product --> Score
+    
+    Score -- Scale / d_k --> S_Scale[Scaled Score]
+    S_Scale -- Softmax --> Weights[Attention Weights]
+    
+    Weights -- Multiply --> Context[Context Vector]
+    V -- Multiply --> Context
+    
+    Context --> Output[Output]
+
+    style Weights fill:#f9f,stroke:#333,stroke-width:2px
+```
+
+### 6.2 Multi-Head Attention (MHA) 架構
+```mermaid
+graph LR
+    subgraph Heads [Parallel Attention Heads]
+        H1[Head 1]
+        H2[Head 2]
+        HN[Head N]
+    end
+    
+    Input --> H1 & H2 & HN
+    H1 & H2 & HN --> Concat[Concatenation]
+    Concat --> Linear[Linear Layer]
+    Linear --> Output
+
+    style Heads fill:#e1f5fe,stroke:#01579b
+```

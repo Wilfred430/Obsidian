@@ -3,6 +3,19 @@
 ## 技由於 Full Fine-tuning 對顯存要求極高，對於一般 GPU 資源，採用參數高效微調（Parameter-Efficient Fine-Tuning, PEFT）是必要手段。
 
 ## QLoRA (Low-Rank Adaptation with Quantization)
+
+```mermaid
+graph LR
+    Input --> Frozen[Frozen Pre-trained Weights: 4-bit]
+    Input --> Adapter[Trainable Adapters: LoRA A/B]
+    Frozen --> Combine[+]
+    Adapter --> Combine
+    Combine --> Output
+    
+    style Frozen fill:#f5f5f5,stroke:#999
+    style Adapter fill:#bfb,stroke:#333
+```
+
 1. 量化 (Quantization)：
    - 使用 bnb-4bit (BitsAndBytes) 技術。
    - 將 16-bit 浮點數壓縮為 4-bit，大幅降低記憶體占用，使 3B 等級模型能在消費級 GPU 上訓練。

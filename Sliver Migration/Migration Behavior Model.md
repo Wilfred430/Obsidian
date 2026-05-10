@@ -6,7 +6,28 @@
 
 您總共需要 **5 個電子元件** 來構建這個最精確的模型。
 
-電路拓樸 (Topology)：
+**電路拓樸 (Topology)：**
+```mermaid
+graph LR
+    In((In)) --> Rs[Rs: 溶液電阻]
+    Rs --> C1[RC 區塊 1: 表面膜層]
+    
+    subgraph RC_Block_1 [Film Layer]
+        C1 --> Rf[R_film]
+        C1 --> Cf[C_film]
+        Rf & Cf --> C2
+    end
+    
+    subgraph RC_Block_2 [Reaction & Dendrites]
+        C2 --> Rct[R_ct: 電荷轉移]
+        C2 --> Cdl[C_dl: 雙電層]
+        Rct & Cdl --> Out((Out))
+    end
+
+    style Rs fill:#fff9c4,stroke:#fbc02d
+    style RC_Block_1 fill:#e1f5fe,stroke:#01579b
+    style RC_Block_2 fill:#f1f8e9,stroke:#558b2f
+```
 
 這是一個 串聯 (Series) 結構，其中包含一個獨立電阻，後面串接著兩個 並聯 (Parallel) 的 RC 區塊。
 
@@ -165,6 +186,14 @@ c_dl <= c_dl + 1.0e-16; // 線性累積
 ### 4. 總結：這個設計對應的「腐蝕三部曲」
 
 這段 `always` block 其實是在演繹一部**災難電影**：
+
+```mermaid
+timeline
+    title 銀遷移失效三部曲
+    潛伏期 (Incubation) : R_film 緩慢指數下降 : 氧化層出現微小孔洞 (Pitting)
+    破裂期 (Nucleation) : R_ct 劇烈指數下降 : 防護層失效，銀原子大量離子化
+    生長期 (Growth) : C_dl 線性/冪次增長 : 枝晶 (Dendrites) 物理堆積，表面積暴增
+```
 
 1. **潛伏期 (Incubation):**
     

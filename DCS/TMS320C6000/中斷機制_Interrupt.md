@@ -91,6 +91,7 @@ sequenceDiagram
 
 ---
 **相關連結：**
+- [[中斷處理機制_ISR_IST_ISTP_ISFP]]
 - [[核心架構與Pipeline]]
 - [[Memory_Map與EMIF]]
 - [[Timer計時器]]

@@ -61,4 +61,10 @@
 - **Link Maintenance**: 同步更新所有筆記內的雙向連結，確保 Wiki 結構完整性。
 
 ---
+---
+## [2026-05-13] Ingest | DSP 中斷機制原子化拆分
+- **Output**: [[DCS/TMS320C6000/中斷處理機制_ISR_IST_ISTP_ISFP|中斷處理機制核心 (ISR/IST/ISTP/ISFP)]]
+- **Update**: 在 [[DCS/TMS320C6000/中斷機制_Interrupt|中斷機制主頁面]] 建立雙向連結。
+- **Action**: 針對 ISR、IST、ISTP 與 ISFP 建立高質量的概念隱喻與運作流程詳解，強化 DCS 領域的知識深度。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

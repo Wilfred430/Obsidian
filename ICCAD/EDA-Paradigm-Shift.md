@@ -1,3 +1,12 @@
+---
+title: EDA Paradigm Shift
+tags:
+  - ICCAD
+  - EDA
+  - Machine-Learning
+date: 2026-05-19
+---
+
 # EDA 範式轉移：傳統演算法 vs. 數據驅動設計
 
 這份筆記記錄了 EDA（電子設計自動化）領域從「傳統規則導向」轉向「人工智慧學習導向」的核心邏輯。

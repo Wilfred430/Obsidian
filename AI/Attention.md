@@ -1,4 +1,12 @@
-#AI
+---
+title: Attention Mechanism
+tags:
+  - AI
+  - Deep-Learning
+  - Transformer
+date: 2026-05-19
+---
+
 ## 1. 定義
 - Attention 是一種讓模型「選擇性關注」輸入不同部分的技術。
 - 核心概念：不是平均處理所有輸入，而是根據相關性分配權重。

@@ -77,4 +77,10 @@
 - **Index**: 重構 `index.md`，新增 AI 核心知識與 CIM 專案章節，提升導航效率。
 - **Cleanup**: 修正 `PEFT-QLoRA.md` 與 `Instruction-Tuning.md` 的標題冗餘與格式問題。
 
+---
+## [2026-05-19] Ingest | B*-tree Floorplanning 演算法剖析
+- **Output**: [[ICCAD/Algorithms/B-Star-Tree|B*-tree Floorplanning 技術筆記]]
+- **Content**: 整合拓樸、幾何、Packing 流程與模擬退火操作的完整教學手冊與 Mermaid 概念圖。
+- **Update**: 於 [[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]] 新增演算法導航連結。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

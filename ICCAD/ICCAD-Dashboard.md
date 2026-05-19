@@ -19,6 +19,7 @@ date: 2026-05-19
 - [[ICCAD/Problem-D-Timing-Fixing|Problem D：Timing Fixing]]
 
 ## 🧠 佈局演算法研究 (Algorithms)
+- [[ICCAD/Algorithms/B-Star-Tree|B*-tree Floorplanning 技術筆記]]：將拓樸與幾何分離的精巧佈局資料結構。
 - [[ICCAD/Algorithms/Wong-Liu-Algorithm|Wong-Liu Algorithm (1986)]]：經典退火演算法與 NPE 表示法。
 - [[ICCAD/Algorithms/Fixed-Outline-Floorplanning|Fixed-Outline Floorplanning (2003)]]：現代分層設計與固定輪廓約束。
 

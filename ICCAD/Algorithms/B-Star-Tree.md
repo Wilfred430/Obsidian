@@ -13,6 +13,21 @@ date: 2026-05-19
 
 # 📑 B*-tree Floorplanning 技術筆記與教學手冊
 
+> [!abstract] **總覽概念圖**
+> ```mermaid
+> graph LR
+>     DS[BNode Data Structure] --> TP[Tree Topology]
+>     TP -- Move/Swap --> TP
+>     DS -- Rotate --> GM[Geometry]
+>     TP --> PK[Packing Process]
+>     GM --> PK
+>     CT[Contour] --> PK
+>     PK --> COST[Cost Evaluation: Area/Wirelength]
+>     COST -- SA Accept/Reject --> TP
+> ```
+
+---
+
 ## 1. TL;DR (一句話定義)
 **B*-tree Floorplanning** 是一種利用「二元樹拓樸結構」來編碼矩形區塊相對位置，並透過「輪廓線 (Contour) 演算法」快速推導出緊湊佈局 (Compact Floorplan) 的表示法。
 
@@ -185,18 +200,3 @@ graph LR
 | 輪廓線 | Contour | 紀錄當前佈局頂部高度的資料結構。 |
 | 模擬退火 | Simulated Annealing | 用於尋找最優佈局的隨機搜尋演算法。 |
 | 固定區塊 | Anchored Block | 位置不可移動的預置模組。 |
-
----
-
-**總覽概念圖**：
-```mermaid
-graph LR
-    DS[BNode Data Structure] --> TP[Tree Topology]
-    TP -- Move/Swap --> TP
-    DS -- Rotate --> GM[Geometry]
-    TP --> PK[Packing Process]
-    GM --> PK
-    CT[Contour] --> PK
-    PK --> COST[Cost Evaluation: Area/Wirelength]
-    COST -- SA Accept/Reject --> TP
-```

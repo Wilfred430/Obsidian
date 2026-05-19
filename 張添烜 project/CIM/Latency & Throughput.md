@@ -9,6 +9,11 @@ updated: 2026-05-11
 
 在計算機架構中，記憶體階層的設計本質上是在 **容量 (Capacity)**、**成本 (Cost)** 與 **效能 (Latency)** 之間進行極致的權衡（Trade-off）。作為 VLSI 設計者，我們必須理解數據表背後的物理真相。
 
+### 延遲 (Latency) 的微觀來源
+- **權重更新延遲**：在大型語言模型中，頻繁更新權重會造成顯著開銷。解決方案請參考 [[張添烜 project/CIM/RCW-Mechanisms|RCW-CIM 隱藏延遲機制]]。
+- **非線性運算延遲**：Softmax 等運算通常需要額外的時鐘週期。解決方案請參考 [[張添烜 project/CIM/Nonlinear-Operator-Fusion|算子融合技術]]。
+
+
 ## 1. 記憶體階層與延遲數據表 (Latency & Specs)
 
 | 階層 (Level) | 典型容量 | 存取延遲 (Cycles) | 實體位置 | 實作技術 |

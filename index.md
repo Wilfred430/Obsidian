@@ -1,12 +1,25 @@
 ---
-Field: Meta
-Type: Index
-Confidence: 5
+title: LLM-Wiki 全域索引
+tags:
+  - Meta/Index
+date: 2026-05-19
 ---
 
 # 🌐 LLM-Wiki 全域索引 (Index)
 
 > [!abstract] **說明**：這是本知識庫的核心目錄，由 AI 自動維護。每當新增重要知識節點時，AI 會在此更新連結。
+
+## 🧠 AI 核心知識 (LLM & GenAI)
+- [[AI/Attention|✨ 注意力機制 (Attention Mechanism)]]
+- [[AI/LLM/Instruction-Tuning|🛠️ 指令微調 (Instruction Tuning)]]
+- [[AI/LLM/PEFT-QLoRA|📉 參數高效微調 (PEFT/QLoRA)]]
+- [[AI/GenAI/HW3/HW3-Hallucination-Detection|🔍 幻覺檢測 (Hallucination Detection)]]
+
+## ⚡ 張添烜 Project: CIM 加速器
+- [[張添烜 project/CIM/RCW-Mechanisms|🏗️ 核心架構：RCW-CIM (Read-Compute/Write)]]
+- [[張添烜 project/CIM/Nonlinear-Operator-Fusion.md|🌀 算子融合：非線性運算優化]]
+- [[張添烜 project/CIM/Latency & Throughput|📊 效能分析：延遲與吞吐量]]
+- [[張添烜 project/CIM/Macro|🧩 硬體單元：CIM Macro 基礎]]
 
 ## 📌 ICCAD 2026 競賽專區
 - [[ICCAD/Problem-A-Bug-Classification|🏆 問題 A：RTL Bug Classification (ML 分群)]]
@@ -14,7 +27,6 @@ Confidence: 5
     - [[ICCAD/FloorSet-Summary|⚡ 快速複習：口訣版 (已更新至 V9)]]
     - [[ICCAD/Algorithms/Fixed-Outline-Floorplanning|🧠 核心概念：固定輪廓與餘裕管理]]
     - [[ICCAD/Algorithms/Wong-Liu-Algorithm|📑 經典算法：Wong-Liu Floorplanning (SA+NPE)]]
-
     - [[ICCAD/EDA-Paradigm-Shift|🧬 背景：EDA 範式轉移 (傳統 vs. AI)]]
     - [[ICCAD/Floorplanning/Outline-Characteristics|📐 基礎：VLSI Outline 種類與特性]]
 - [[ICCAD/Problem-D-Timing-Fixing|🏆 問題 D：Timing Fixing by Useful Skew]]

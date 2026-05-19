@@ -1,3 +1,12 @@
+---
+title: 指令微調與提示工程
+tags:
+  - LLM
+  - Instruction-Tuning
+  - Prompt-Engineering
+date: 2026-05-19
+---
+
 # 指令微調與提示工程進化
 
 ## 指令微調 (Instruction Tuning)

@@ -67,4 +67,14 @@
 - **Update**: 在 [[DCS/TMS320C6000/中斷機制_Interrupt|中斷機制主頁面]] 建立雙向連結。
 - **Action**: 針對 ISR、IST、ISTP 與 ISFP 建立高質量的概念隱喻與運作流程詳解，強化 DCS 領域的知識深度。
 
+---
+## [2026-05-19] Refactor | 全面庫整理與知識原子化
+- **Metadata**: 修正全庫 10+ 份筆記的 YAML Frontmatter 格式，確保從第一行開始。
+- **Atomization**: 將 Zotero 中的 RCW-CIM 研究精煉為獨立知識節點：
+    - [[張添烜 project/CIM/RCW-Mechanisms|RCW-CIM 架構與隱藏延遲]]
+    - [[張添烜 project/CIM/Nonlinear-Operator-Fusion|非線性運算算子融合]]
+- **Linking**: 完成「AI/LLM」與「CIM 加速器」專案間的雙向連結，特別是在 [[張添烜 project/CIM/Latency & Throughput|Latency 分析]] 中導入硬體解決方案。
+- **Index**: 重構 `index.md`，新增 AI 核心知識與 CIM 專案章節，提升導航效率。
+- **Cleanup**: 修正 `PEFT-QLoRA.md` 與 `Instruction-Tuning.md` 的標題冗餘與格式問題。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

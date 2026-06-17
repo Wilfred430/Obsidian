@@ -22,19 +22,19 @@ date: 2026-06-17
 
 ```mermaid
 graph TD
-    subgraph Floorplan [實體晶片佈局 (Physical Floorplan)]
+    subgraph Floorplan ["實體晶片佈局 (Physical Floorplan)"]
         direction BT
-        C[Block C] ---|在 A 上方| A[Block A <br> Root]
-        A ---|A 在 B 左側| B[Block B]
+        C["Block C"] ---|"在 A 上方"| A["Block A <br> Root"]
+        A ---|"A 在 B 左側"| B["Block B"]
     end
 
-    subgraph BTree [B*-Tree 內部資料結構]
-        NodeA((A))
-        NodeB((B))
-        NodeC((C))
+    subgraph BTree ["B*-Tree 內部資料結構"]
+        NodeA(("A"))
+        NodeB(("B"))
+        NodeC(("C"))
         
-        NodeA -- 左子樹<br>(右側相鄰) --> NodeB
-        NodeA -- 右子樹<br>(上方相鄰) --> NodeC
+        NodeA -->|"左子樹<br>(右側相鄰)"| NodeB
+        NodeA -->|"右子樹<br>(上方相鄰)"| NodeC
         
         style NodeA fill:#f9f,stroke:#333,stroke-width:2px
         style NodeB fill:#bbf,stroke:#333,stroke-width:2px

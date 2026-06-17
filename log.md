@@ -83,4 +83,13 @@
 - **Content**: 整合拓樸、幾何、Packing 流程與模擬退火操作的完整教學手冊與 Mermaid 概念圖。
 - **Update**: 於 [[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]] 新增演算法導航連結。
 
+## [2026-06-17] Ingest | ICCAD 2026 SA Optimizer 程式碼深度解析
+- **Source**: `ICCAD_code/` (Python Wrapper + C++ SA Engine)
+- **Output**: 產出四份結構化與圖表化 (Mermaid) 筆記：
+    - [[ICCAD_code/1_Data_Loader_and_Wrapper|1_Data_Loader_and_Wrapper]] (資料介接與 ML 預熱)
+    - [[ICCAD_code/2_SA_Optimizer_Engine|2_SA_Optimizer_Engine]] (核心退火算法與 B*-Tree)
+    - [[ICCAD_code/3_Cost_Function_and_Penalty|3_Cost_Function_and_Penalty]] (成本計算與數學約束)
+    - [[ICCAD_code/4_Packing_and_Evaluation|4_Packing_and_Evaluation]] (拓撲打包與座標推算)
+- **Insight**: 成功將複雜的 C++ B*-Tree 操作與 Simulated Annealing 機制轉化為 PM 視角的架構圖，並透過 LaTeX 提取了 Cost Function 與動態 Penalty 的核心公式，為專題報告提供強大火力支援。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

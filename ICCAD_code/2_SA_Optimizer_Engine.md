@@ -55,18 +55,18 @@ graph TD
 
 ```mermaid
 graph TD
-    subgraph Before_Swap [Swap 前 (A 與 D 交換)]
-        R1((Root)) --> A((A))
-        R1 --> B((B))
-        A --> C((C))
-        A --> D((D))
+    subgraph Before_Swap ["Swap 前 (A 與 D 交換)"]
+        R1(("Root")) --> A(("A"))
+        R1 --> B(("B"))
+        A --> C(("C"))
+        A --> D(("D"))
     end
     
-    subgraph After_Swap [Swap 後]
-        R2((Root)) --> D_new((D))
-        R2 --> B_new((B))
-        D_new --> C_new((C))
-        D_new --> A_new((A))
+    subgraph After_Swap ["Swap 後"]
+        R2(("Root")) --> D_new(("D"))
+        R2 --> B_new(("B"))
+        D_new --> C_new(("C"))
+        D_new --> A_new(("A"))
     end
     
     style A fill:#ffcccc,stroke:#f00
@@ -80,15 +80,15 @@ graph TD
 
 ```mermaid
 graph TD
-    subgraph Before_Move [Move 前 (將 C 移給 B 當左子樹)]
-        P((A)) -- 右子樹 --> C((C))
-        P -- 左子樹 --> B((B))
+    subgraph Before_Move ["Move 前 (將 C 移給 B 當左子樹)"]
+        P(("A")) -->|"右子樹"| C(("C"))
+        P -->|"左子樹"| B(("B"))
     end
     
-    subgraph After_Move [Move 後]
-        P2((A)) -- 右子樹 --> Null[Null]
-        P2 -- 左子樹 --> B2((B))
-        B2 -- 左子樹 --> C2((C))
+    subgraph After_Move ["Move 後"]
+        P2(("A")) -->|"右子樹"| Null["Null"]
+        P2 -->|"左子樹"| B2(("B"))
+        B2 -->|"左子樹"| C2(("C"))
     end
     
     style C fill:#fff3e0,stroke:#e65100

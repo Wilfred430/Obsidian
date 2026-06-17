@@ -14,32 +14,36 @@ date: 2026-06-17
 
 ```mermaid
 graph TD
-    subgraph Input [大會測資 (PyTorch Tensors)]
-        T1[Block Area]
-        T2[Constraints]
-        T3[Netlist B2B/P2B]
+    subgraph Input ["大會測資 (PyTorch Tensors)"]
+        T1["Block Area"]
+        T2["Constraints"]
+        T3["Netlist B2B/P2B"]
     end
 
-    subgraph Wrapper [Python Wrapper]
-        ML[ml/predict.py<br>Graph-Transformer Inference]
-        Write[寫入 case_NNN.txt<br>包含 BLOCKS, NETS]
-        Warm[附加 WARM_POSITIONS<br>初始座標猜測]
+    subgraph Wrapper ["Python Wrapper"]
+        ML["ml/predict.py<br>Graph-Transformer Inference"]
+        Write["寫入 case_NNN.txt<br>包含 BLOCKS, NETS"]
+        Warm["附加 WARM_POSITIONS<br>初始座標猜測"]
         
-        T1 & T2 & T3 --> Write
-        T1 & T2 & T3 -.送入預測.-> ML
-        ML -.吐出預測座標.-> Warm
+        T1 --> Write
+        T2 --> Write
+        T3 --> Write
+        T1 -.->|"送入預測"| ML
+        T2 -.->|"送入預測"| ML
+        T3 -.->|"送入預測"| ML
+        ML -.->|"吐出預測座標"| Warm
         Write --> Warm
     end
 
-    subgraph Cpp_Engine [C++ SA Optimizer]
-        SA[floorplanner 二進位執行檔<br>讀取 txt 進行退火優化]
-        Sol[輸出 case_NNN.sol]
+    subgraph Cpp_Engine ["C++ SA Optimizer"]
+        SA["floorplanner 二進位執行檔<br>讀取 txt 進行退火優化"]
+        Sol["輸出 case_NNN.sol"]
     end
     
     Warm --> SA
     SA --> Sol
     
-    Sol --> Parse[解析 sol 轉回 Tensor<br>回傳給大會框架]
+    Sol --> Parse["解析 sol 轉回 Tensor<br>回傳給大會框架"]
 
     style Input fill:#e8f5e9,stroke:#0277bd,stroke-width:2px
     style Wrapper fill:#fff3e0,stroke:#388e3c,stroke-width:2px

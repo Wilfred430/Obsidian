@@ -3,7 +3,7 @@ tags: [GenerativeAI, DeepLearning, ComputerVision, Diffusion]
 aliases: [DDPM, Denoising Diffusion Probabilistic Model, 去噪擴散概率模型]
 ---
 
-> 關聯網絡： [[生成式AI]] | [[Markov_Chain]] | [[Variational_Inference]] | [[U-Net]] | [[Langevin_Dynamics]]
+> 關聯網絡： [[AI/GenAI/GenAI-Overview|生成式AI]] | [[AI/Markov-Chain|Markov_Chain]] | [[AI/GenAI/Variational-Inference|Variational_Inference]] | [[AI/GenAI/UNet|U-Net]] | [[AI/GenAI/Langevin-Dynamics|Langevin_Dynamics]] | [[AI/GenAI/Diffusion-Model|Diffusion Model 總覽]]
 
 # 去噪擴散概率模型 (DDPM)
 

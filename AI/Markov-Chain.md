@@ -1,6 +1,6 @@
 ---
 tags: [StochasticProcesses, Math, Probability, MCMC]
-aliases: [馬可夫鏈, Markov Chain, Discrete-time Markov Chain, DTMC]
+aliases: [馬可夫鏈, Markov Chain, Discrete-time Markov Chain, DTMC, Markov_Chain]
 ---
 
 > 關聯網絡： [[Stochastic_Process]] | [[Probability_Theory]] | [[MCMC]] | [[Ergodic_Theory]] | [[Detailed_Balance]]

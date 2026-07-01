@@ -95,4 +95,9 @@ $$ p_\theta(x_{t-1} \vert x_t) = \mathcal{N}(x_{t-1}; \mu_\theta(x_t, t), \Sigma
 > 根據隨機過程與 Feller 定理（以及相關的 Langevin Dynamics 分析），唯有當**單步轉移的變異數（即時間步步長 $\beta_t$）趨近於無窮小（Infinitesimal）**時，正向擴散與逆向擴散的機率分佈族才會同構。也就是說，唯有在 $\beta_t \to 0$ 且步數 $T \to \infty$ 的極限條件下，真實的逆向分佈才會嚴格保持為高斯分佈。這是為何擴散模型通常需要極大的時間步數（如 $T=1000$）來確保每個微小轉移的穩定性與高斯假設的合理性。
 
 ---
-關聯節點：[[Diffusion_Model]] | [[Markov_Chain]] | [[Bayes_Theorem]] | [[Stochastic_Process]]
+關聯節點：[[AI/GenAI/Diffusion-Model|Diffusion_Model]] | [[AI/Markov-Chain|Markov_Chain]] | [[AI/GenAI/DDPM|DDPM 完整推導]]
+
+> [!info] 尚未建立的相關節點（暫不展開，屬於較外圍的機率論基礎，非本次 Diffusion/UNet 範圍）：`Bayes_Theorem`、`Stochastic_Process`、`Probability_Theory`、`MCMC`、`Ergodic_Theory`、`Detailed_Balance`。
+
+---
+**相關筆記**：[[AI/GenAI/DDPM|DDPM 完整數學推導]] · [[AI/GenAI/Diffusion-Model|Diffusion Model 總覽]] · [[AI/GenAI/Variational-Inference|變分推斷]] · [[AI/GenAI/Langevin-Dynamics|朗之萬動力學]] · [[AI/Markov-Chain|馬可夫鏈基礎]]

@@ -16,6 +16,7 @@ date: 2026-05-19
 
 ## 🧠 AI 核心領域
 - [[AI/Machine-Learning|🧠 機器學習總覽 (ML 樞紐頁)]]
+- [[AI/Transformer|🔷 Transformer 架構全解]]
 - [[AI/Attention|✨ 注意力機制]]
 - [[AI/Markov-Chain|🎲 馬可夫鏈 (SA 數學基礎)]]
 - [[AI/LLM/Instruction-Tuning|🛠️ 指令微調 (Instruction Tuning)]]

@@ -34,7 +34,8 @@ aliases: [Machine Learning, 機器學習, ML]
 
 ## 4. 本庫 AI 相關筆記導航
 
-- [[AI/Attention|注意力機制 (Attention)]]:Transformer 的核心,兩個 ICCAD ML 模型都建立在它之上。
+- [[AI/Transformer|Transformer 架構全解]]:本庫兩個 ICCAD 模型的共同基礎架構,含 Encoder-only/Decoder-only/Encoder-Decoder 三大家族對照。
+- [[AI/Attention|注意力機制 (Attention)]]:Transformer 的核心組件——QKV、Multi-Head 的機制細節。
 - [[AI/Markov-Chain|馬可夫鏈]]:MCMC 與 [[ICCAD_code/2_SA_Optimizer_Engine|模擬退火]] 的數學基礎。
 - [[AI/LLM/Instruction-Tuning|指令微調]] · [[AI/LLM/PEFT-QLoRA|參數高效微調]]:大型語言模型的訓練技術。
 - [[AI/GenAI/DDPM|擴散模型 DDPM]]:生成式模型的另一典範。

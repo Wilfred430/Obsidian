@@ -89,3 +89,6 @@ graph LR
 
     style Heads fill:#e1f5fe,stroke:#01579b
 ```
+
+---
+**相關筆記**：[[AI/Transformer|Transformer 架構全解（Attention 只是其中一塊積木）]] · [[AI/Machine-Learning|機器學習總覽]]

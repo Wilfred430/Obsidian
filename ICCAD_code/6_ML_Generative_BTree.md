@@ -21,6 +21,8 @@ date: 2026-07-01
 
 ## 6.2 模型架構：三個 Pointer Network
 
+> [!info] 這是 [[AI/Transformer|Transformer]] 的 **Encoder-Decoder** 家族變體：Context Encoder（雙向，理解整個 case）+ Causal Decoder（自迴歸生成，跟 GPT 的 decoder 同一類），只是把最後輸出層從「詞彙表 softmax」換成三個 Pointer Network——因為要生成的是「指向哪個已知節點」而不是「哪個詞彙」。
+
 ```mermaid
 graph TD
     A["Block 特徵 [N,16] + Terminal [T,2]"] --> B["Context Encoder<br>(沿用第 5 篇的架構)"]

@@ -127,4 +127,11 @@
 - **Update**: `index.md` 新增「基礎概念 (Fundamentals)」章節,並在 AI 領域補上 ML 樞紐頁與馬可夫鏈連結。
 - **Insight**: 全庫斷鏈盤點後,ICCAD + Fundamentals 範圍內已無「點了空白」的死連結。往後維護原則:筆記只解說架構,程式碼永遠只留在 `collaborate/` git repo,不再複製進 vault。
 
+---
+## [2026-07-01] Ingest | Transformer 架構全解（回應 user 對 Transformer 的興趣）
+- **Source**: 使用者對 Transformer 表達興趣；結合《Attention Is All You Need》標準架構與本庫兩個 ICCAD 模型的實際原始碼（`ml/model.py`、`ml/model_tree.py`）。
+- **Output**: [[AI/Transformer|Transformer 架構全解]]——涵蓋 Positional Encoding、Encoder/Decoder 堆疊、Masked Self-Attention、Cross-Attention、Add&Norm、FFN，以及 Encoder-only / Decoder-only / Encoder-Decoder 三大家族對照表。
+- **Insight**: 兩個 ICCAD 模型剛好各代表一種家族——[[ICCAD_code/5_ML_Coordinate_Regression|`model.py`]] 是 Encoder-only（同 BERT），[[ICCAD_code/6_ML_Generative_BTree|`model_tree.py`]] 是 Encoder-Decoder 變體（把輸出層從詞彙表換成 Pointer Network）。用真實跑得動的程式碼具體對照教科書架構，比純理論筆記更扎實。
+- **Linking**: 雙向連結 [[AI/Attention|Attention]]（细節互補，不重複 QKV 公式）、[[AI/Machine-Learning|Machine-Learning 樞紐頁]]、`ICCAD_code/5` 與 `6` 的架構段落，並更新 `index.md`。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

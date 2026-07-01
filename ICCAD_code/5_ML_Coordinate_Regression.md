@@ -10,6 +10,8 @@ date: 2026-07-01
 
 ## 5.1 架構
 
+> [!info] 這是 [[AI/Transformer|Transformer]] 的 **Encoder-only** 家族（跟 BERT 同一類）：只有雙向自注意力，沒有 Decoder、沒有自迴歸生成，直接對每個位置的輸出做回歸。
+
 ```mermaid
 graph TD
     A["Block Features [N, 16]"] --> C["Block Encoder<br>Linear-GELU-Linear"]

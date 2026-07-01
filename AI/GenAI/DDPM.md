@@ -96,3 +96,6 @@ $$ L_{simple}(\theta) = \mathbb{E}_{t, x_0, \epsilon} \left[ \left\| \epsilon - 
 
 > [!NOTE] 損失函數的學術意涵
 > $L_{simple}$ 放棄了 VLB 中各個時間步的嚴格權重係數 (即忽略了 $\frac{\beta_t^2}{2\sigma_t^2 \alpha_t (1-\bar{\alpha}_t)}$)，這等同於在較大的 $t$ (雜訊主導期) 給予較小的權重，這促使網絡將注意力集中在較小 $t$ 時的高頻特徵去噪上。這種數學上的「不嚴謹」反而賦予了模型生成極高質量影像的能力。
+
+---
+**相關筆記**：[[AI/GenAI/Markov-Chain-DDPM|馬可夫鏈與 DDPM 的數學交織（本篇的證明細節）]] · [[AI/GenAI/UNet|U-Net（$\epsilon_\theta$ 的骨幹網路）]] · [[AI/GenAI/Variational-Inference|變分推斷（VLB 的來源）]] · [[AI/GenAI/Diffusion-Model|Diffusion Model 總覽]] · [[AI/GenAI/GenAI-Overview|生成式 AI 總覽]]

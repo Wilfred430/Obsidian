@@ -22,6 +22,15 @@ date: 2026-05-19
 - [[AI/LLM/Instruction-Tuning|🛠️ 指令微調 (Instruction Tuning)]]
 - [[AI/LLM/PEFT-QLoRA|📉 參數高效微調 (PEFT/QLoRA)]]
 
+## 🎨 生成式 AI (Generative AI)
+- [[AI/GenAI/GenAI-Overview|🎨 生成式 AI 總覽 (樞紐頁)]]
+- [[AI/GenAI/Diffusion-Model|🌊 Diffusion Model 總覽（家族地圖 + U-Net vs Transformer 骨幹）]]
+- [[AI/GenAI/DDPM|📐 DDPM 完整數學推導]]
+- [[AI/GenAI/Markov-Chain-DDPM|🔗 馬可夫鏈與 DDPM 的數學交織]]
+- [[AI/GenAI/UNet|🏗️ U-Net 架構]]
+- [[AI/GenAI/Variational-Inference|📊 變分推斷 (ELBO)]]
+- [[AI/GenAI/Langevin-Dynamics|🎲 朗之萬動力學 (Score-based 擴散)]]
+
 ## 🧱 基礎概念 (Fundamentals)
 - [[Fundamentals/Optimization-Theory|📐 最佳化理論與組合爆炸]]：ICCAD SA/ML 路線的理論根基。
 - [[Fundamentals/Big-endian|🔢 位元組順序 (Endianness)]]

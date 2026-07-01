@@ -134,4 +134,18 @@
 - **Insight**: 兩個 ICCAD 模型剛好各代表一種家族——[[ICCAD_code/5_ML_Coordinate_Regression|`model.py`]] 是 Encoder-only（同 BERT），[[ICCAD_code/6_ML_Generative_BTree|`model_tree.py`]] 是 Encoder-Decoder 變體（把輸出層從詞彙表換成 Pointer Network）。用真實跑得動的程式碼具體對照教科書架構，比純理論筆記更扎實。
 - **Linking**: 雙向連結 [[AI/Attention|Attention]]（细節互補，不重複 QKV 公式）、[[AI/Machine-Learning|Machine-Learning 樞紐頁]]、`ICCAD_code/5` 與 `6` 的架構段落，並更新 `index.md`。
 
+---
+## [2026-07-01] Ingest | Diffusion Model / U-Net 家族補完
+- **Source**: 使用者對 UNet、Diffusion Model 表達興趣；既有 `AI/GenAI/DDPM.md` 與 `Markov-Chain-DDPM.md` 兩篇硬核數學筆記的「關聯網絡」全部是斷鏈（`生成式AI`/`Variational_Inference`/`U-Net`/`Langevin_Dynamics`/`Diffusion_Model` 均不存在）。
+- **Output（5 篇新筆記）**：
+    - [[AI/GenAI/UNet|UNet]]：架構圖解、skip connection 的必要性、時間步 FiLM 注入、現代 diffusion U-Net 混入 Attention block。
+    - [[AI/GenAI/Diffusion-Model|Diffusion-Model]]：DDPM/DDIM/Score-SDE/Latent Diffusion 家族地圖 + **U-Net vs Transformer(DiT) 骨幹比較表**——這是 DDPM 與 [[AI/Transformer|Transformer]] 關係的正式落地處。
+    - [[AI/GenAI/Variational-Inference|Variational-Inference]]：ELBO 推導，補上 DDPM 數學裡跳過的一步。
+    - [[AI/GenAI/Langevin-Dynamics|Langevin-Dynamics]]：證明 DDPM 的雜訊預測本質是離散化朗之萬採樣，串起 Score-based 觀點。
+    - [[AI/GenAI/GenAI-Overview|GenAI-Overview]]：`AI/GenAI/` 資料夾樞紐頁，修復 `生成式AI` 斷鏈。
+- **Fix**: `DDPM.md`／`Markov-Chain-DDPM.md` 開頭與結尾的斷鏈全部改指向新筆記；`AI/Markov-Chain.md` 補 `Markov_Chain` alias。
+- **Deferred**: `Markov-Chain.md` 自身較外圍的機率論斷鏈（`Probability_Theory`/`MCMC`/`Ergodic_Theory`/`Detailed_Balance`/`Bayes_Theorem`/`Stochastic_Process`）已在 `Markov-Chain-DDPM.md` 內用 callout 明確標註為「尚未建立」，非本次範圍。
+- **Update**: `index.md` 新增「生成式 AI」章節，連到全部 7 篇 GenAI 筆記。
+- **Insight**: DDPM（訓練框架）與 Transformer（骨幹架構）本是獨立技術，DiT 證明兩者可自由組合——這與本庫 [[ICCAD_code/6_ML_Generative_BTree|生成式 B*-tree 模型]]「把 Transformer 當萬用序列骨幹」是同一個故事的兩個案例。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

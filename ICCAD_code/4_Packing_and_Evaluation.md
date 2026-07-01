@@ -33,6 +33,26 @@ Packer 使用**深度優先搜尋 (DFS)** 來走訪 B*-Tree。
 但是，因為有上述的「強制覆寫 (Anchored)」機制，自然長出來的軟模組有可能撞上預先擺好的硬模組。
 - 在每次 Packing 結束時，Packer 會快速檢查是否有此類重疊，並回傳 `overlap_free = false` 給 `cost.hpp`，從而在 SA 迴圈中施加巨大的重疊懲罰 ($W_{overlap}=5000$)。
 
+## 4.4 打包後的四道修復通道 (Post-Pack Repair Passes)
+
+> **報告重點**：Contour Line 打包出來的結果雖然合法（不重疊），但**很醜**——會有大量破碎空白、長條形 bbox、群組被打散、邊界模組被拉離邊界。`packer.cpp` 在每次打包後，固定跑以下四道確定性 (deterministic) 修復，且**不改變拓樸，只調整實現座標**，所以 SA 的「拓樸不變性」完全不受影響：
+
+```mermaid
+graph LR
+    A["Contour DFS<br>打包"] --> B["① compact_left_down<br>盡量往左下擠壓"]
+    B --> C["② bbox_balance_pass<br>修長條狀 bbox"]
+    C --> D["③ compact_left_down<br>(再壓一次)"]
+    D --> E["④ holes_fill_pass<br>補 L 形死空白"]
+    E --> F["⑤ compact_left_down<br>(再壓一次)"]
+    F --> G["⑥ grouping_repair_pass<br>群組黏回去"]
+    G --> H["⑦ boundary_repair_pass<br>邊界模組貼回邊"]
+```
+
+1. **`compact_left_down`**：把每個非錨定模組盡量往左、往下滑到不會重疊為止，交替沿 x/y 軸跑到不動為止（最多 12 輪）。單純的 Contour DFS 打包會留下大量破碎空白，這一步負責壓實。
+2. **`bbox_balance_pass`**：Contour Line 打包偏好長出「右深左淺」的長條狀 bbox（尤其樹的右分支很深時）。這一步找出撐開長邊的那個「尖刺」模組，嘗試把它挪到短邊的空位，把 bbox 往目標正方形 ($\sqrt{\text{baseline\_area}}$) 拉回來。
+3. **`holes_fill_pass`**：`compact_left_down` 只會沿單一軸壓，遇到「往左會撞、往下也會撞，但往左下角斜插得進去」的 L 形死空白就束手無策。這一步窮舉其他模組的角點座標當候選位置，挑一個能讓 $\max(x+w, y+h)$ 最小的位置塞進去。
+4. **`grouping_repair_pass` / `boundary_repair_pass`**：前面三道壓縮會把 Grouping 群組打散、把該貼邊界的模組拉離邊界。這兩道在最後把它們**確定性地**修回去——不是靠隨機的 SA move 碰運氣，而是每次打包都強制檢查修復，大幅降低 $V_{group}$ / $V_{boundary}$，直接壓低 [[ICCAD_code/3_Cost_Function_and_Penalty|contest cost 的 $\exp(2V_{rel})$ 項]]。
+
 ---
 
 # 🚀 總結：EDA 報告的反擊戰策略 (PM 視角)

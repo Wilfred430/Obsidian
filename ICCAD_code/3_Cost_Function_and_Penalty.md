@@ -58,3 +58,20 @@ $$ \text{Penalty}_{soft} = \exp\left( 2 \times \frac{V_g + V_m + V_b}{N_{soft}} 
 在實體設計中，晶片長寬比 (Aspect Ratio) 也是痛點。雖然 v9 放寬了硬性 AR 限制，但我們可以透過 `w_outline` 權重介入：
 $$ \text{Cost}_{outline} = W_{outline} \times \left| \log\left( \frac{\text{bbox\_w}}{\text{bbox\_h}} \right) \right| $$
 當寬高越接近（正方形），$\log(1) = 0$，懲罰越小。但通常我們會讓 **外部腳位 ($HPWL_{ext}$)** 自動引導 SA 長出最適合外圍腳位的形狀，而非強制壓成正方形。
+
+## 3.4 官方 Contest Cost：跟 SA Cost 是兩個不同的函數
+
+> [!danger] **不要搞混**
+> 上面 3.1–3.3 講的 $W_a, W_h, W_{group}=500, W_{overlap}=5000$ 這些權重，都只是**餵給 SA 看的內部連續函數** (`sa_cost`)，是我們自己調的，數值大小沒有比賽意義。**真正拿去排名的公式**是下面這個固定形式 (`contest_cost`)，來自 v9 規格書，任何人都不能改：
+
+$$ \text{Cost} = \big(1 + 0.5 \cdot (\text{HPWL\_gap} + \text{Area\_gap})\big) \times \exp(2 \cdot V_{rel}) \times \max(0.7,\ RT^{0.3}) $$
+
+若不可行 (infeasible)，直接判 $\text{Cost} = 10$（不看其他項）。
+
+- **HPWL_gap / Area_gap**：這是**有號的相對差距** $(\text{實際} - \text{baseline}) / \text{baseline}$。負值代表比 baseline 好。
+- **$V_{rel} = \min\big(1,\ (V_{group}+V_{mib}+V_{boundary}) / N_{soft}\big)$**：所有軟約束違規的「比例」，被限制在 $[0,1]$，所以 $\exp(2 V_{rel}) \in [1, e^2{\approx}7.39]$——最慘也就是 7.39 倍，不會無限爆炸（跟 SA 內部那個 $W_{group}=500$ 的做法完全不同邏輯）。
+- **$RT$ (RuntimeFactor)**：跑得快有獎勵，但封頂在 0.7（最多省 30%）；跑得慢的懲罰**沒有上限**。
+
+### e^n 總分加權：大 case 才是真正戰場
+
+比賽總分不是各 case 平均，而是 $\sum_n e^n \times \text{Cost}_n$，$n$ 從 21 到 120。一個 120-block 的 case 權重是 21-block case 的 $e^{99} \approx 8\times10^{42}$ 倍。**這代表：小 case 分數再漂亮都無關緊要，整場比賽事實上只由 n≈90–120 的少數幾個 case 決定。** 詳見 [[ICCAD_code/8_Winning_Strategy_and_Roadmap|8_Winning_Strategy_and_Roadmap]] 的搜尋空間分析。

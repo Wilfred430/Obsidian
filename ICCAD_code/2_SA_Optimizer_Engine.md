@@ -97,7 +97,12 @@ graph TD
 
 ### D. 其他重要 Move (論文特有)
 - **AspectRatio (AR - M4)**：針對 Soft Block 改變長寬比，但在 `MoveProb` 中有 `sa_ar_clamp` 限制，避免形狀變得太細長 (如 100:1) 導致排線困難。
+- **MibSync (M5)**：同一 MIB (Multi-Instantiated Block) 群組的所有成員必須共享同一組 $(w, h)$。這個 Move **必須原子性地**同時更新群組內全部成員，再統一 pack、統一檢查——絕不能只改一半就打包，否則會出現「合法但矛盾」的中間態。
 - **FixBoundary (M6)**：直接將違反邊界限制的 Block 強制移往對應方向，屬於 Deterministic 的修復手段。
+- **FixGrouping (M7)**：將未緊鄰同群組夥伴的 Block 強制搬到群組旁邊，修復 Grouping 違規。近期改為**雙向 (bidirectional)** 搜尋（可以往左貼、也可以往右貼），修正了舊版「只往右貼」導致的 right-spine 偏斜問題（樹會不自然地一直往右長）。
+
+> [!danger] **`always_accept` 不變量**
+> M6 (FixBoundary) 與 M7 (FixGrouping) 是僅有的兩個 `always_accept = true` 的 Move——它們**繞過 Metropolis 準則**，只要能修復違規就無條件接受，不看 $\Delta E$。這兩個 Move 的存在意義是「專職修復軟約束」，不是「探索解空間」。**絕對不能再增加更多 always-accept 的 Move**，否則會破壞 SA 的混合性 (mixing) 保證，讓退火失去統計意義上的收斂性。
 
 ## 2.3 降溫計畫 (Cooling Schedule)
 

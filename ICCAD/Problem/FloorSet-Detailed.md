@@ -9,7 +9,7 @@ Cross_Domain: "Machine Learning, Optimization Theory"
 
 # 📚 ICCAD 2026 Problem C：FloorSet 挑戰賽完整規格
 
-> [!info] 相關領域：[[Machine Learning]], [[Optimization Theory]]
+> [!info] 相關領域：[[AI/Machine-Learning|Machine Learning]], [[Fundamentals/Optimization-Theory|Optimization Theory]]
 
 > [!info] 競賽核心
 > 這是一場關於「算力與數據博弈」的競賽，旨在解決傳統 EDA 演算法在現代 SoC 複雜約束下的效率瓶頸。

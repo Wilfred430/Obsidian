@@ -43,4 +43,4 @@
 
 ---
 **相關知識節點**：
-- [[ICCAD/Problem Overview|ICCAD 問題 C：Data-Driven SoC Floorplanning]]
+- [[ICCAD/ICCAD-Dashboard|ICCAD 問題 C：Data-Driven SoC Floorplanning 儀表板]]

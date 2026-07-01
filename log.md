@@ -108,4 +108,23 @@
 - **Update**: [[ICCAD/ICCAD-Dashboard|ICCAD Dashboard]] 新增「現況」callout 與「實作深潛」章節，連到全部 8 篇筆記。
 - **Insight**: `tree_sol` 這個大會資料集裡的欄位被舊版 loader 標記 unused 直接丟棄，解密後發現是完整的 B*-tree 邊表——這是本次同步中最關鍵的一個發現，直接催生了整個生成式拓樸模型路線。
 
+---
+## [2026-07-01] Refactor | 全庫歸納整理：消滅散落根目錄檔與斷鏈
+- **Action（清理舊 code 副本）**：刪除 `ICCAD_code/` 下過時的程式碼與文件副本（`include/`、`ml/`、`src/`、`my_optimizer*.py`、`README_iccad.md`、`SA_TUNING_GUIDE.md`、`START_HERE.md`、`SUBMISSION.md`），這些原是給 Gemini CLI 寫筆記用的暫存,現已無用。`ICCAD_code/` 現在只保留 8 篇原子概念筆記。
+- **Action（歸納根目錄散落檔案,落實「所有檔案都在 folder 下」）**：
+    - 新建 `Fundamentals/` 資料夾收納通用 CS/理論概念。
+    - `Big-endian.md`（空）→ `Fundamentals/Big-endian.md`,補寫大小端完整知識,設 `Little-endian` alias（修復 DCS 的 `[[Little-endian]]` 斷鏈）。
+    - `NVMe_SSD.md`（空）→ `Fundamentals/NVMe_SSD.md`,補寫 NVMe/SSD 完整知識。
+    - `Markov_Chain.md`（空,根目錄）→ 刪除,因與已填實的 [[AI/Markov-Chain|AI/Markov-Chain.md]] 重複。
+    - 根目錄現在只剩 `index.md` / `log.md` / `README.md` 三個基礎設施檔。
+- **Output（補寫斷鏈目標,消滅「點進去空白」）**：
+    - [[Fundamentals/Optimization-Theory|Optimization-Theory]]：組合最佳化、NP-hard、Metaheuristics、局部最佳陷阱——ICCAD SA/ML 路線的理論根基。
+    - [[AI/Machine-Learning|Machine-Learning]]：ML 樞紐頁 (MOC),串起判別式 vs 生成式、三大學習範式與全庫 AI 筆記。
+- **Fix（斷鏈修復）**：
+    - `FloorSet-Detailed.md` 的 `[[Machine Learning]]` / `[[Optimization Theory]]` → 指向新筆記。
+    - `EDA-Paradigm-Shift.md` 修正壞掉的四欄表格,移除 `[[FloorSet 挑戰賽]]` 斷鏈。
+    - `Outline-Characteristics.md` 的 `[[ICCAD/Problem Overview]]`（已刪除的舊筆記）→ 重新指向 [[ICCAD/ICCAD-Dashboard|Dashboard]]。
+- **Update**: `index.md` 新增「基礎概念 (Fundamentals)」章節,並在 AI 領域補上 ML 樞紐頁與馬可夫鏈連結。
+- **Insight**: 全庫斷鏈盤點後,ICCAD + Fundamentals 範圍內已無「點了空白」的死連結。往後維護原則:筆記只解說架構,程式碼永遠只留在 `collaborate/` git repo,不再複製進 vault。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

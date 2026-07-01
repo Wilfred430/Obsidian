@@ -15,9 +15,16 @@ date: 2026-05-19
 - [[Sliver Migration/教授回答|🧪 銀遷移研究]]：行為模型與模擬紀錄。
 
 ## 🧠 AI 核心領域
+- [[AI/Machine-Learning|🧠 機器學習總覽 (ML 樞紐頁)]]
 - [[AI/Attention|✨ 注意力機制]]
+- [[AI/Markov-Chain|🎲 馬可夫鏈 (SA 數學基礎)]]
 - [[AI/LLM/Instruction-Tuning|🛠️ 指令微調 (Instruction Tuning)]]
 - [[AI/LLM/PEFT-QLoRA|📉 參數高效微調 (PEFT/QLoRA)]]
+
+## 🧱 基礎概念 (Fundamentals)
+- [[Fundamentals/Optimization-Theory|📐 最佳化理論與組合爆炸]]：ICCAD SA/ML 路線的理論根基。
+- [[Fundamentals/Big-endian|🔢 位元組順序 (Endianness)]]
+- [[Fundamentals/NVMe_SSD|💾 NVMe SSD 固態硬碟]]
 
 ## 🚀 DCS 數位控制系統 (TMS320C6000)
 - [[DCS/TMS320C6000/核心架構與Pipeline|🏗️ 核心架構與中斷機制]]

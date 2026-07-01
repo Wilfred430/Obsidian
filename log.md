@@ -92,4 +92,20 @@
     - [[ICCAD_code/4_Packing_and_Evaluation|4_Packing_and_Evaluation]] (拓撲打包與座標推算)
 - **Insight**: 成功將複雜的 C++ B*-Tree 操作與 Simulated Annealing 機制轉化為 PM 視角的架構圖，並透過 LaTeX 提取了 Cost Function 與動態 Penalty 的核心公式，為專題報告提供強大火力支援。
 
+---
+## [2026-07-01] Refactor + Ingest | ICCAD 實作筆記同步至 Beta 現況 + 生成式模型記錄
+- **Source**: `collaborate/` repo 現況（Claude Code 讀取 `src/packer.cpp`、`ml/*.py`、`WINNING_STRATEGY.md`、CLAUDE.md 等）。
+- **Action（更新既有筆記,補上 6 週的落差）**：
+    - [[ICCAD_code/2_SA_Optimizer_Engine|2_SA_Optimizer_Engine]]：補上 M5 (MibSync)、M7 (FixGrouping，含雙向修正)、`always_accept` 不變量說明。
+    - [[ICCAD_code/3_Cost_Function_and_Penalty|3_Cost_Function_and_Penalty]]：新增 3.4 節，釐清 SA 內部 cost 與**官方 contest cost 公式**（含 $e^n$ 總分加權）的差異——原筆記只講前者，容易被誤讀成兩者相同。
+    - [[ICCAD_code/4_Packing_and_Evaluation|4_Packing_and_Evaluation]]：新增 4.4 節，補上打包後的四道確定性修復通道（`compact_left_down`/`bbox_balance_pass`/`holes_fill_pass`/`grouping_repair`/`boundary_repair`），原筆記完全沒提及。
+- **Output（新增四篇原子筆記）**：
+    - [[ICCAD_code/5_ML_Coordinate_Regression|5_ML_Coordinate_Regression]]：座標回歸模型架構 + **Mode Collapse 診斷**（多峰解被 MSE 平均成不合法解）。
+    - [[ICCAD_code/6_ML_Generative_BTree|6_ML_Generative_BTree]]：`tree_sol` schema 解密（比對 `packer.cpp` 確認 direction bit 語義）、三個 Pointer Network 的生成式模型架構、150k 筆 GPU 訓練結果（`val_ptr_acc` 0.874）。
+    - [[ICCAD_code/7_Electrostatic_Placer|7_Electrostatic_Placer]]：電靜力法（ePlace 典範），目前分數最佳（Total 2.966）。
+    - [[ICCAD_code/8_Winning_Strategy_and_Roadmap|8_Winning_Strategy_and_Roadmap]]：三個關鍵診斷（$e^n$ 加權/搜尋空間/Mode Collapse）+ 四階段生成式管線 + 現況時間軸。
+- **Cleanup**：刪除 `ICCAD_code/` 下過時的程式碼副本（`include/`、`ml/*.py`、`src/*.o`、`my_optimizer*.py` 等，含當初複製時一併帶進來的 `*Zone.Identifier` 垃圾檔）——這些檔案已與 repo 現況脫節超過一個月。**往後原則**：筆記只解說架構,不再複製程式碼進 vault,程式碼永遠只有 git repo 一份。
+- **Update**: [[ICCAD/ICCAD-Dashboard|ICCAD Dashboard]] 新增「現況」callout 與「實作深潛」章節，連到全部 8 篇筆記。
+- **Insight**: `tree_sol` 這個大會資料集裡的欄位被舊版 loader 標記 unused 直接丟棄，解密後發現是完整的 B*-tree 邊表——這是本次同步中最關鍵的一個發現，直接催生了整個生成式拓樸模型路線。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

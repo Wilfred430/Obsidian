@@ -56,8 +56,16 @@ graph TD
 
 | 規模 | 硬體 | 結果 |
 |---|---|---|
-| 3000 筆 × 3 epoch | CPU | `val_ptr_acc` 0.682→0.815；驗證集 case（21 blocks）採樣 8 個拓樸全部 feasible，最佳 Cost 遠高於 1（訓練量太小，符合預期） |
-| 150,000 筆 × 3 epoch | GPU (RTX 5060) | 進行中 |
+| 3,000 筆 × 3 epoch | CPU | `val_ptr_acc` 0.682→0.815 |
+| **150,000 筆 × 3 epoch** | **GPU (RTX 5060 Laptop)** | `val_ptr_acc` **0.860→0.874**、`val_block_acc` 0.253→0.281（模型 679 萬參數，訓練約 87 分鐘） |
+
+驗證集 case（config_21，21 blocks，**真正 blind**——這個 case 沒有 `tree_sol`）採樣 16 個拓樸：**全部 feasible（無重疊）**，最佳一個 `area_gap=+73%`、`hpwl_gap=+175%`、`V_rel=0.435`、**Cost=5.35**。
+
+> [!info] **怎麼解讀這個 Cost**
+> Parent-pointer 準確率 87.4% 已經相當不錯（模型確實學到了拓樸結構），但 Cost 5.35 離「贏過 baseline」（Cost < 1）還很遠。原因有三，且都是已知、可解的：
+> 1. Soft Block 尺寸是佔位用正方形，不是真正優化過的長寬比。
+> 2. `pack_tree.py` 沒有 [[ICCAD_code/4_Packing_and_Evaluation|`bbox_balance_pass`/`holes_fill_pass`/`grouping_repair`/`boundary_repair`]]，$V_{rel}=0.435$ 主要來自這裡。
+> 3. 目前只有監督式預訓練（模仿 `tree_sol`），還沒進入 [[ICCAD_code/8_Winning_Strategy_and_Roadmap|Stage 1 獎勵微調]]——模仿的示範本身就不是最優解。
 
 **已知限制**：soft Block 尺寸目前是佔位用的正方形 $w=h=\sqrt{area}$（模型只管拓樸不管長寬比），是造成 Cost 偏高的主因之一——下一步考慮接 [[ICCAD_code/5_ML_Coordinate_Regression|第 5 篇]]的 `dim_head` 來補長寬。
 

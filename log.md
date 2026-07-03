@@ -148,4 +148,27 @@
 - **Update**: `index.md` 新增「生成式 AI」章節，連到全部 7 篇 GenAI 筆記。
 - **Insight**: DDPM（訓練框架）與 Transformer（骨幹架構）本是獨立技術，DiT 證明兩者可自由組合——這與本庫 [[ICCAD_code/6_ML_Generative_BTree|生成式 B*-tree 模型]]「把 Transformer 當萬用序列骨幹」是同一個故事的兩個案例。
 
+---
+## [2026-07-01] Ingest + Refactor | 補零基礎新手層 + 建立閱讀動線
+- **Source**: 使用者反映「對這專案還不太熟」，並詢問既有筆記是否有助理解。診斷：
+  `ICCAD_code/1-8`、`ICCAD/Problem/FloorSet-Summary`/`Detailed` 全部假設讀者已懂
+  模組/網表/畫布/B*-tree 等基礎詞彙，直接切入細節，沒有「從零開始」的鋪陳層。
+- **Output（2 篇新基礎筆記）**：
+    - [[Fundamentals/VLSI-Floorplanning-101|VLSI-Floorplanning-101]]：真正的
+      零基礎起點——晶片/模組/網表用城市/建築物比喻鋪陳，五種約束用生活比喻
+      對照（冰箱/插座/一家人/雙胞胎/靠牆書架），B*-tree 用疊箱子比喻建立
+      直覺，最後銜接到 Cost 評分與本庫三條路線現況。
+    - [[Fundamentals/ICCAD-Glossary|ICCAD-Glossary]]：速查詞彙表，六大類
+      （基本物件/約束/表示法演算法/評分公式/ML 相關）近 30 個術語，每個一句
+      白話解釋 + 連到深入筆記，供讀技術筆記卡住時查閱。
+- **Update**: [[ICCAD/ICCAD-Dashboard|ICCAD Dashboard]] 新增「🔰新手從這裡開始」
+  callout，給出六步閱讀動線（PDF → 101 → 詞彙表 → FloorSet 規格 → 實作 1-8
+  → 演算法/AI 深入）；`index.md` 的「基礎概念」章節同步補上兩篇新連結；
+  [[ICCAD_code/1_Data_Loader_and_Wrapper|1_Data_Loader_and_Wrapper]] 與
+  [[ICCAD/Problem/FloorSet-Summary|FloorSet-Summary]]（兩個系列的入口筆記）
+  頂端各加一句新手提示，確保不是從 Dashboard 進來的讀者也能被導回正確順序。
+- **Insight**: 「參考索引」式的知識庫組織（按主題分類）跟「新手引導」式組織
+  （線性閱讀動線）是兩種不同需求，本庫原本只服務前者；本次新增的是後者，
+  兩者並存而非取代——熟悉專案後仍應以 Dashboard 的主題分類快速查找。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

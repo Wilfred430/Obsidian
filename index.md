@@ -32,6 +32,8 @@ date: 2026-05-19
 - [[AI/GenAI/Langevin-Dynamics|🎲 朗之萬動力學 (Score-based 擴散)]]
 
 ## 🧱 基礎概念 (Fundamentals)
+- [[Fundamentals/VLSI-Floorplanning-101|🔰 VLSI Floorplanning 入門（零基礎起點）]]
+- [[Fundamentals/ICCAD-Glossary|📖 ICCAD 專案速查詞彙表]]
 - [[Fundamentals/Optimization-Theory|📐 最佳化理論與組合爆炸]]：ICCAD SA/ML 路線的理論根基。
 - [[Fundamentals/Big-endian|🔢 位元組順序 (Endianness)]]
 - [[Fundamentals/NVMe_SSD|💾 NVMe SSD 固態硬碟]]

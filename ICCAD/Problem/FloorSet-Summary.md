@@ -8,6 +8,8 @@ Confidence: 5
 
 # ⚡ ICCAD 2026 FloorSet：一、二、三 框架 (口訣版)
 
+> [!info] 🔰 **完全沒背景？** 先讀 [[Fundamentals/VLSI-Floorplanning-101|VLSI Floorplanning 入門]]，這篇假設你已經懂什麼是模組/網表/硬約束軟約束。
+
 > [!info] 背景知識：[[../EDA-Paradigm-Shift|EDA 範式轉移 (從傳統規則到 AI 驅動)]]
 
 ## 1. 一個核心目標

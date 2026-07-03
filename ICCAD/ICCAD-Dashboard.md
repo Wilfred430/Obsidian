@@ -15,6 +15,15 @@ date: 2026-07-01
 > [!success] **現況（2026-07-01）**
 > Alpha test 已過，進入 Beta→Final 衝刺。三條路線並存：[[ICCAD_code/2_SA_Optimizer_Engine|B*-tree+SA]]（主力，穩定）、[[ICCAD_code/6_ML_Generative_BTree|生成式拓樸模型]]（新，GPU 訓練中，`val_ptr_acc` 87%）、[[ICCAD_code/7_Electrostatic_Placer|電靜力法]]（**目前分數最佳** Total 2.966）。完整策略見 [[ICCAD_code/8_Winning_Strategy_and_Roadmap|奪冠策略總覽]]。
 
+> [!abstract] **🔰 新手從這裡開始（零基礎閱讀動線）**
+> 這個 vault 的其他筆記大多假設你已經懂晶片設計基礎——如果不是，照下面順序讀，不要跳著看：
+> 1. **大局觀**：`collaborate/新手入門_專案總覽.pdf`（生活比喻版簡報，一次掌握全貌，適合印出來看）
+> 2. **建立基礎詞彙**：[[Fundamentals/VLSI-Floorplanning-101|VLSI Floorplanning 入門]] —— 什麼是晶片、什麼是模組/網表、為什麼難、B*-tree 的直覺
+> 3. **卡住就查**：[[Fundamentals/ICCAD-Glossary|速查詞彙表]] —— 讀後面的技術筆記遇到看不懂的詞，回來這裡查一句話解釋
+> 4. **比賽規則**：[[ICCAD/Problem/FloorSet-Summary|FloorSet 快速複習]] →（想看細節再讀）[[ICCAD/Problem/FloorSet-Detailed|FloorSet 規格詳解]]
+> 5. **實作深潛，照 1→8 編號順序讀**（見下方「實作深潛」區塊）——這個順序本身就是設計過的：資料怎麼進來 → SA 怎麼搜 → 怎麼打分 → 怎麼拼出座標 → 舊 ML 為什麼失敗 → 新 ML 怎麼做 → 電靜力法 → 最後總覽策略
+> 6. **想深入某個演算法/理論**：從技術筆記裡的連結點出去（[[ICCAD/Algorithms/B-Star-Tree|B*-tree]]、[[AI/Transformer|Transformer]]、[[Fundamentals/Optimization-Theory|最佳化理論]] 等）
+
 ## 📋 競賽問題規格 (Problems)
 - [[ICCAD/Problem/FloorSet-Detailed|🏆 Problem C：FloorSet 規格詳解]] (重點關注 V9 更新)
 - [[ICCAD/Problem/FloorSet-Summary|⚡ FloorSet 快速複習 (口訣版)]]

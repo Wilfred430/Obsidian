@@ -3,5 +3,6 @@
   "newLinkFormat": "relative",
   "promptDelete": false,
   "alwaysUpdateLinks": true,
-  "spellcheck": false
+  "spellcheck": false,
+  "defaultViewMode": "preview"
 }

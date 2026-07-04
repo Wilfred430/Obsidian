@@ -46,6 +46,7 @@ date: 2026-05-19
 - [[log|📜 操作日誌 (System Log)]]
 - [[Tool/LLM_Rules/System_Instructions|🤖 LLM 操作規範]]
 - [[Tool/LLM_Rules/SCHEMA|📜 Wiki 維護規範]]
+- [[Tool/AI-Collaboration-Discipline|🧭 與 AI 協作的自律準則（給自己的規則，非給 AI）]]
 
 ---
 **最近更新日誌**：[[log|📜 查看操作日誌 >>]]

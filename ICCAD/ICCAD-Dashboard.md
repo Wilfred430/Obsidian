@@ -39,6 +39,7 @@ date: 2026-07-01
 ## 🔧 實作深潛 (Implementation Deep-Dive)
 > 對應 `collaborate/` repo 的實際程式碼架構,原子筆記系列 1-8。
 - [[ICCAD_code/1_Data_Loader_and_Wrapper|1. Data Loader 與 Python 封裝架構]]
+- [[ICCAD_code/1b_Input_Output_Contract|1b. Input/Output 完整合約（資料存在哪、格式是什麼）]]
 - [[ICCAD_code/2_SA_Optimizer_Engine|2. 核心退火引擎與 B*-Tree]]
 - [[ICCAD_code/3_Cost_Function_and_Penalty|3. Cost Function 與動態懲罰機制]]
 - [[ICCAD_code/4_Packing_and_Evaluation|4. 拓撲打包與座標推算]]

@@ -9,6 +9,8 @@ date: 2026-06-17
 > [!info] 🔰 **第一次讀這個系列？** 先讀 [[Fundamentals/VLSI-Floorplanning-101|VLSI Floorplanning 入門]] 建立基礎詞彙（模組、網表、B*-tree 是什麼），遇到看不懂的名詞查 [[Fundamentals/ICCAD-Glossary|速查詞彙表]]。這篇開始的 1→8 系列會照順序介紹整條 pipeline。
 >
 > 下面「大會測資」三個方塊（Block Area / Constraints / Netlist B2B/P2B）如果覺得抽象，看 [[Fundamentals/FloorSet-Data-Worked-Example|真實資料實例解析]]——直接打開一個驗證集案例，用具體數字對照每個欄位在講什麼。
+>
+> 想知道這些資料**實際存在哪個檔案、`solve()` 的完整參數格式、以及輸出要回傳什麼**，看 [[ICCAD_code/1b_Input_Output_Contract|1b. Input/Output 完整合約]]——這篇專門拆解「原始資料集檔案 → 框架 API → 本專案 .txt/.sol」這三層轉換。
 
 > **核心角色**：本模組 (`my_optimizer.py` & `my_optimizer_ml.py`) 負責將大會提供的 PyTorch Tensor 格式測資，轉換為 C++ 核心引擎能看懂的 `.txt` 檔案。同時，它也負責整合 ML 模型預測結果，實現「Warm-start（熱啟動）」，是整個 EDA 流程的**指揮中心 (Orchestrator)**。
 

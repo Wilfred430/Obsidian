@@ -224,4 +224,26 @@
   驗證約束是否滿足，是大三生現有能力範圍內就能做、且能建立真實判斷力的
   練習，不需要等到有博班程度的背景才能開始。
 
+---
+## [2026-07-05] Ingest | Input/Output 完整合約
+- **Source**: 使用者反映對 ICCAD C 的 input 資料格式不清楚，要求說明資料存放
+  位置、output 格式、以及對應的檔案。診斷後發現這其實牽涉三層容易混淆的
+  「輸入」：(1) 原始資料集檔案 (2) contest 框架呼叫 `solve()` 的 API 格式
+  (3) 本專案內部 `.txt`/`.sol` 中介格式——過去筆記沒有把這三層拆開講清楚。
+- **Action（原始碼查證，不是憑印象寫）**：讀
+  `iccad2026contest/iccad2026_evaluate.py::FloorplanOptimizer.solve()` 確認
+  官方 API 簽名（`area_targets`/`constraints[N,5]`/`target_positions[N,4]`
+  等，注意 `constraints` 少了 area 那一欄，跟原始 `blocks[N,6]` 不同形狀）；
+  讀 `my_optimizer.py::_write_txt()`/`_parse_sol()` 確認 `.txt`/`.sol` 實際
+  格式；一度誤寫 `.sol` 由 `main.cpp` 寫出，查證後訂正為
+  `parser.cpp::save_solution()`（`main.cpp` 只是呼叫它）。
+- **Output**: [[ICCAD_code/1b_Input_Output_Contract|1b_Input_Output_Contract]]——
+  全局 Mermaid 流程圖（三層轉換一次看完）+ 各層對照表 + `.txt`/`.sol` 真實
+  格式範例 + `FLOORPLANNER_KEEP=1` 環境變數教怎麼自己打開中介檔案看。
+- **Update**: 串連進 [[ICCAD_code/1_Data_Loader_and_Wrapper|1_Data_Loader_and_Wrapper]]、
+  Dashboard 實作深潛清單（新增「1b」）。
+- **Insight**: 「三層輸入格式」的混淆是很典型的新手困惑點——原始檔案格式、
+  框架 API、專案內部格式三者形狀相近但不相同（尤其 area 欄位的位置），
+  沒有人指出來很容易誤以為是同一份東西。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

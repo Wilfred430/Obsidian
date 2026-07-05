@@ -202,4 +202,26 @@
   現在的我夠不夠格猜」，否則會把一個漸進式的能力養成過程，錯誤地當成
   「立刻該有全面判斷力」的一次性要求。
 
+---
+## [2026-07-05] Ingest | FloorSet 資料實例解析（真實數字版）
+- **Source**: 使用者要求把 `ICCAD_code/1_Data_Loader_and_Wrapper` 裡「大會測資」
+  的抽象方塊圖換成真實數字說明——實際打開驗證集 `config_21`（21 blocks）
+  用 Python 解析 `blocks`/`b2b`/`p2b`/`pins_pos` tensor，挑具體 block 出來對照。
+- **Output**: [[Fundamentals/FloorSet-Data-Worked-Example|FloorSet-Data-Worked-Example]]——
+  用真實數字逐一對照：block 12（`area=270`，無任何約束的純 soft block）、
+  block 6（`boundary_code=5`=左上角，並實測驗證真實解確實 `x_min=0`且
+  `y_max=H`）、cluster_id=3 的分組（block 5/8/17，驗證出「不是每個都互貼，
+  是靠 block 5 當橋樑連成一個連通分量」這個常被誤解的細節）、mib_id=1 的
+  7 個 block（驗證全部 `w=18.0, h=26.0` 完全一致）、block 12 的 b2b/p2b
+  權重與腳位座標。
+- **Update**: 串連進 [[ICCAD_code/1_Data_Loader_and_Wrapper|1_Data_Loader_and_Wrapper]]、
+  [[Fundamentals/VLSI-Floorplanning-101|VLSI-Floorplanning-101]]、
+  [[Fundamentals/ICCAD-Glossary|ICCAD-Glossary]]、`index.md`、Dashboard 閱讀動線
+  （新增步驟 2.5）。
+- **Insight**: grouping 約束「不需要全員互貼、只需要整體連通」這個細節，
+  用真實資料實測驗證後比純文字定義更容易記住——這也印證了[[Tool/AI-Collaboration-Discipline|
+  自律準則]]裡「構得到的問題」這一類：讀懂 tensor 欄位定義、動手跑程式碼
+  驗證約束是否滿足，是大三生現有能力範圍內就能做、且能建立真實判斷力的
+  練習，不需要等到有博班程度的背景才能開始。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

@@ -7,6 +7,8 @@ date: 2026-06-17
 # 1. Data Loader 與 Python 封裝架構 (Wrapper)
 
 > [!info] 🔰 **第一次讀這個系列？** 先讀 [[Fundamentals/VLSI-Floorplanning-101|VLSI Floorplanning 入門]] 建立基礎詞彙（模組、網表、B*-tree 是什麼），遇到看不懂的名詞查 [[Fundamentals/ICCAD-Glossary|速查詞彙表]]。這篇開始的 1→8 系列會照順序介紹整條 pipeline。
+>
+> 下面「大會測資」三個方塊（Block Area / Constraints / Netlist B2B/P2B）如果覺得抽象，看 [[Fundamentals/FloorSet-Data-Worked-Example|真實資料實例解析]]——直接打開一個驗證集案例，用具體數字對照每個欄位在講什麼。
 
 > **核心角色**：本模組 (`my_optimizer.py` & `my_optimizer_ml.py`) 負責將大會提供的 PyTorch Tensor 格式測資，轉換為 C++ 核心引擎能看懂的 `.txt` 檔案。同時，它也負責整合 ML 模型預測結果，實現「Warm-start（熱啟動）」，是整個 EDA 流程的**指揮中心 (Orchestrator)**。
 

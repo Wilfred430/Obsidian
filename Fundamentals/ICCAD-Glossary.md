@@ -66,4 +66,4 @@ aliases: [Glossary, 詞彙表, 名詞解釋]
 | **Transformer / Attention** | 讓模型一次看完整個序列、互相「對話」的神經網路架構，本庫兩個模型的骨幹 | [[AI/Transformer\|Transformer 架構全解]] |
 
 ---
-**相關筆記**：[[Fundamentals/VLSI-Floorplanning-101|VLSI Floorplanning 入門]] · [[ICCAD/ICCAD-Dashboard|回到 Dashboard]]
+**相關筆記**：[[Fundamentals/VLSI-Floorplanning-101|VLSI Floorplanning 入門]] · [[Fundamentals/FloorSet-Data-Worked-Example|資料實例解析（真實數字版）]] · [[ICCAD/ICCAD-Dashboard|回到 Dashboard]]

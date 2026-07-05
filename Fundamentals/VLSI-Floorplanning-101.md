@@ -72,7 +72,7 @@ aliases: [Floorplanning 101, 佈局規劃入門]
 
 本專案（ICCAD 2026 Contest Problem C）要對 21～120 個模組的晶片案例，自動找出「Cost 越低越好」的擺法，而且**大案例的分數權重極高**（見 [[ICCAD_code/8_Winning_Strategy_and_Roadmap|奪冠策略總覽]]），所以真正的戰場在處理上百個模組的複雜案例。有三條並行的解法路線，摘要見 [[ICCAD/ICCAD-Dashboard|Dashboard 的「現況」區塊]]。
 
-**讀完這篇，你已經有足夠的背景知識進入下一步**——回到 [[ICCAD/ICCAD-Dashboard|Dashboard]] 依照「新手從這裡開始」的順序繼續讀。
+**讀完這篇，你已經有足夠的背景知識進入下一步**——想直接看這些概念對應到的真實數字，讀 [[Fundamentals/FloorSet-Data-Worked-Example|資料實例解析]]；想繼續照順序讀，回到 [[ICCAD/ICCAD-Dashboard|Dashboard]] 依照「新手從這裡開始」的順序繼續。
 
 ---
-**相關筆記**：[[Fundamentals/ICCAD-Glossary|速查詞彙表]] · [[ICCAD/Problem/FloorSet-Summary|FloorSet 規格快速複習]] · [[ICCAD/Algorithms/B-Star-Tree|B*-tree 技術筆記]] · [[Fundamentals/Optimization-Theory|最佳化理論]] · [[ICCAD/ICCAD-Dashboard|回到 Dashboard]]
+**相關筆記**：[[Fundamentals/ICCAD-Glossary|速查詞彙表]] · [[Fundamentals/FloorSet-Data-Worked-Example|資料實例解析（真實數字版）]] · [[ICCAD/Problem/FloorSet-Summary|FloorSet 規格快速複習]] · [[ICCAD/Algorithms/B-Star-Tree|B*-tree 技術筆記]] · [[Fundamentals/Optimization-Theory|最佳化理論]] · [[ICCAD/ICCAD-Dashboard|回到 Dashboard]]

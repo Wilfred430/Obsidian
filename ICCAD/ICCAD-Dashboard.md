@@ -19,6 +19,7 @@ date: 2026-07-01
 > 這個 vault 的其他筆記大多假設你已經懂晶片設計基礎——如果不是，照下面順序讀，不要跳著看：
 > 1. **大局觀**：`collaborate/新手入門_專案總覽.pdf`（生活比喻版簡報，一次掌握全貌，適合印出來看）
 > 2. **建立基礎詞彙**：[[Fundamentals/VLSI-Floorplanning-101|VLSI Floorplanning 入門]] —— 什麼是晶片、什麼是模組/網表、為什麼難、B*-tree 的直覺
+> 2.5. **想看真實數字**：[[Fundamentals/FloorSet-Data-Worked-Example|資料實例解析]] —— 打開一個真實驗證集案例，把 area/constraint/b2b/p2b 換成具體數字對照著看
 > 3. **卡住就查**：[[Fundamentals/ICCAD-Glossary|速查詞彙表]] —— 讀後面的技術筆記遇到看不懂的詞，回來這裡查一句話解釋
 > 4. **比賽規則**：[[ICCAD/Problem/FloorSet-Summary|FloorSet 快速複習]] →（想看細節再讀）[[ICCAD/Problem/FloorSet-Detailed|FloorSet 規格詳解]]
 > 5. **實作深潛，照 1→8 編號順序讀**（見下方「實作深潛」區塊）——這個順序本身就是設計過的：資料怎麼進來 → SA 怎麼搜 → 怎麼打分 → 怎麼拼出座標 → 舊 ML 為什麼失敗 → 新 ML 怎麼做 → 電靜力法 → 最後總覽策略

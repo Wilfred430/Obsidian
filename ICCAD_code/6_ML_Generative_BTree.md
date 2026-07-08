@@ -93,5 +93,24 @@ graph TD
 
 > [!info] **教訓**：「用有限的修復手段測出的壞結果」不能直接推論「這個表示法本身不行」——要先排除「修復管線不完整」這個變因，才能下結構性的結論。這也是為什麼要把每次實驗都誠實記下來，包含被推翻的那些。
 
+## 6.7 攻 V_rel=0：先診斷再對症下藥（2026-07-09）
+
+目標轉為「feasible + $V_{rel}=0$，在此前提壓最低 cost」。第一步不是亂修，是**先量出違規來自哪裡**（寫了 `ml/diag_vrel.py`，逐 case 拆解 $V_{grouping}$/$V_{mib}$/$V_{boundary}$）。20-case 診斷結果：
+
+| 違規類型 | 原始總數（20 case） | 佔比 |
+|---|---|---|
+| **boundary** | **141** | **74%** ← 絕對主力 |
+| grouping | 41 | 21% |
+| MIB | 9 | 5% |
+
+依此對症下藥，兩個確定的戰果：
+
+- **MIB：9 → 0（by construction，一勞永逸）**。診斷發現的 bug：MIB 群組若含 fixed-shape 成員，該成員長寬鎖死，但 soft 成員被 aspect 掃描掃成別的形狀 → 形狀不一致。修法（`eval_full.py::dims_with_aspect`）：MIB 群組的 soft 成員一律**強制跟隨群組裡 fixed 成員的形狀**（MIB 成員面積相同，所以套同一形狀不會違反 1% 面積容忍）。這是真正的「建構即滿足」，不是事後修。
+- **boundary：141 → ~12**。原本的 `boundary_repair` 太保守（只在目標格子剛好空著才貼）。改成**沿要求的牆掃描找第一個不重疊的位置**：LEFT/BOTTOM（x=0/y=0 永遠存在）保證能貼到；RIGHT/TOP 對齊當前 bbox 邊、必要時往外推成為新邊。
+
+> [!warning] **一個沒解決的張力：boundary 變兇會扯散 grouping**。強力 boundary 把「同時屬於群組又要貼邊」的方塊拉到牆邊，grouping 從 41 漲到 59–79。讓 grouping 修復**跳過有邊界約束的方塊**（只聚集自由成員）緩解了一部分，但 grouping 仍卡在每 case ~4–5 次違規降不下去。**根因**：後處理式的 grouping 修復需要「空間」才能把落單成員拉去貼群組，但密集佈局裡核心周圍常常沒有空格。**這指向真正的解法是 by-construction 的 super-block 收縮**（把整個群組當一個剛體從一開始就打包在一起，永不被拆散）——這是 [[ICCAD_code/8_Winning_Strategy_and_Roadmap|T8]] 的內容，也是下一個該做的大工程。
+
+**方法論備註**：`diag_vrel.py` 的違規數是「最低 cost pack 的違規數」，而最低 cost pack 每次選的不一樣，所以這個數字有雜訊，不能拿來精細比較兩版修復的優劣——真正的裁判是 100-case 的 **Total Score**。追個別違規數容易陷入打地鼠，這也是一個教訓。
+
 ---
 **相關筆記**：[[ICCAD_code/5_ML_Coordinate_Regression|上一篇：座標回歸與 Mode Collapse]] · [[ICCAD_code/8_Winning_Strategy_and_Roadmap|奪冠策略總覽]]

@@ -284,4 +284,30 @@
   [[ICCAD_code/6_ML_Generative_BTree|6.6 節]]留下訂正紀錄，而不是默默改掉
   假裝沒發生過。
 
+---
+## [2026-07-09] Optimize | 攻 V_rel：MIB 歸零 + boundary 大降，並確認 post-hoc 修復到頂
+- **Source**: `/goal` 持續優化 + 使用者指定目標「feasible + V_rel=0，壓最低 cost」。
+- **方法（先診斷再對症）**: 寫 `ml/diag_vrel.py` 逐 case 拆解軟約束違規來源，
+  發現 boundary 佔 74%（141/191），先打它。
+- **戰果**:
+    - **MIB 9→0（by construction）**: 修好 `dims_with_aspect` 的 bug——MIB 群組
+      soft 成員被 aspect 掃成跟群組 fixed 成員不同形狀。強制跟隨後歸零。
+    - **boundary 141→~12**: 強化 `_boundary_repair_pass`（沿牆掃描找空位，
+      LEFT/BOTTOM 保證貼到）。
+    - **Total Score 4.67→3.91**（100-case，e^(n/12) 加權），本 session 累計
+      13.77→3.91（−72%），全程沒動模型權重。
+- **代價與邊界結論**: 強力 boundary 把內部方塊抬到邊界，area_gap 從 +63% 爆到
+  +168%。但 portfolio 測試（同時打包面積優先版讓 cost 逐 case 選）證明面積優先版
+  幾乎從不勝出——即 area 損失在 cost 上是「正確定價」的（$\exp(2V_{rel})$ 指數項
+  主導）。grouping 用 union-find 聚集也卡在每 case ~4–5 降不下去（密集佈局沒空間
+  聚集）。**兩者都指向同一結論：post-hoc 修復已到頂，再往下的 ceiling-breaker 是
+  by-construction 約束感知擺放（super-block grouping、boundary-feasible 拓樸），
+  正是 pop 的 electro/M1 在做的方向。**
+- **Output**: 全部記進 [[ICCAD_code/6_ML_Generative_BTree|6.6/6.7 節]]、
+  `WINNING_STRATEGY.md` T7/T8；新增 `ml/diag_vrel.py`、`ml/eval_full.py`。
+- **Insight**: 「先量化違規來源再對症下藥」比亂修有效率得多（一眼看出 boundary
+  是主力）；但也踩到「追個別違規數（雜訊指標）容易陷入打地鼠」的坑——真正的
+  裁判是 100-case Total Score。誠實記錄了 union-find grouping 強化反而讓數字變差
+  的失敗嘗試，沒有默默改掉。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

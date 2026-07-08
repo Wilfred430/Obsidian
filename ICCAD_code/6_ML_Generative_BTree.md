@@ -118,7 +118,9 @@ graph TD
 
 順著這個發現，加了 **HPWL 收尾微調**（`eval_full.py::hpwl_nudge`）：對每個 case 選出的最佳 pack，把每個**自由方塊**（非 preplaced/boundary/cluster——這些是約束釘死的）滑向它 b2b/p2b 連線鄰居的加權重心，但**只准移到不重疊、且不撐大 bbox 的空位**（嚴格不劣化面積，只降線長）。30-case 子集實測：Total **3.48 → 3.18（−8.6%）**，維持 100% feasible。
 
-> [!info] **這一步的意義**：它是第一個「V_rel 修好後、針對新主導項（HPWL）」的優化，證明診斷「主導項換人」→ 對症下藥的方法奏效。但也再次印證 6.7 的結論——真正的病根是強力 boundary 把方塊拉離原位，HPWL 微調只是**部分回收**這個損失，治標。要根治還是得 by-construction（讓 boundary 方塊一開始就在對的地方、不用事後硬拉）。完整 100-case 定案數字待補。
+> [!info] **這一步的意義**：它是第一個「V_rel 修好後、針對新主導項（HPWL）」的優化，證明診斷「主導項換人」→ 對症下藥的方法奏效。但也再次印證 6.7 的結論——真正的病根是強力 boundary 把方塊拉離原位，HPWL 微調只是**部分回收**這個損失，治標。要根治還是得 by-construction（讓 boundary 方塊一開始就在對的地方、不用事後硬拉）。
+
+**完整 100-case 定案：Total 3.87 → 3.66（−5.4%）。** 本 session 生成式路線累計 **13.77 → 3.66（−73%）**，全程沒動模型權重。剩下最大的失血是 area_gap +168%（強力 boundary 撐大 bbox）——下一個實驗方向是測試「限制 boundary 往界外推」看面積回收是否勝過多出的 V_rel。
 
 ---
 **相關筆記**：[[ICCAD_code/5_ML_Coordinate_Regression|上一篇：座標回歸與 Mode Collapse]] · [[ICCAD_code/8_Winning_Strategy_and_Roadmap|奪冠策略總覽]]

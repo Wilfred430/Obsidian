@@ -120,7 +120,15 @@ graph TD
 
 > [!info] **這一步的意義**：它是第一個「V_rel 修好後、針對新主導項（HPWL）」的優化，證明診斷「主導項換人」→ 對症下藥的方法奏效。但也再次印證 6.7 的結論——真正的病根是強力 boundary 把方塊拉離原位，HPWL 微調只是**部分回收**這個損失，治標。要根治還是得 by-construction（讓 boundary 方塊一開始就在對的地方、不用事後硬拉）。
 
-**完整 100-case 定案：Total 3.87 → 3.66（−5.4%）。** 本 session 生成式路線累計 **13.77 → 3.66（−73%）**，全程沒動模型權重。剩下最大的失血是 area_gap +168%（強力 boundary 撐大 bbox）——下一個實驗方向是測試「限制 boundary 往界外推」看面積回收是否勝過多出的 V_rel。
+**完整 100-case 定案：Total 3.87 → 3.66（−5.4%）。** 本 session 生成式路線累計 **13.77 → 3.66（−73%）**，全程沒動模型權重。剩下最大的失血是 area_gap +168%（強力 boundary 撐大 bbox）。
+
+## 6.9 boundary「推出界外」on/off portfolio（2026-07-09）
+
+順著 6.8 的方向，測試 boundary 修復裡「RIGHT/TOP 找不到空位時把方塊推出界外成為新邊」這個分支（`_boundary_repair_pass(push_past=...)`）——它保證邊界貼到，但撐大 bbox。做成 **on/off portfolio**：每個拓樸/aspect 同時打包 push_past=True 跟 =False，用真實 cost 逐 case 挑便宜的。
+
+**30-case 實測：Total 3.18 → 2.96（−7%），area_gap +155% → +111%。** 證實了假設——**很多 case「保持面積緊湊、接受該邊界方塊違規」比「硬推出界」更便宜**（面積+HPWL 的損失大於多出的那點 $\exp(2V_{rel})$）。讓 portfolio 逐 case 自選，兩邊的好處都拿到。
+
+> [!success] **這修正了 6.7 的一個過度概化**：6.7 說「面積損失是正確定價、post-hoc 無法迴避」——那是對「完全不做 boundary 修復」的 all-or-nothing portfolio 而言。但「push_past on/off」這個更細的旋鈕證明：**在「做 boundary 修復」的前提下，還有一個更省的操作點**（對齊現有邊、不硬推出界）。教訓：portfolio 的顆粒度很重要，粗顆粒（全有/全無）測不出細顆粒（單一分支開關）能拿到的收益。完整 100-case 定案數字待補。
 
 ---
 **相關筆記**：[[ICCAD_code/5_ML_Coordinate_Regression|上一篇：座標回歸與 Mode Collapse]] · [[ICCAD_code/8_Winning_Strategy_and_Roadmap|奪冠策略總覽]]

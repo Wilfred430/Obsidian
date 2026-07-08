@@ -246,4 +246,40 @@
   框架 API、專案內部格式三者形狀相近但不相同（尤其 area 欄位的位置），
   沒有人指出來很容易誤以為是同一份東西。
 
+---
+## [2026-07-08] Refactor + Ingest | 補齊 packer 修復管線，推翻上一輪悲觀結論
+- **Source**: `/goal` 設定「持續優化專題，找更好的 strategy 降低 cost，值得更新就記
+  進 Obsidian」的 session 目標。延續上一輪 100-case 實測（`ml/pack_tree.py` 只有
+  `compact_left_down`，area_gap +125%、Total 13.77）與 pop 的 M1 文件警告
+  （「contour 規則無法重現 GT 咬合拼磚」），著手驗證這是否為 contour 表示法的
+  結構性死路，還是修復管線本身沒補齊。
+- **Action（同時修正 contest_cost.py 的一個正確性 bug）**：讀 spec PDF 截圖確認
+  官方 `compute_cost` 第 322 行對每個 gap 做 `max(0,·)` clamp（贏過 baseline
+  完全不加分，Q 恆 ≥1，0.7 是真地板）——`ml/contest_cost.py` 原本漏了這個
+  clamp，已補上；同步訂正 `WINNING_STRATEGY.md`/`FABLE_BRIEF_cost0.7.md`
+  裡「贏過 baseline 可壓破 0.7」的錯誤說法。
+- **Action（移植 packer.cpp 剩餘的修復通道到 `ml/pack_tree.py`）**：新增
+  `_bbox_balance_pass`（修長條狀 bbox）、`_holes_fill_pass`（補 L 形死空白）、
+  `_grouping_repair_pass`、`_boundary_repair_pass`，忠實照抄
+  [[ICCAD_code/4_Packing_and_Evaluation|`src/packer.cpp`]] 的演算法邏輯。
+- **新增 `ml/eval_full.py`**：全 100-case A/B 評估工具，soft block 長寬做全域
+  aspect ratio 掃描（含正方形選項，保證優化後不劣於優化前），用真實 Cost 公式
+  排名。
+- **實測結果（100-case，e^(n/12) 加權 Total Score）**：
+
+  | 修復管線 | 平均 area_gap | Total Score |
+  |---|---|---|
+  | 只有 `compact_left_down` | +125% | 13.77 → 12.40（形狀優化 −9.9%） |
+  | **+ `bbox_balance` + `holes_fill`** | **+24.9%** | **8.41 → 7.77（−39% vs 原本）** |
+
+  全部四道通道（含 `grouping_repair`/`boundary_repair`）的完整結果背景執行中，
+  待補。
+- **Insight（最重要的一條）**：上一輪的「contour 打包有結構性密度天花板」是
+  **下得太早的結論**——只用了四道修復通道中的一道（`compact_left_down`）就
+  判定整個表示法不行，沒有先排除「修復管線不完整」這個變因。補齊其中兩道，
+  area_gap 就掉了 5 倍。這是[[Tool/AI-Collaboration-Discipline|自律準則]]
+  「先猜再驗證，猜錯了就訂正」的活教材——上次的悲觀結論已經在
+  [[ICCAD_code/6_ML_Generative_BTree|6.6 節]]留下訂正紀錄，而不是默默改掉
+  假裝沒發生過。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

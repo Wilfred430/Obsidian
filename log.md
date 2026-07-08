@@ -294,8 +294,9 @@
       soft 成員被 aspect 掃成跟群組 fixed 成員不同形狀。強制跟隨後歸零。
     - **boundary 141→~12**: 強化 `_boundary_repair_pass`（沿牆掃描找空位，
       LEFT/BOTTOM 保證貼到）。
-    - **Total Score 4.67→3.91**（100-case，e^(n/12) 加權），本 session 累計
-      13.77→3.91（−72%），全程沒動模型權重。
+    - **Total Score 4.67→3.87**（100-case，e^(n/12) 加權；3.91 是未加最終
+      壓實回收的版本，加了 final-compact 回收面積後定案 3.87），本 session 累計
+      13.77→3.87（−72%），全程沒動模型權重。
 - **代價與邊界結論**: 強力 boundary 把內部方塊抬到邊界，area_gap 從 +63% 爆到
   +168%。但 portfolio 測試（同時打包面積優先版讓 cost 逐 case 選）證明面積優先版
   幾乎從不勝出——即 area 損失在 cost 上是「正確定價」的（$\exp(2V_{rel})$ 指數項

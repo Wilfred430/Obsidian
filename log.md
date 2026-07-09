@@ -311,4 +311,22 @@
   裁判是 100-case Total Score。誠實記錄了 union-find grouping 強化反而讓數字變差
   的失敗嘗試，沒有默默改掉。
 
+---
+## [2026-07-09] Optimize | 品質項優化（HPWL 微調 + boundary portfolio）+ post-hoc 天花板
+- **接續**: V_rel 修好後發現 cost 主導項換成品質項（area_gap +168%、hpwl_gap ~270%）。
+- **HPWL 微調** (`eval_full.py::hpwl_nudge`): 自由方塊滑向 b2b/p2b 連線重心，只准
+  移到不重疊且不撐大 bbox 的空位。100-case: **3.87 → 3.66**。
+- **boundary push_past on/off portfolio**: boundary「推出界外」分支做成逐 case
+  自選，很多 case 保持面積緊湊、接受該違規更便宜。100-case: **3.66 → 3.53**
+  （代價：boundary 打包多一倍，34s→62s/case）。修正了 6.7「面積損失無法迴避」
+  的過度概化——portfolio 顆粒度要夠細才測得出收益。
+- **本 session 累計: 13.77 → 3.53（−74%），全程沒動模型權重**，純打包後處理。
+- **Output**: 全記進 [[ICCAD_code/6_ML_Generative_BTree|6.8/6.9/6.10 節]]（含完整
+  優化階段表）；新增 `ml/hpwl_nudge`、`_boundary_repair_pass(push_past=)` 開關。
+- **天花板判斷**: 剩最大失血是大 case（n≈120）area_gap +130~220%——contour 打包
+  多方塊的密度極限 + 底層拓樸品質（模型只訓 150k×3ep）共同造成，post-hoc 再加
+  通道也解不了。要破 3.5 逼近電靜力法 2.84，只剩 (1) 訓練拓樸模型到收斂 或
+  (2) by-construction/換更密 placer（pop 的 electro/M1 方向）。post-hoc 投報比
+  已低。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

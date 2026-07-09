@@ -128,7 +128,23 @@ graph TD
 
 **30-case 實測：Total 3.18 → 2.96（−7%），area_gap +155% → +111%。** 證實了假設——**很多 case「保持面積緊湊、接受該邊界方塊違規」比「硬推出界」更便宜**（面積+HPWL 的損失大於多出的那點 $\exp(2V_{rel})$）。讓 portfolio 逐 case 自選，兩邊的好處都拿到。
 
-> [!success] **這修正了 6.7 的一個過度概化**：6.7 說「面積損失是正確定價、post-hoc 無法迴避」——那是對「完全不做 boundary 修復」的 all-or-nothing portfolio 而言。但「push_past on/off」這個更細的旋鈕證明：**在「做 boundary 修復」的前提下，還有一個更省的操作點**（對齊現有邊、不硬推出界）。教訓：portfolio 的顆粒度很重要，粗顆粒（全有/全無）測不出細顆粒（單一分支開關）能拿到的收益。完整 100-case 定案數字待補。
+> [!success] **這修正了 6.7 的一個過度概化**：6.7 說「面積損失是正確定價、post-hoc 無法迴避」——那是對「完全不做 boundary 修復」的 all-or-nothing portfolio 而言。但「push_past on/off」這個更細的旋鈕證明：**在「做 boundary 修復」的前提下，還有一個更省的操作點**（對齊現有邊、不硬推出界）。教訓：portfolio 的顆粒度很重要，粗顆粒（全有/全無）測不出細顆粒（單一分支開關）能拿到的收益。
+
+**完整 100-case 定案：Total 3.66 → 3.53（−3.6%）。** full-100 收益比 30-case（−7%）小，因為大 case（n≈119/120）boundary 方塊太多、portfolio 選不出乾淨的省法（那幾個 case before=after）。代價：多一倍 boundary 打包，每 case 34s→62s。
+
+## 6.10 本 session 優化總結與 post-hoc 天花板（2026-07-09）
+
+| 階段 | 手段 | Total Score（100-case, e^(n/12)） |
+|---|---|---|
+| 起點 | 只有 `compact_left_down` | 13.77 |
+| +4 道修復 | `bbox_balance`/`holes_fill`/`grouping`/`boundary` | 4.67 |
+| +V_rel 修復 | MIB by-construction 歸零 + 強力 boundary + 面積回收 | 3.87 |
+| +HPWL 微調 | 自由方塊滑向連線重心（不撐大 bbox） | 3.66 |
+| **+push_past portfolio** | boundary 推界外 on/off 逐 case 自選 | **3.53** |
+
+**累計 13.77 → 3.53（−74%），全程沒動任何模型權重**——純粹是把打包後處理做對、做滿。方法論一致：每步先診斷「當前 cost 的主導項是誰」，再對症下藥，再完整驗證；走錯的（union-find grouping 強化、粗顆粒 portfolio）也誠實留著。
+
+> [!danger] **post-hoc 的天花板已在眼前**：剩下最大的失血是**大 case 的 area_gap 仍 +130~220%**（n≈120 的 bbox 是 baseline 的 2~3 倍）。這是 contour 打包在多方塊時的密度極限 + 底層拓樸品質（模型只訓 150k×3ep、`val_ptr_acc` 87%）共同造成，**兩者都不是再加一道後處理能解的**。要突破 3.5 這個量級（逼近電靜力法的 2.84），真正的下一步只有兩條：(1) **把拓樸模型訓練到收斂**（更大資料/更久/更大模型），讓底層佈局本來就更密；(2) **by-construction / 換更密的 placer**（即 pop 的 electro/M1 方向）。post-hoc 微調到此投報比已經很低。
 
 ---
 **相關筆記**：[[ICCAD_code/5_ML_Coordinate_Regression|上一篇：座標回歸與 Mode Collapse]] · [[ICCAD_code/8_Winning_Strategy_and_Roadmap|奪冠策略總覽]]

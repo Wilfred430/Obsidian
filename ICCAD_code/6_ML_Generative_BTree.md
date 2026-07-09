@@ -146,5 +146,12 @@ graph TD
 
 > [!danger] **post-hoc 的天花板已在眼前**：剩下最大的失血是**大 case 的 area_gap 仍 +130~220%**（n≈120 的 bbox 是 baseline 的 2~3 倍）。這是 contour 打包在多方塊時的密度極限 + 底層拓樸品質（模型只訓 150k×3ep、`val_ptr_acc` 87%）共同造成，**兩者都不是再加一道後處理能解的**。要突破 3.5 這個量級（逼近電靜力法的 2.84），真正的下一步只有兩條：(1) **把拓樸模型訓練到收斂**（更大資料/更久/更大模型），讓底層佈局本來就更密；(2) **by-construction / 換更密的 placer**（即 pop 的 electro/M1 方向）。post-hoc 微調到此投報比已經很低。
 
+## 6.11 進行中（2026-07-09，待驗證）
+
+同時推兩件事，攻上面兩條路：
+
+1. **v2 拓樸模型微調（GPU 訓練中）**：從 `tree_v1.pt` 暖啟動，加大到 30 萬筆、4 epoch、`--size-power 2.0`（大 case 加權，因為大 case 主導 Total）。目標讓大 case 拓樸本來就更密，減少修復要拉扯的幅度。存成 `tree_v2.pt`。
+2. **保約束壓實（已實作，`_rigid_group_compact` + `_boundary_wall_slide`）**：最終壓實原本把 boundary/cluster 全釘死，但它們其實能在「保約束」前提下移動回收面積——**整個 cluster 當剛體往原點滑**（相對位置不變→V_group 不變）、**boundary 方塊沿自己的牆滑**（LEFT 沿 y 滑保持 x=0）。3-case CPU sanity check 通過（feasible、無 crash、cost 沒退步），完整 100-case 驗證等 v2 訓練完 GPU 空出來一起做。
+
 ---
 **相關筆記**：[[ICCAD_code/5_ML_Coordinate_Regression|上一篇：座標回歸與 Mode Collapse]] · [[ICCAD_code/8_Winning_Strategy_and_Roadmap|奪冠策略總覽]]

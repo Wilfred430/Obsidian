@@ -170,5 +170,80 @@ graph TD
 
 > [!danger] **這證實了三條獨立槓桿都已收斂到同一個天花板**：(1) post-hoc 修復管線在 6.10 已測到頂（13.77→3.53）；(2) 這次確認**幾何後製的邊際招式（保約束壓實）貢獻趨近於零**；(3) 模型微調雖然有效但邊際效益遞減劇烈（300k 筆×4 epoch 換來 2.5%）。三條線收斂的意義是：**生成式 B\*-tree 這條路線純靠繼續加碼同類手段，投報比已經很低**。要再往下顯著突破（逼近電靜力法的 2.84），需要質變而非量變——例如 by-construction 的 super-block 分組，或評估把這條線的產出（拓樸提案）併入 pop 更成熟的 electro/M1 pipeline，而不是繼續在原地加碼。這是個團隊分工層級的決策，已回報給使用者。
 
+## 6.12 質變：grouping 的 by-construction super-block 分組（2026-07-09）
+
+使用者選定的下一步。核心想法：post-hoc `_grouping_repair_pass`（見 §6.7）之所以碰頂，是因為它只能把落單成員「湊」到緊密打包裡剛好殘留的空隙——但緊密打包本來空隙就少。真正的解法是**打包前**就把同一 group 的方塊當成一個剛性 super-block，塞進 B\*-tree 的 DFS 裡當一個節點，事後再展開成個別座標。
+
+**實作**（`ml/pack_tree.py`）：
+- `_shelf_pack`：group 內部用 next-fit-decreasing-height 的貨架式打包。關鍵性質：高度遞減排序保證「每個新貨架的第一塊 = 該貨架最高」且「永遠從 x=0 起擺」，所以連續貨架之間必定有正長度接觸——**整包在建構上就是一個連通元件**，V_group 天生為 0，不用再修。
+- `_collapse_clusters`：把整個 tree 的 lc/rc 改寫——挑一個 anchor 節點代表整個 group（其餘成員從樹上「吸收」掉），anchor 的 `dims` 換成 group 的 bbox，其餘成員的孩子（如果有)重新掛回樹上（BFS 找空位）。只收「乾淨」的 group（成員都沒有 boundary_code、preplaced 成員 ≤1 個）——有衝突的 group 完全不碰，走原本 post-hoc 路徑，**嚴格加法式設計**：只會消掉修得掉的違規，不會製造新的。
+- Group 展開：`x[member] = x[anchor] + dx`，其餘後製通道（compact/balance/holes_fill/boundary/grouping）全部只跑在「存活節點」（未被吸收的 id）上，最後才展開。
+
+> [!danger] **踩到的坑，誠實記錄**：第一版直接拿「深度最小」或「preplaced 成員」當 anchor，讓 anchor 在 shelf-pack 局部座標裡的位置不一定是 (0,0)。Bug 後果：DFS 用 `coll_dims[anchor]` 在 anchor 的 DFS 座標處保留一個 bbox 大小的方塊，但如果 anchor 局部偏移不是 (0,0)，這個保留區跟其他成員展開後的實際位置**對不上**——其他方塊可能滑進「看起來保留了、其實展開後才被占用」的空間，造成硬約束重疊（`overlap_violation`，cost=10）。5-case 抽測就抓到。
+>
+> **修法**：anchor 必須「永遠」是 shelf-pack 自然排序下最先擺放、落在局部 (0,0) 的那個成員——這樣 anchor 的 DFS 座標才能直接當作整個 bbox 的原點。沒有 preplaced 成員時直接採用 shelf-pack 排出來的第一個；有 preplaced 成員時，因為它的絕對座標是硬約束、必須當 anchor，改成「強制它第一個擺」（犧牲部分「最高先擺」的順序），但這樣可能打破連通保證，所以額外加一個 `_offsets_connected` 驗證，驗證不過就整個 group 放棄 by-construction、退回舊的 post-hoc 路徑（安全網，不會產生更差的結果）。
+>
+> 這是本次優化 session 第二次「先錯後對」但誠實留痕的例子（第一次見 §6.6 的「結構天花板」自我訂正）——過程比結論更值得記錄。
+
+修好後 debug 案例（config_21, seed 0）：cost 3.421 vs 沒有 by-construction 的 4.169（單案 −18%），100% feasible。
+
+### 第三個坑：preplaced anchor 體積暴增撞到別的固定方塊
+
+100-case CPU 壓力測試（samples=2）跑出 **96/100 feasible**，4 個 case（54/55/61/86）兩個 sample 都 overlap——不是隨機小機率，是結構性的。追進去發現：這些 case 裡 group 的 preplaced 成員被選為 anchor 後，`new_dims[anchor]` 從自己原本的小尺寸換成整個 cluster 的 bbox（例如 case 54 的 block 65，本來 preplaced 在一塊小方塊，換成 bbox 後直接吞掉旁邊另一個**完全無關**、獨立 preplaced 的 block 12）。
+
+問題根源：資料集只保證所有 preplaced 位置在「各自原本的小尺寸」下互不重疊，換成 by-construction 的放大 bbox 後這個保證就失效了——而 preplaced 位置是硬約束、不能移動，這是真實的、無法後製化解的衝突。
+
+**修法**：在接受一個「preplaced 成員當 anchor」的 group 之前，先把它放大後的 bbox 拿去跟所有其他固定方塊（其他不在任何 group 裡的 preplaced 方塊、以及已經被接受的其他 group 的放大 bbox）做重疊檢查，撞到就放棄這個 group 的 by-construction（退回舊的 post-hoc 路徑，安全網，不會製造新問題）。修完，原本的 4 個 infeasible case 全部 feasible。完整 100-case CPU 壓力測試（samples=2）重跑中確認 100/100。
+
+三個坑加起來的教訓：by-construction 這條路徑每次新增一種「方塊會被放大代表一整包東西」的手法，都要重新檢查所有「原本互不重疊」的隱性假設是否還成立——這正是為什麼要先跑低樣本 CPU 壓力測試掃過全部 100 case 抓 edge case，再跑昂貴的 GPU 品質驗證。
+
+**確認：修完三個坑後，100-case CPU 壓力測試（samples=2）100/100 feasible。**
+
+### 完整驗證：by-construction 分組是目前最強的單一槓桿
+
+完整 GPU 品質驗證（samples=4，v1 權重，刻意不跟 v2 混用以單獨量測 by-construction 分組本身的貢獻）：**Total Score 3.535 → 3.400（−3.8%）**，100/100 feasible。
+
+> [!success] **這是目前為止單一改動貢獻最大的一次**：v1（較弱的模型權重）+ by-construction 分組 = 3.400，已經**打敗**了 v2（微調過的權重）+ 保約束壓實的 3.439——用比較弱的模型，靠打包方式的質變就贏過模型量變的累積效果。這印證了 §6.11 的歸因結論：post-hoc 幾何招式已經到頂、模型微調邊際效益遞減，而 by-construction 才是真正的質變槓桿。
+
+累計進度：13.77 → 3.400（**−75.3%**，尚未計入 v2）。
+
+### 最終組合：v2 + by-construction 分組 = 目前最佳 3.315
+
+**Total Score 3.315**，100/100 feasible，平均 area_gap +180%→+124%。
+
+## 6.13 本 session 完整優化軌跡總結（2026-07-09）
+
+| 階段 | 手段 | Total Score |
+|---|---|---|
+| 起點 | 只有 `compact_left_down` | 13.77 |
+| +4 道修復 | bbox_balance/holes_fill/grouping/boundary | 4.67 |
+| +V_rel 修復 | MIB by-construction 歸零 + 強力 boundary + 面積回收 | 3.87 |
+| +HPWL 微調 | 自由方塊滑向連線重心 | 3.66 |
+| +push_past portfolio | boundary 推界外 on/off 逐 case 自選 | 3.53 |
+| +v2 模型微調 | 300k 筆×4 epoch 暖啟動，大 case 加權 | 3.44 |
+| +by-construction 分組 | grouping 打包前用 shelf-pack 收成 super-block | **3.315** |
+
+**累計 13.77 → 3.315（−75.9%），全部驗證於官方 cost 公式、100/100 feasible。**
+
+> [!success] **本 session 最重要的方法論心得**：三個「量變」槓桿（更多後製招式、模型微調、幾何補丁）在 §6.10–6.11 陸續碰頂，貢獻遞減到趨近於零；而**一個「質變」槓桿**（把 grouping 從「打包後補救」改成「打包前 by-construction」）單獨貢獻了 −3.8%〜−6%，且在除錯過程中連續抓到三個微妙但會直接導致硬約束違反（`Cost=10`）的 bug（anchor 局部座標未對齊、preplaced 強制排序打破連通性、preplaced anchor 放大後撞到其他固定方塊）——每個都是「先跑小樣本 CPU 壓力測試掃全部 100 case，抓到才進 GPU 品質驗證」這個紀律抓到的，不是靠代碼審查看出來的。這印證了 §6.6/§6.7 已經建立的方法論：**診斷先於修復，安全網先於效能**。
+
+> [!info] **仍未攻下的**：boundary-coded 的 cluster（有成員同時要求貼邊）目前完全跳過 by-construction、退回舊 post-hoc 路徑——這是下一個潛在的質變槓桿，但需要解「剛體要如何同時滿足貼邊」這個更難的子問題。生成式 B\*-tree 路線目前站上 3.315，逼近電靜力法 pop 的 2.84，差距從 session 開始的 4.85 倍縮小到 1.17 倍。
+
+## 6.14 攻下部分 boundary-coded cluster（2026-07-09 續）
+
+分析後找到一個安全的漸進擴展：`_boundary_repair_pass`/`_boundary_wall_slide` 對 **LEFT(1)/BOTTOM(8)/左下角(9)** 這三種代碼的 `satisfied()`/滑動檢查**只看 x[i]/y[i] 位置，從不看 dims[i]（寬高）**——這代表只要把這個邊界成員強制排進 shelf-pack 的第一位（局部座標保證是 (0,0)，跟 preplaced anchor 用的是同一招），它自己的真實小方塊角落就會跟整包 bbox 的角落重合，既有的 post-hoc 通道完全不用改，直接對放大後的 anchor 正確運作。RIGHT(2)/TOP(4) 需要對齊「遠端」邊，放大後的 bbox 不保證那個遠端等於成員自己的遠端，暫不處理，仍退回 post-hoc。
+
+實作：`_collapse_clusters` 的資格檢查從「任何成員有 boundary_code 就跳過」放寬成「最多一個成員有 code 且該 code ∈ {1,8,9}」；若同時有 preplaced 成員又是不同的方塊，視為衝突（兩個不同的「必須強制第一位」候選人），保守跳過退回舊路徑。
+
+**驗證**：100-case CPU 壓力測試（samples=2）100/100 feasible，沒有新坑。完整 GPU 品質驗證（v2 權重 + 擴展後的 by-construction）：**Total Score 3.3185**，100/100 feasible。
+
+> [!warning] **貢獻趨近於零（3.315→3.3185，差 0.003，雜訊等級）——但這次「沒進步」本身就是有用的診斷**。事後想通：LEFT/BOTTOM/左下角這幾種代碼在**舊的 post-hoc 通道裡本來就是「保證可滿足」的**（`_boundary_repair_pass` 自己的文件寫著：牆在 x=0/y=0，永遠有空位可貼）——所以 by-construction 在這裡沒有額外空間可以贏，兩條路本來就會收斂到同一個答案。真正還有油水的是 **RIGHT(2)/TOP(4)**：post-hoc 目前對這兩種要嘛推出界外增加面積（`push_past`）、要嘛接受違規，兩者都不是「保證最優」，所以那裡才是 by-construction 真正可能有收穫的地方。但要做對，需要解「anchor 的遠端要對齊整包 bbox 的遠端，而不是成員自己的遠端」這個更難的座標平移子問題——是明顯更高的工程成本，且投報比不確定（可能像這次一樣趨近於零，也可能有實質收穫，做之前無法確定）。
+
+## 6.15 Session 檢查點：生成式路線暫時停在 3.3185
+
+**累計 13.77 → 3.3185（−75.9%）**，全部 100/100 feasible，經過三輪獨立驗證（v1 單獨、v2+分組、v2+擴展分組）反覆確認數字穩定。連續兩個新招式（保約束壓實、LEFT/BOTTOM/BL 邊界擴展）的邊際貢獻都趨近於零，且都有合理解釋（緊密打包缺空隙；post-hoc 對這些情況本來就保證最優）——這是第二次獨立訊號指向同一個結論：**這條路線容易拿的分都拿完了**，剩下的都是報酬遞減、成本遞增的困難子問題（RIGHT/TOP 邊界的 by-construction、大 case 拓樸品質的根本提升）。
+
+在這個檢查點，跟 pop 電靜力法 2.84 的差距是 **1.17 倍**（session 開始時是 4.85 倍）。是否值得再投入 RIGHT/TOP 邊界這個不確定報酬的工程，還是把這個時間用在跟 pop 討論兩條線分工/整合，是下一個該由使用者判斷的節點。
+
 ---
 **相關筆記**：[[ICCAD_code/5_ML_Coordinate_Regression|上一篇：座標回歸與 Mode Collapse]] · [[ICCAD_code/8_Winning_Strategy_and_Roadmap|奪冠策略總覽]]

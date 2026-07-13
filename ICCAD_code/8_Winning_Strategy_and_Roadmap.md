@@ -136,5 +136,43 @@ GPU 訓練迴圈、size-power 加權、checkpoint 管理）在拿到程式碼後
 4. 是否同步 pop 的 `temp` 分支、如何分工（拿 M1 程式碼、或自己重新實作），是團隊分工層級
    決策，已回報給使用者。
 
+## 8.8 用 Gemini 深度研究 + 自己動手驗證，找到一個真正打破密度天花板的表示法（2026-07-14）
+
+請 Gemini 針對「如何逼近 Cost 理論下限 0.7」做深度研究，產出報告見
+`AI-deep-search/gemini_cost0.7_research_brief.md`（提示文件）與同目錄的研究報告。**先查證
+再採信**：報告引用的四篇論文（IncreMacro/ISPD'24、Flora/2025、RulePlanner/ICML'26、
+AutoFloorplan/ICLR'26）逐一用 WebSearch 查證，**全部真實存在**（一開始因為「每個子問題都有
+一篇量身訂做的論文」這個模式懷疑是幻覺，查證後推翻了這個懷疑——是真的文獻，不是編的）。
+
+**最有分量的線索**：IncreMacro（ISPD 2024，真實論文，`constraint-graph-based LP for macro
+legalization`）指向一個我們自己還沒試過的打包表示法：**sequence-pair + 線性規劃（LP）
+legalize**，而不是 B\*-tree + contour packer。
+
+**動手驗證（非套套邏輯版本）**：仿造 pop 的 `probe_m3_tree.py` 方法論寫了
+`ml/probe_lp_legalize.py`：從 1M 訓練集抓 GT（`fp_sol`）的完整座標，用**獨立於 GT 精確關係
+的拓樸抽取法**（classical sequence-pair，對角線 `x+y`/`x-y` 排序，避免了「直接讀 GT 答案」
+的套套邏輯陷阱——這個陷阱第一版程式碼真的踩到了，發現 areaR 剛好等於 1.0000 太乾淨才驚覺
+不對，修正後重跑），把抽出來的拓樸丟給 LP（`scipy.optimize.linprog`，變數是每個方塊的
+`x,y` + 全域 `W,H`，目標最小化 `W+H`，約束是每對方塊維持抽取出來的分離關係 + 落在
+`[0,W]x[0,H]` 內）求最緊 bbox。
+
+**結果（n=21 到 120，16 個 case 涵蓋全範圍）**：
+
+| 指標 | sequence-pair + LP | pop 的 B\*-tree + contour（M3 探針） |
+|---|---|---|
+| 平均面積比（重建/GT） | **1.1523**（範圍 1.03–1.26） | 1.403（範圍 1.12–1.69） |
+| 重疊 | 0%（16/16） | 0%（合法性免費，兩者都成立） |
+
+> [!success] **這證實了 Gemini 報告的核心論點，而且是我們自己獨立驗證的，不是盲信報告**：
+> **sequence-pair + LP 這個表示法的密度天花板（~1.15 倍）明顯比 B\*-tree + contour
+> （~1.40 倍）低**，用的是完全類比 pop M3 探針的方法論（獨立拓樸抽取，不是讀 GT 答案），
+> 公平比較。**而且 1.15 倍已經比 electro 現況的密度（util ~0.55-0.60，約當面積比
+> 1.65-1.8 倍）還要好**——代表如果能把這個 legalizer 接上一個好的初始佈局（不管是我們的
+> 生成式模型、還是 electro 的解析佈局），有機會同時打敗兩條現有路線。
+
+**下一步（進行中）**：把這個 LP legalizer 接上真正的「非 GT」佈局來源（electro 的
+pre-legalize 解析位置，或我們自己模型的預測），看在真實預測誤差下密度天花板能不能維持在
+這個量級，而不只是「已知 GT 的近似拓樸」這種理想化測試。
+
 ---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

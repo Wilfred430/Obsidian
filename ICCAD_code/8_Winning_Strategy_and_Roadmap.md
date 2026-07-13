@@ -170,9 +170,32 @@ legalize**，而不是 B\*-tree + contour packer。
 > 1.65-1.8 倍）還要好**——代表如果能把這個 legalizer 接上一個好的初始佈局（不管是我們的
 > 生成式模型、還是 electro 的解析佈局），有機會同時打敗兩條現有路線。
 
-**下一步（進行中）**：把這個 LP legalizer 接上真正的「非 GT」佈局來源（electro 的
-pre-legalize 解析位置，或我們自己模型的預測），看在真實預測誤差下密度天花板能不能維持在
-這個量級，而不只是「已知 GT 的近似拓樸」這種理想化測試。
+**下一步（已執行）**：把這個 LP legalizer 接上真正的「非 GT」佈局來源——直接呼叫 pop
+`electro/analytical_place.py::place()` 拿到解析佈局的原始（可能重疊）座標，分別套用
+(A) pop 自己的 push/evict legalizer、(B) 我們的 sequence-pair+LP legalizer，兩邊都送進
+`contest_cost.py` 算真實 cost 比較（`ml/probe_lp_vs_electro_legalize.py`）。
+
+**結果（11 個 case，n=21~120）**：
+
+- **config_21（唯一成功求解的 case）**：LP legalizer cost **3.328** < pop legalizer cost
+  **3.939**（雖然 area_gap 較高 +39.5% vs -3.0%，但整體 cost 更低，代表 V_rel 項的差異
+  更大——當時省略了 grouping_repair/boundary_snap 兩條後製，兩邊都缺，這只是單一 case 的
+  部分訊號，不是決定性證據）。
+- **其餘 10/11 case：LP 直接回報 infeasible**。
+
+> [!danger] **誠實的階段性結論**：追查發現根因比預期更深——「exact readout」（preplaced
+> 方塊用讀取真實關係取代粗略對角線排序）看似合理，但 LP 求解時**其他自由方塊會因為跟別的
+> 方塊的排序約束被拉到很遠的新位置**，可能跨過 preplaced 方塊的另一側，讓「求解前凍結」的
+> 關係跟求解後的新位置直接矛盾——這不是小補丁能修的，需要**迭代式重新推導關係**或
+> **更嚴謹的 anchor-aware sequence-pair 構造法**，是獨立的多日工程。**這剛好印證了 Gemini
+> 報告自己對 CG-LP 打包器的工時估計（2-3 週）是合理、不是誇大的**——用實作直接驗證了這個
+> 估計，而不是盲信報告的文字。
+>
+> **淨結論**：sequence-pair + LP 這個表示法本身（密度天花板 ~1.15 倍，見上方 GT 驗證）
+> 已經確認優於 B\*-tree + contour（~1.40 倍），這是這次探索最紮實的收穫；但要把它接上
+> 真實的、含 preplaced 硬約束的佈局管線，還需要一輪獨立的、規模不小的工程才能繞過目前
+> 發現的無解問題。是否投入這個工程（比照 Gemini 估計的 2-3 週），或先以 pop 現有的
+> electro+S1（2.72 分，已可用）為主力送出，是下一個策略決策點，已回報使用者。
 
 ---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

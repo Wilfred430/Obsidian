@@ -245,5 +245,19 @@ graph TD
 
 在這個檢查點，跟 pop 電靜力法 2.84 的差距是 **1.17 倍**（session 開始時是 4.85 倍）。是否值得再投入 RIGHT/TOP 邊界這個不確定報酬的工程，還是把這個時間用在跟 pop 討論兩條線分工/整合，是下一個該由使用者判斷的節點。
 
+## 6.16 新增兩個工具 + 第三個零貢獻招式，確認密度天花板的真正來源（2026-07-09/14）
+
+**新增兩個可觀察工具**：
+- `ml/case_report.py`：每次執行輸出一份 `case_report.xlsx`（Per-Case + Summary 兩個工作表），逐 case 列出 4 種硬約束旗標、3 種軟約束計數、HPWL/area/cost/runtime，違規儲存格自動標紅底。100-case 跑出：**Total V_grouping=455、V_mib=0、V_boundary=334，平均 runtime 47.9s/case**（這是 samples=4 × 7 長寬比 × push_past on/off 的搜尋管線耗時，不是真正單次推論會用的設定）。
+- `DEV_COMMANDS.md`：整理所有開發指令（訓練/微調、單 case 展示、100-case 驗證、V_rel 診斷、Excel 報告）與「先 CPU 小樣本壓力測試、抓到才上 GPU 正式驗證」的除錯紀律，讓非 AI 也能重現整個流程。
+
+**HPWL cluster 剛體微調**（`hpwl_nudge_clusters`，整包 group 當剛體滑向對外連線加權重心）：100-case CPU 壓力測試 100/100 feasible，但完整 GPU 驗證結果 **3.3185 → 3.3185，跟修改前小數點後四位完全相同**——**第三個連續趨近於零的新招式**。
+
+> [!danger] **確認密度天花板的真正來源：不是模型，是 B\*-tree/contour 這個幾何表示法本身**。查證 pop（electro 路線）自己的 `AI-deep-search/NEXT_STEPS.md` 才發現：pop 已經獨立做過「拿 C++ 的 B\*-tree 打包去跟 electro 的連續佈局比」的實驗，結論是 **「C++ B\*-tree repack 已否決：它比 electro 更鬆（area_gap 0.90 vs 0.61）、cost 全輸」**。這跟我們這條線目前的 area_gap（+124%）是同一個現象——**離散拓樸 + contour 堆疊的打包密度，結構上就是比連續梯度佈局差**，不是「訓練不夠久」或「後製招式不夠多」能解的。三個連續零貢獻的後製招式（保約束壓實、邊界擴展、HPWL cluster 微調）加上這個獨立佐證，把「post-hoc 已到頂」這個結論鎖死了。
+>
+> **額外的實務風險**：47.9s/case 的搜尋管線遠慢於 pop 的 5-9s/case——若真要拿這條線提交，必須砍掉昂貴搜尋，且 contest 的 `RuntimeFactor` 對變慢沒有封頂（只有變快封頂在 30%），這是除了 Cost 本身之外，這條路線要正式提交還得解決的額外問題。
+
+**Session 最終定案：13.77 → 3.3185（−75.9%），100/100 feasible。** 生成式 B\*-tree 路線的 post-hoc/geometric 改進空間已經用盡；要再進步只剩兩條質變路：(1) RIGHT/TOP 邊界 by-construction（工程貴、報酬不確定，且無法改變表示法本身的密度天花板）、(2) 放棄 contour 打包，把生成式模型的拓樸/分組提案接到 pop 更密的 electro 連續佈局後端。
+
 ---
 **相關筆記**：[[ICCAD_code/5_ML_Coordinate_Regression|上一篇：座標回歸與 Mode Collapse]] · [[ICCAD_code/8_Winning_Strategy_and_Roadmap|奪冠策略總覽]]

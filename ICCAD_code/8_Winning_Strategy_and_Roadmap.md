@@ -1448,6 +1448,36 @@ WL 就打破了這個平衡。**結論：不追加 bbox/緊湊性約束的話，
 不可行，此變體不整合進正式程式碼**。若要繼續這個方向，需要同時加入
 bbox span 最小化項做聯合目標，屬於下一輪可再嘗試的變體，非本輪投入。
 
+**同日追加（Antigravity 查證深度研究報告 + 負面結果）**：請使用者透過
+Antigravity 查證上一份 Gemini Deep Search 報告引用的 7 項文獻/公式。
+**結果**：TCG（Lin & Chang, DAC2001/TVLSI2005）、UFO（Lin & Hung,
+ASP-DAC2010/TCAD2011）、"Placement Constraints in Floorplan Design"
+（Young/Chu/Ho, TVLSI2004）、QinFer（Ji et al., Computers & Operations
+Research 2021）**全部確認真實存在**；但 **DREAMPlace 3.0 的密度權重更新
+公式是編造的**（報告寫的 $\alpha_k=\alpha_L+(\alpha_H-\alpha_L)/(1+\ln(1+
+\beta D_k/D_0))$ 不存在，真正公式是有界乘法式成長
+$\alpha_{t+1}=\alpha_t^{\ln(\mu\Vert D_t\odot P_\lambda\Vert_2)/(1+\ln(\mu
+\Vert D_t\odot P_\lambda\Vert_2))}\cdot(\alpha_h-\alpha_l)+\alpha_l$，
+$\alpha_l=1.03,\alpha_h=1.04$）；**AutoDMP 用的是貝葉斯優化（Optuna），
+不是 RL/MDP**（報告誤植，跟 Google 的 RL macro placer 搞混了）；
+**RePlAce-ld 的局部密度懲罰公式 $\nu_j=e^{\alpha(\text{BinDemand}_j-
+\text{BinCapacity}_j)}$ 確認為真**（Lu et al., RePlAce, TCAD2019）。
+
+**基於確認為真的 RePlAce-ld 公式，實作並測試局部密度權重**（
+`analytical_place.py` 新增 `ELECTRO_LOCAL_DENSITY_ALPHA`，掛在既有
+`ELECTRO_EDENSITY` 的 DCT 密度場機制上，對超過目標密度的網格額外加壓）。
+**結果為明確負面**：9 案抽樣，A（現行預設，eDensity 關閉）加權 Total=
+2.9579；B（單純打開均勻 eDensity）暴增到 6.5944；C（局部權重 α=5）
+5.7123；D（α=20）8.4341，n=120 甚至衝到 cost=10.0。**根因**：eDensity
+原本設計是要「取代」現有的 pairwise-overlap 擴散力（`lam_ov`）跟 bbox
+壓實力（`lam_bb`），但程式碼只有 `lam_out`（浮動包覆框）在 eDensity 開啟
+時會自動關閉，`lam_ov`/`lam_bb` 這兩個舊機制仍全程作用——兩套擴散力互相
+打架，導致品質崩潰。**這不是「局部密度權重概念不行」的證據，而是「不能
+只打開 eDensity 環境變數就指望能用」的證據**：eDensity 機制本身需要先
+跟 `lam_ov`/`lam_bb` 重新配合調校（例如 eDensity 開啟時同步關閉/降低
+`lam_ov`），才能公平評估局部密度權重這個真正的技術點——這是比預期更大
+的工程量，本輪不繼續投入，**不整合進正式程式碼**。
+
 **同時發現**：`C_QA_20260618.pdf`（官方正式 Q&A）確認：(1) 硬體規格
 = A100 80GB GPU + 48 核 Icelake CPU + 128GB RAM，測資逐一序列評測，
 但**單一測資內部允許 multiprocessing/multithreading**（Q3/A3）；

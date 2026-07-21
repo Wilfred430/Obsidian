@@ -1322,4 +1322,92 @@ block10(x=21.999999,w=21) 這一組，算出來的 `overlap_x =
 > TODO，尚未實作），不是能快速修的小問題。
 
 ---
+
+## §8.34（2026-07-21，重大突破）：官方 Alpha 排名曝光巨大差距，追出 legalize.py 的貪婪演算法瓶頸，LP 替換法驗證 −31.0%
+
+**觸發**：使用者發現官方公佈的 Alpha 正式排名（`C_Alpha_Top5(20260720).csv`）——
+前五名 Total Score 落在 **0.879–1.100**，遠低於我們目前最佳（electro，
+2.1513）。追出**不是靠 runtime 贏**：第一名 100 案總耗時 266.8s
+（均 2.67s/案），並不比我們快多少。搭配同時公佈的
+`C_Median Runtime per Testcase(Alpha).csv`（每個 test case 的跨隊伍真實
+median runtime，例如 n=21 中位數 2.0s，n=120 中位數 11.8s），確認前五名
+贏在**擺放品質**（gap≈0、V_rel≈0），不是速度。這跟先前 §8.23 的診斷完全
+吻合：gap 項若歸零可省 45% Total Score，比 V_rel 項（24%）更關鍵，且
+electro 現有架構上所有 loss 權重旋鈕（13 個）都已驗證榨乾，沒有免費分數。
+
+**根因追查**：重讀 `electro_optimized/legalize.py` 逐行確認，發現它的
+`_compact()` 是**單一 pass 的貪婪 longest-path 壓縮**——只保證滿足非重疊
+約束（feasibility），完全不管 HPWL/面積這個目標函數本身，是「能動就動到
+剛好卡住為止」的貪婪解，不是最優解。這正是先前 §8.8/§8.9 驗證過
+sequence-pair+LP（1.15 倍面積比，比 B*-tree 的 1.40 倍好）的核心優勢
+所在——但那次從零建構 sequence-pair 的嘗試卡在 preplaced anchor 矛盾
+（用啟發式對角線排序推導出的順序，跟 preplaced 方塊的真實座標關係衝突，
+被判定需要研究等級的多日工程）。
+
+**關鍵洞察**：`legalize.py` 自己 Step 1（`_overlap_matrix`+
+`triu_indices`+取重疊較少的軸）已經在**讀取 analytical_place() 收斂後的
+真實幾何**來決定每一對方塊的分離軸（不是憑空發明的啟發式），而且這個
+順序在正式 pipeline 已經跑了大半年、已知正確——只是 Step 2（`_compact`）
+拿到這個正確的順序後，用貪婪法而非最優法去解位置。**如果直接複用
+Step 1 完全不改的順序，只把 Step 2 換成 LP（最小化跟 analytical
+placement 的總位移，而非「貪婪推到剛好卡住」），理論上能同時吃到
+sequence-pair+LP 的密度優勢，又不會撞上讓那次從零嘗試失敗的 anchor
+矛盾**——因為順序來源不同：這次是已經跟 preplaced 座標自洽的真實幾何，
+不是會跟它衝突的獨立啟發式。
+
+**第一次嘗試就撞牆，但抓出了為什麼**：把全部 order 約束（含 movable→
+preplaced 兩個方向）都丟進 LP，9 案全部 infeasible。診斷發現：即使一個
+41-block case 只有 2 個 preplaced 方塊，強制滿足全部 pairwise 約束就會
+infeasible（不是圖論上的環，兩軸個別驗證都是 DAG）——真正原因是**一個
+movable 方塊被兩個各自獨立釘死座標的 preplaced anchor 兩面夾殺**，數值上
+無解。回頭看 `_compact()` 原始碼才發現：production 本來就**刻意跳過
+「後繼是 preplaced」的約束**（`if is_pre[succ]: continue`），把這類
+「卡在兩個錨點之間」的情況留給 `_cleanup()` 的 pairwise push-apart backstop
+處理——這不是疏漏，是必要的設計。改成套用同一條跳過規則後，LP 立刻全部
+feasible。
+
+**驗證結果（100 案全跑，單一 seed=0、iters=600、無 portfolio，兩邊接上
+完全相同的 repair chain）**：
+- **0 個 LP-infeasible，100/100 feasible 兩邊都成立**
+- **加權 Total Score（e^(n/12)）：貪婪法 5.3029 → LP 法 3.6592，相對改善
+  −31.0%**
+- 100 案裡 82 案改善、約 18 案小幅退步（例如 config_51 +10%、config_36
+  +26%），但大 n 案例（e^(n/12) 權重最重）幾乎全面大勝
+  （config_120: 6.58→2.43 −63%；config_112: 7.57→2.32 −69%；
+  config_113: 5.28→1.90 −64%；config_105: 7.03→2.95 −58%），所以加權
+  總分改善幅度遠大於簡單平均。
+- 單獨這一個子程式替換，就吃掉了 §8.23 估計「gap 項全歸零可省 45%」
+  裡的一大半，且完全沒動任何既有 loss 權重、seeds、Jacobi、portfolio
+  機制。
+
+**已實作為 opt-in（`ELECTRO_LEGALIZE_LP=1`，預設關閉）**：
+`legalize.py` 新增 `_compact_lp()`（LP 版 `_compact`，跟現行版本共用完全
+相同的順序抽取邏輯與「跳過 preplaced 後繼」規則，用 scipy
+`linprog`／HiGHS 求解「最小化跟 analytical placement 的總位移」，LP 失敗
+時 fallback 回原本的貪婪 `legalize()`，絕不會比現行更差）+
+`legalize_lp()`（跟 `legalize()` 結構一致的 drop-in 替代，共用 Step 1/3）。
+`electro_parallel.py::post_place_repair` 依環境變數選擇兩者之一。
+`requirements.txt` 補上 `scipy`（雖然 Beta 指南說評測環境即使
+requirements.txt 是空的也會提供 scipy，但既然真的引用了就明確列出）。
+
+**下一步（進行中）**：用完整正式 pipeline（含全部 seeds/Jacobi/portfolio/
+adaptive iters）跑 `ELECTRO_LEGALIZE_LP=0` 對 `=1` 的全 100 案對照，確認
+疊加所有既有機制後的真實最終 Total Score（隔離測試的 −31% 是否會被
+portfolio 機制部分「吃掉」重疊的改善，或維持獨立疊加——按本專案一貫的
+教訓，兩者都有可能，必須實測才能下結論）。若確認為真，這是本專案至今
+單一最大的一次分數躍進，直接回應「electro 現有架構挖乾」的困境——
+不是靠新的 loss 權重或更多 runtime，是修正一個一直存在、被貪婪法掩蓋
+的次優解算法。
+
+**同時發現**：`C_QA_20260618.pdf`（官方正式 Q&A）確認：(1) 硬體規格
+= A100 80GB GPU + 48 核 Icelake CPU + 128GB RAM，測資逐一序列評測，
+但**單一測資內部允許 multiprocessing/multithreading**（Q3/A3）；
+(2) 最終提交是包裝好的 executable，由官方 `op_wrapper.py` 呼叫，仍需
+相容 `MyOptimizer.solve()` 介面（Q7-11）；(3) soft block 面積容差是
+對稱雙向 1%，不能靠放大面積去湊 boundary/grouping（Q6/A6）；
+(4) preplaced 位置是硬約束、boundary touching 是軟約束，衝突時一律保留
+preplaced 不動（Q5/A5，我們的實作已經是這樣做）。這些都跟現行實作方向
+一致，沒有需要修正的落差。
+
+---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

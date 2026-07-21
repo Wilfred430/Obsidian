@@ -1390,14 +1390,48 @@ feasible。
 `requirements.txt` 補上 `scipy`（雖然 Beta 指南說評測環境即使
 requirements.txt 是空的也會提供 scipy，但既然真的引用了就明確列出）。
 
-**下一步（進行中）**：用完整正式 pipeline（含全部 seeds/Jacobi/portfolio/
-adaptive iters）跑 `ELECTRO_LEGALIZE_LP=0` 對 `=1` 的全 100 案對照，確認
-疊加所有既有機制後的真實最終 Total Score（隔離測試的 −31% 是否會被
-portfolio 機制部分「吃掉」重疊的改善，或維持獨立疊加——按本專案一貫的
-教訓，兩者都有可能，必須實測才能下結論）。若確認為真，這是本專案至今
-單一最大的一次分數躍進，直接回應「electro 現有架構挖乾」的困境——
-不是靠新的 loss 權重或更多 runtime，是修正一個一直存在、被貪婪法掩蓋
-的次優解算法。
+**完整正式 pipeline 對照結果（重要修正，−31% 沒有直接疊加）**：跑了四組
+100 案對照（含全部 seeds/Jacobi/portfolio/adaptive iters 的完整正式
+pipeline，vs. 精簡設定=只用 Jacobi replace、關掉 wideswap/grouping-
+pushpast/adaptive-iters-portfolio）：
+
+| 設定 | Legalizer | Total Score |
+|---|---|---|
+| 完整 portfolio（現行預設） | 貪婪法 | 2.1513（已知官方分數） |
+| 完整 portfolio | LP | **2.1230（−1.3%）** |
+| 精簡（僅 Jacobi replace） | 貪婪法 | 2.2474 |
+| 精簡 | LP | 2.2134（−1.5%） |
+
+**關鍵誠實結論**：隔離測試量到的 −31.0% 並沒有直接疊加進正式 pipeline。
+真正原因是**現有 portfolio 機制（多候選挑最好）本身就貢獻了 −4.3%**
+（精簡貪婪法 2.2474 → 完整 portfolio 貪婪法 2.1513），跟 LP 法能補的
+品質缺口高度重疊——portfolio 靠「多跑幾種候選、挑最好的」已經吸收掉了
+LP 法在單一候選情境下能貢獻的大部分價值。精簡+LP（2.2134）甚至打不贏
+完整 portfolio+貪婪法（2.1513），證實「更多候選多樣性」目前仍是比
+「單一候選品質」更強的槓桿。**但 LP 法在兩種設定下都是一致、可重現的
+正向改善**（−1.3%、−1.5%），沒有任何反例，且是嚴格加法式（LP 失敗
+自動 fallback 回貪婪法，絕不會更差）——**已將 `ELECTRO_LEGALIZE_LP`
+預設改為 `"1"`**（`electro_optimizer.py`），冷啟動（無任何環境變數覆寫）
+獨立確認：`Total Score=2.1230 Vgrp=380 Vmib=0 Vbnd=282 feasible=100/100`，
+完全吻合。**electro 路線正式定案更新為 2.1230**（原始基準 2.9007 的
+−26.8%，即測正確性修復後的 2.1513 再 −1.3%）。
+
+**對「如何追上 Alpha Top5（0.879-1.100）」這個問題的誠實回答**：這次
+LP 法是一個乾淨、低風險、已驗證的小改善，但**不是能拉近那 2 倍差距的
+答案**。真正有意義的訊號反而是隔離測試量到的 −31%——它證明了「給定同一個
+順序，存在遠比目前 portfolio 找到的候選更好的解」，但現有 portfolio
+的候選生成方式（多 seed/Jacobi/wideswap 變體）顯然**不擅長穩定產出
+這種高品質候選**，只是在一堆普通候選裡挑相對最好的。這代表下一步的
+真正槓桿不是「再加一種 portfolio 花招」（已知報酬遞減）也不是「換更好的
+legalizer 接上同樣的候選」（剛驗證只值 1.3%），而是**候選生成機制本身
+需要架構級的重新思考**——例如：(1) 重啟先前擱置的 sequence-pair+LP
+從零建構路線（§8.8-8.9，已驗證面積比 1.15 倍優於 B*-tree 的 1.40 倍），
+但這次用「讀取 analytical_place() 收斂幾何的順序」當作額外的 warm-start
+候選餵給 LP（而非單純的對角線啟發式排序），或許能繞開當初卡住那條線的
+anchor 矛盾；(2) 認真評估這個 2 倍差距是否本質上需要一個結構不同的
+placement 典範（例如生成式 B*-tree 路線的 reward fine-tuning，或
+electro 之外的第三條路徑），而非目前 electro 架構的任何微調能達到的
+——這是研究等級的投入，需要使用者決定是否值得繼續砸時間。
 
 **同時發現**：`C_QA_20260618.pdf`（官方正式 Q&A）確認：(1) 硬體規格
 = A100 80GB GPU + 48 核 Icelake CPU + 128GB RAM，測資逐一序列評測，

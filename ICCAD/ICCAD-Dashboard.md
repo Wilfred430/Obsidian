@@ -37,7 +37,7 @@ date: 2026-07-01
 - [[ICCAD/Algorithms/Fixed-Outline-Floorplanning|Fixed-Outline Floorplanning (2003)]]：現代分層設計與固定輪廓約束。
 
 ## 🔧 實作深潛 (Implementation Deep-Dive)
-> 對應 `collaborate/` repo 的實際程式碼架構,原子筆記系列 1-8。
+> 對應 `collaborate/` repo 的實際程式碼架構,原子筆記系列 1-9。
 - [[ICCAD_code/1_Data_Loader_and_Wrapper|1. Data Loader 與 Python 封裝架構]]
 - [[ICCAD_code/1b_Input_Output_Contract|1b. Input/Output 完整合約（資料存在哪、格式是什麼）]]
 - [[ICCAD_code/2_SA_Optimizer_Engine|2. 核心退火引擎與 B*-Tree]]
@@ -47,6 +47,7 @@ date: 2026-07-01
 - [[ICCAD_code/6_ML_Generative_BTree|6. 生成式 B*-tree 拓樸模型]]
 - [[ICCAD_code/7_Electrostatic_Placer|7. 電靜力法擺放器]]
 - [[ICCAD_code/8_Winning_Strategy_and_Roadmap|8. 奪冠策略總覽與現況路線圖]]
+- [[ICCAD_code/9_Research_Tool_Workflow|9. 研究工具分工流程（Claude Code/Antigravity/Gemini/NotebookLM/Connected Papers）]]
 
 ## 🧬 EDA 領域背景
 - [[ICCAD/EDA-Paradigm-Shift|EDA 範式轉移]]：從傳統規則到 AI 驅動的轉變。

@@ -329,4 +329,33 @@
   (2) by-construction/換更密 placer（pop 的 electro/M1 方向）。post-hoc 投報比
   已低。
 
+---
+## [2026-07-21] Optimize | electro legalizer 換成 LP 求解 + 官方 Alpha 排名差距診斷
+- **觸發**: 官方 Alpha 正式排名曝光（Top5 Total Score 0.879-1.100，遠低於我們的
+  2.1513，且不是靠 runtime 贏），追出 `legalize.py::_compact()` 是貪婪演算法
+  （只保證不重疊，不管 HPWL/面積），非最優解。
+- **修法**: 新增 `legalize_lp()`（LP 版壓縮，複用完全相同的順序抽取邏輯，避開了
+  先前 sequence-pair 從零建構卡住的 preplaced anchor 矛盾），opt-in
+  `ELECTRO_LEGALIZE_LP`。**完整 pipeline 驗證：2.1513 → 2.1230（−1.3%）**，已設
+  為新預設。隔離測試（無 portfolio）曾測到 −31.0%，但現有 portfolio 機制（多
+  seed/Jacobi/wideswap）已吸收掉大部分同樣的品質缺口，兩者高度重疊。
+- **負面結果（已排除，避免重複踩）**: LP 目標函數換成純 HPWL 最小化（放棄位移
+  正則化）讓佈局失去緊湊性，9 案加權變差 +37.2%；`ELECTRO_EDENSITY`（含 RePlAce-ld
+  局部密度權重）跟既有 `lam_ov`/`lam_bb` 機制打架，9 案加權從 2.96 暴增到 5.7-8.4。
+- **Deep Search 文獻查證**: TCG、UFO、"Placement Constraints in Floorplan
+  Design"、QinFer 全部確認真實存在；但 DREAMPlace 3.0 的密度權重公式是編造的、
+  AutoDMP 被誤植為 RL/MDP（實際是貝葉斯優化）。
+- **Output**: 全記進 [[ICCAD_code/8_Winning_Strategy_and_Roadmap|8.34 節]]；
+  `d:\ICCAD-2026-C\AI-deep-search\research_notes.md` 是完整查證紀錄。
+
+## [2026-07-23] Refactor | 新增研究工具分工流程筆記 + 專案合作模式轉為蘇格拉底式導師
+- **Context**: 使用者決定不再用 `/goal` 讓 Claude Code 自主跑實驗/改 production
+  程式碼，改為引導式教學（先解釋邏輯、使用者自己動手、小測驗確認理解）。同時
+  建立 `d:\ICCAD-2026-C\.claude\skills\floorplan-guard\` 專案級 skill，把 1% 面積
+  容差、preplaced 不可移動等硬約束規則固化成 checklist。
+- **Output**: 新增 [[ICCAD_code/9_Research_Tool_Workflow|9. 研究工具分工流程]]，
+  整理 Claude Code / Antigravity / Gemini Deep Research / NotebookLM /
+  Connected Papers 五個工具的分工與建議流程，並記錄「論文標題真實不代表引用的
+  具體公式就是真的」這個查證教訓。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

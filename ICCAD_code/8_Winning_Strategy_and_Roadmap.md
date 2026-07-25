@@ -1588,7 +1588,7 @@ place-compact，proxy 逐案挑，永遠只加 1 個 spectral seed=0——jitter
 | 配置 | Total（Neutral RT） | vs 起點 2.1230 | runtime |
 |---|---|---|---|
 | place-compact（**預設，安全**） | **1.9666** | −7.4% | 中性 |
-| + spectral（jacobi+spectral） | **1.8538** | **−12.7%** | ~2× |
+| + spectral（jacobi+spectral） | **1.8521** | **−12.7%** | ~2× |
 | （對照）+ seeds=2（同 runtime） | 1.8811 | −11.4% | ~2× |
 | + spectral + seeds=2 | 1.8362 | −13.5% | ~3× |
 | （對照）+ seeds=3（同 runtime） | 1.8363 | −13.5% | ~3× |

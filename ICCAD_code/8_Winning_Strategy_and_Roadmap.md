@@ -1489,4 +1489,65 @@ preplaced 不動（Q5/A5，我們的實作已經是這樣做）。這些都跟�
 一致，沒有需要修正的落差。
 
 ---
+
+## §8.35（2026-07-25，重大突破）：place-compact 重擺放候選，2.1230→2.0562（−3.1%），且揭示「哪些改進能轉移到完整 pipeline」的判準
+
+**背景**：使用者切回自主優化模式，要求「不斷試錯挑戰最低 cost」。上一輪
+（§8.34）確認了核心瓶頸是 **area_gap（密度），不是 runtime**——第一名
+（Alpha Top5，Total 0.879）跟我們速度幾乎一樣（2.67s vs 2.83s），但 Cost
+只有我們的 40%。本輪系統性攻擊 area_gap。
+
+**四個實驗（9 案快篩 → 值得的才 full-100 驗證），只有一個轉移成功**：
+
+1. **eDensity 純模式（`ELECTRO_EDENSITY_PURE`，把 lam_ov/lam_bb 關掉讓
+   eDensity 當唯一密度力）**：❌ 否決。假說是「§8.34 的 eDensity 失敗只是被
+   舊擴散力干擾」，但即使正確關掉 lam_ov/lam_bb，9 案加權還是從 2.96 暴增到
+   5.7-7.0，mean area_gap 反而**上升**（153%→176-221%）。eDensity 根本不適合
+   這個小規模問題，不是配置問題。
+
+2. **LP legalizer 加 bbox 跨度最小化項（`M_x ≥ 所有右邊界`，最小化外框）**：
+   ❌ 無效（2.9579→2.9641，幾乎沒動）。**這個負面結果最有診斷價值**：加了
+   外框壓縮項卻壓不動，證明**空白不是「方塊之間的間距」（順序約束早就壓緊
+   了），而是結構性地烙印在 analytical placement 的「排列方式」裡**——哪些
+   方塊當鄰居。用實測再次坐實 §8.34 的 B*-tree 1.403 倍面積比結論：GT 的高
+   密度來自拼圖式互鎖排列，不是把現有排列壓緊就能得到。
+
+3. **密度旋鈕重掃（LP legalizer 加入後）**：`BB1=0.15`（bbox 壓縮終值，原
+   0.04）在 9 案隔離測試 **−14.7%**（2.9579→2.5219），`OV1=1.5`（重疊擴散
+   終值）**−8.4%**。兩者都是「讓 analytical placement 更密，靠 LP legalizer
+   收拾多出來的重疊」。**但 full-100 完整 pipeline 驗證：BB1=0.15 反而變差
+   到 2.1957（+3.4%）**。原因：完整 pipeline 已透過 jacobi 初始化 + adaptive
+   延伸 + portfolio 榨取了大部分密度紅利，再加 BB1 過度壓縮、互相干擾。
+   **這是隔離贏、完整輸的又一例（跟 LP legalizer 隔離 −31%→完整 −1.3% 同
+   模式）**。BB1+OV1 疊加更是災難（9 案 3.88，兩個同方向旋鈕過度壓縮）。
+   **BB1/OV1 都否決**。
+
+4. **place↔compact 重擺放候選（`ELECTRO_PLACE_COMPACT`，新增）**：✅ **確認
+   贏面**。機制：把已 legalize+repair 的緊密佈局的中心點當 init，重跑一輪短
+   analytical placement（250 迭代），再 legalize+repair，當**額外 portfolio
+   候選**，由既有 proxy 排名擇優。9 案 place-compact 讓 mean area_gap 大降
+   153%→90%，但**極度逐案分歧**（config_91 大勝 5.29→2.88、config_41 大敗
+   1.82→5.39）——正是 portfolio 型態。先驗證 proxy 挑選正確：proxy-picked
+   2.7938 幾乎等於 oracle-min 2.7875（−5.5%），所有災難案例都正確拒絕。
+   **full-100 完整 pipeline：2.1230→2.0562（−3.1%），100/100 feasible，
+   Vgrp 380→328、Vbnd 282→266，runtime 相當甚至更快**（place-compact 常
+   提供好候選讓 adaptive 延伸觸發更少，避開 1200 迭代）。冷啟動獨立驗證
+   2.0562 完全吻合，**已設為預設**（`os.environ.setdefault("ELECTRO_PLACE_
+   COMPACT", "1")`）。
+
+**為什麼 place-compact 轉移成功、BB1 卻失敗？——本輪最重要的方法論產出**：
+能轉移到完整 pipeline 的改進，只有做「**pipeline 裡沒有任何其他機制在做的
+genuinely 新的事**」的。place-compact 重新推導**排列**（哪些方塊當鄰居），
+這是 jacobi/adaptive/wideswap/pushpast 全都沒碰的維度，所以疊加有效。BB1
+只是把「密度」這個既有機制已經榨乾的維度再推一把，必然互相干擾。**判斷一
+個隔離測試的贏面值不值得 full-100，先問：它跟現有 pipeline 機制是否作用在
+同一個維度？同維度的大概率被蓋掉，正交維度才可能疊加。**
+
+**目前 electro 路線正式冷啟動分數：2.0562**（原始 electro 基準 2.9007 的
+−29.1%；session 起點正確性修復後 2.1513 的 −4.5%）。程式碼改動：
+`electro_parallel.py` 新增 `place_compact_variant()`，`electro_optimizer.py`
+solve() 新增 opt-in 候選區塊 + 翻預設，`analytical_place.py` 新增
+`ELECTRO_EDENSITY_PURE`（否決但保留 opt-in，預設關）。
+
+---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

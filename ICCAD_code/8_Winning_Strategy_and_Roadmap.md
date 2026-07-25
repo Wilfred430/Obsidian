@@ -1671,9 +1671,19 @@ ELECTRO_ADAPTIVE_SEED=1 ELECTRO_PROXY_ABSAREA=1 ELECTRO_PROXY_ABSHPWL=1` =
 且穩健（兩個 pool 無關參考互相平衡）。是「持續逼問為什麼」而非「多試幾組
 參數」的成果。
 
+**再追加：escalated 的 `ELECTRO_ADAPTIVE_SEED` 改成「數量」**（給最難案例
+加 N 個額外 jacobi seed，而非只 1 個），配合完全 pool 無關 proxy 掃描（全
+100/100 feasible）：SEED=1→1.7535(~1.6×)、**SEED=2→1.7342(~1.8×，效率甜蜜
+點)**、SEED=3→1.7279(~2×，遞減)。報酬遞減（−1.1%→−0.4%）。（註：config_110
+的 2.220 好候選即使給了完整多樣性配方仍選不出，卡在 2.694——因 proxy 對 area
+有好 baseline 估計 total_block_area，但 hpwl 無幾何 baseline 估計、永遠是近似，
+這個案例是 hpwl 驅動的排名反轉，是 proxy 無 baseline 的根本限制，不追單一案例。）
+
 **更新後的完整 Pareto frontier（全 100/100 feasible）**：1×→1.9666（預設）、
-~1.35×→adaptive-spectral 1.8790、**~1.6×→escalated+完全proxy 1.7535（最佳
-runtime-efficient）**、2×→full spectral 1.8521、3×→spec+seeds 1.836。
+~1.35×→adaptive-spectral 1.8790、**~1.6×→escalated+完全proxy 1.7535**、
+~1.8×→+adaptive-seed=2 1.7342、**~2×→+adaptive-seed=3 1.7279（本輪最低已驗證，
+−40.4% vs 原始基準 2.9007）**、（對照）2×→full spectral 1.8521、3×→spec+seeds
+1.836。
 
 ---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

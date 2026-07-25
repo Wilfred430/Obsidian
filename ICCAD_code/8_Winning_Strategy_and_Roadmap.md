@@ -1621,7 +1621,9 @@ adaptive iters 的「只對難案例花成本」哲學，**只對 proxy 判定�
 | adaptive spectral thresh=2.0 | 1.9341 | ~1.15× | ~14 案 |
 | **adaptive spectral thresh=1.5** | **1.8790** | ~1.35× | ~31 案 |
 | adaptive spectral thresh=1.3 | 1.8742 | ~1.45× | 更多 |
+| **escalated（spectral+額外 jacobi seed）thresh=1.5** | **1.8449** | ~1.6× | ~31 案 |
 | full spectral（無條件） | 1.8521 | 2× | 全部 |
+| spectral+seeds（無條件） | 1.836 | 3× | 全部 |
 
 **關鍵結論：adaptive spectral（thresh~1.5）Pareto-支配 full spectral**——
 1.8790 @1.35× 幾乎追平 full spectral 的 1.8521 @2×，卻省一半 runtime。效率

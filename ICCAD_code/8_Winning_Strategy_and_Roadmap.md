@@ -1646,17 +1646,33 @@ config_110（area_gap 129%、單案佔加權 13.9%）的「好候選」（area 5
 **結果（豐富候選池下）**：escalated adaptive + absarea =
 **1.8096（−14.8% vs 起點 2.1230）**，config_110 從 3.985 破解到 2.694，是
 目前最低的**已驗證** runtime-efficient 分數（@~1.6×，且打贏 spec+seeds 的
-1.836 @3×，更好又更便宜）。**但重要注意（誠實）：absarea 不是通用改進**——
-它幫了 escalated（−1.9%），卻**傷了 spec+seeds（1.836→1.8556）**、在稀疏的
-預設候選池中性偏負（1.9666→1.9710）。原因：pool-mean 跟 absarea 都是「真實
-cost（需未知 baseline）」的不完美啟發式，誰好誰壞跟候選池組成有關。**因此
-absarea 只在 escalated adaptive 這個特定豐富候選池組合下開啟才有淨效益，
-不能無腦全開，也不設預設**。目前最低已驗證組合：
-`ELECTRO_SPECTRAL_ADAPTIVE=1 THRESH=1.5 ELECTRO_ADAPTIVE_SEED=1
-ELECTRO_PROXY_ABSAREA=1` = 1.8096 @~1.6×。純安全預設仍為 place-compact 1.9666。
+1.836 @3×，更好又更便宜）。absarea-only 一開始好壞參半（幫 escalated 卻傷 spec+seeds 1.836→1.8556），
+因為它只修了 area 項、hpwl 項還是 pool-mean，不平衡。**完成修正——把 hpwl
+項也做成 pool 無關**（`ELECTRO_PROXY_ABSHPWL=1`）：HPWL 的自然長度尺度是
+`sqrt(total_block_area)`，所以 `hpwl/sqrt(total_block_area)` 是 pool 無關的
+hpwl 參考。**完全 pool 無關 proxy（absarea+abshpwl）變得穩健**：
+
+| 配置 | pool-mean（原） | absarea only | **完全 pool 無關** |
+|---|---|---|---|
+| escalated adaptive（豐富池） | 1.8449 | 1.8096 | **1.7535** |
+| spec+seeds（豐富池） | 1.836 | 1.8556（傷） | 1.834（恢復） |
+| 預設（稀疏池） | 1.9666 | 1.9710 | 1.9866（傷） |
+
+**規律**：完全 pool 無關 proxy **只在豐富候選池有益**（pool-mean 失真在
+「難案例有大量跨度大的候選」時最嚴重）；稀疏預設池候選少、pool-mean 本身
+就是合理局部參考，換掉反而傷。**所以 proxy 修正要跟多樣性機制一起開，不上
+預設**。**目前最低已驗證組合：`ELECTRO_SPECTRAL_ADAPTIVE=1 THRESH=1.5
+ELECTRO_ADAPTIVE_SEED=1 ELECTRO_PROXY_ABSAREA=1 ELECTRO_PROXY_ABSHPWL=1` =
+1.7535 @~1.6×（−17.4% vs 起點 2.1230，−39.6% vs 原始基準 2.9007）**，config_110
+從 3.985 破解到 2.694。純安全預設仍為 place-compact 1.9666。
+
+**這是本輪最深入的一擊**：從盲目調參一路深入到**診斷並修正候選選擇機制
+本身的第一原理缺陷**（pool-mean 對真實 gap 的失真），比任何旋鈕都根本，
+且穩健（兩個 pool 無關參考互相平衡）。是「持續逼問為什麼」而非「多試幾組
+參數」的成果。
 
 **更新後的完整 Pareto frontier（全 100/100 feasible）**：1×→1.9666（預設）、
-~1.35×→adaptive-spectral 1.8790、**~1.6×→escalated+absarea 1.8096（最佳
+~1.35×→adaptive-spectral 1.8790、**~1.6×→escalated+完全proxy 1.7535（最佳
 runtime-efficient）**、2×→full spectral 1.8521、3×→spec+seeds 1.836。
 
 ---

@@ -1555,5 +1555,23 @@ genuinely 新的事**」的。place-compact 重新推導**排列**（哪些方�
 `analytical_place.py` 新增 `ELECTRO_EDENSITY_PURE`（否決但保留 opt-in，
 預設關）。
 
+**追加：place-compact 與 seeds（多起點）正交可疊加，畫出 runtime/quality
+trade-off 曲線**。place-compact 給「排列精修」，seeds 給「初始多樣性」，兩者
+作用維度不同 → 疊加有效（正是上面判準的正面例子）：
+
+| 配置 | Total（Neutral RT） | vs 起點 2.1230 | runtime |
+|---|---|---|---|
+| place-compact（seeds=1，**預設**） | **1.9666** | −7.4% | 中性/略快 |
+| + seeds=2 | 1.8811 | −11.4% | ~2× |
+| + seeds=3 | 1.8363 | −13.5% | ~3× |
+
+全部 100/100 feasible。報酬遞減（s1→s2 −4.3%、s2→s3 −2.4%）。**但 seeds>1
+沒有設為預設**——`electro_optimizer.py` 原作者註解已權衡過：Neutral RT 只講
+一半故事，真實 Contest RT 對變慢無封頂懲罰（`RT^0.3`），seeds=N 讓 runtime
+約 N 倍，若慢到全場中位數數倍，RT 懲罰會吃掉品質紅利。**因此正式送出建議
+用 seeds=1 + place-compact（1.9666，runtime 安全）；seeds=2/3 是「確定 runtime
+預算充足時才開」的選項**，是團隊層級決策。這條曲線是「若 runtime 免費，
+排列品質能到多低」的誠實上限，留給最終提交時依實際 runtime 預算取捨。
+
 ---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

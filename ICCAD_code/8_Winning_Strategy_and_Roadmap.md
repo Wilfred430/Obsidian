@@ -1490,7 +1490,7 @@ preplaced 不動（Q5/A5，我們的實作已經是這樣做）。這些都跟�
 
 ---
 
-## §8.35（2026-07-25，重大突破）：place-compact 重擺放候選，2.1230→2.0562（−3.1%），且揭示「哪些改進能轉移到完整 pipeline」的判準
+## §8.35（2026-07-25，重大突破）：place-compact 重擺放候選，2.1230→1.9666（−7.4%），且揭示「哪些改進能轉移到完整 pipeline」的判準
 
 **背景**：使用者切回自主優化模式，要求「不斷試錯挑戰最低 cost」。上一輪
 （§8.34）確認了核心瓶頸是 **area_gap（密度），不是 runtime**——第一名
@@ -1529,11 +1529,15 @@ preplaced 不動（Q5/A5，我們的實作已經是這樣做）。這些都跟�
    153%→90%，但**極度逐案分歧**（config_91 大勝 5.29→2.88、config_41 大敗
    1.82→5.39）——正是 portfolio 型態。先驗證 proxy 挑選正確：proxy-picked
    2.7938 幾乎等於 oracle-min 2.7875（−5.5%），所有災難案例都正確拒絕。
-   **full-100 完整 pipeline：2.1230→2.0562（−3.1%），100/100 feasible，
-   Vgrp 380→328、Vbnd 282→266，runtime 相當甚至更快**（place-compact 常
-   提供好候選讓 adaptive 延伸觸發更少，避開 1200 迭代）。冷啟動獨立驗證
-   2.0562 完全吻合，**已設為預設**（`os.environ.setdefault("ELECTRO_PLACE_
-   COMPACT", "1")`）。
+   **full-100 完整 pipeline（第二輪 250 迭代）：2.1230→2.0562（−3.1%），
+   100/100 feasible，Vgrp 380→328、Vbnd 282→266，runtime 相當甚至更快**
+   （place-compact 常提供好候選讓 adaptive 延伸觸發更少，避開 1200 迭代）。
+   **接著掃第二輪迭代數（`ELECTRO_PLACE_COMPACT_ITERS`），發現非單調峰值在
+   400**：250→2.0562、350→2.0069、**400→1.9666（最佳）**、450→1.9695、
+   600→2.0237（太多會 re-spread 漂回原本較鬆的平衡）。**iters2=400 冷啟動
+   確認 1.9666，已設為預設**（`ELECTRO_PLACE_COMPACT=1`、
+   `ELECTRO_PLACE_COMPACT_ITERS` 預設 400）。**對 session 起點 2.1230 是
+   −7.4%。**
 
 **為什麼 place-compact 轉移成功、BB1 卻失敗？——本輪最重要的方法論產出**：
 能轉移到完整 pipeline 的改進，只有做「**pipeline 裡沒有任何其他機制在做的
@@ -1543,11 +1547,13 @@ genuinely 新的事**」的。place-compact 重新推導**排列**（哪些方�
 個隔離測試的贏面值不值得 full-100，先問：它跟現有 pipeline 機制是否作用在
 同一個維度？同維度的大概率被蓋掉，正交維度才可能疊加。**
 
-**目前 electro 路線正式冷啟動分數：2.0562**（原始 electro 基準 2.9007 的
-−29.1%；session 起點正確性修復後 2.1513 的 −4.5%）。程式碼改動：
-`electro_parallel.py` 新增 `place_compact_variant()`，`electro_optimizer.py`
-solve() 新增 opt-in 候選區塊 + 翻預設，`analytical_place.py` 新增
-`ELECTRO_EDENSITY_PURE`（否決但保留 opt-in，預設關）。
+**目前 electro 路線正式冷啟動分數：1.9666**（原始 electro 基準 2.9007 的
+**−32.2%**；session 起點正確性修復後 2.1513 的 −8.6%）。程式碼改動：
+`electro_parallel.py` 新增 `place_compact_variant()`（支援
+`ELECTRO_PLACE_COMPACT_ITERS` 迭代數與 `ELECTRO_PLACE_COMPACT_ROUNDS`
+多輪），`electro_optimizer.py` solve() 新增 opt-in 候選區塊 + 翻預設，
+`analytical_place.py` 新增 `ELECTRO_EDENSITY_PURE`（否決但保留 opt-in，
+預設關）。
 
 ---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

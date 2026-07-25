@@ -1635,5 +1635,29 @@ adaptive iters 的「只對難案例花成本」哲學，**只對 proxy 判定�
 `ELECTRO_SPECTRAL_ADAPTIVE=1 + THRESH=1.5` 是目前最推薦的 runtime-efficient
 升級選項，優於 full spectral。
 
+**最後追加（診斷驅動的 proxy 缺陷修正，本輪最深入的一擊）**：診斷發現
+config_110（area_gap 129%、單案佔加權 13.9%）的「好候選」（area 57%）明明
+在候選池中卻沒被選——追根究柢是**候選排名 proxy 的結構性缺陷**。proxy 用
+`area/候選池平均` 當 area_gap 代理，但難案例所有候選都遠離 baseline、平均被
+拉高，壓縮了差異、讓 `exp(2·vrel)` 項主導而選錯。**第一原理修正**
+（`ELECTRO_PROXY_ABSAREA=1`）：`baseline_area ≈ total_block_area/GT_util
+(~0.965) ≈ total_block_area`（solve 時已知常數），所以 `area/total_block_area
+≈ 1+area_gap` 是 pool 無關、忠實追蹤真實 area_gap 的參考，取代 pool-mean。
+**結果（豐富候選池下）**：escalated adaptive + absarea =
+**1.8096（−14.8% vs 起點 2.1230）**，config_110 從 3.985 破解到 2.694，是
+目前最低的**已驗證** runtime-efficient 分數（@~1.6×，且打贏 spec+seeds 的
+1.836 @3×，更好又更便宜）。**但重要注意（誠實）：absarea 不是通用改進**——
+它幫了 escalated（−1.9%），卻**傷了 spec+seeds（1.836→1.8556）**、在稀疏的
+預設候選池中性偏負（1.9666→1.9710）。原因：pool-mean 跟 absarea 都是「真實
+cost（需未知 baseline）」的不完美啟發式，誰好誰壞跟候選池組成有關。**因此
+absarea 只在 escalated adaptive 這個特定豐富候選池組合下開啟才有淨效益，
+不能無腦全開，也不設預設**。目前最低已驗證組合：
+`ELECTRO_SPECTRAL_ADAPTIVE=1 THRESH=1.5 ELECTRO_ADAPTIVE_SEED=1
+ELECTRO_PROXY_ABSAREA=1` = 1.8096 @~1.6×。純安全預設仍為 place-compact 1.9666。
+
+**更新後的完整 Pareto frontier（全 100/100 feasible）**：1×→1.9666（預設）、
+~1.35×→adaptive-spectral 1.8790、**~1.6×→escalated+absarea 1.8096（最佳
+runtime-efficient）**、2×→full spectral 1.8521、3×→spec+seeds 1.836。
+
 ---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

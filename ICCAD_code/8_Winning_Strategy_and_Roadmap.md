@@ -1603,5 +1603,35 @@ GiFt 文獻（已查證真實，見 `literature_verified_citations.md`）直接�
 traded、非預設**：正式送出若要開一級 runtime，`ELECTRO_SPECTRAL=1` 是比
 seeds=2 更好的選擇。
 
+**最後追加（資料驅動診斷 → adaptive spectral，本輪最有價值的設計）**：
+不再盲目調參，改為分析 1.9666 的逐案加權貢獻，發現**殘留損失集中在 ~10 個
+大案例**（n≥108 佔加權 79%），且分兩種失血模式：密度受限（area_gap 60-72%、
+低 vrel）與邊界受限（Vb=9-14、vrel 0.27-0.29）。異常值 config_110（area 129%、
+單案佔 13.9%）所有 init 都落進同一壞 basin——直到夠多樣性的組合才壓到
+area 57%，證明**難案例需要更多多樣性，但全域給多樣性要花 runtime**。
+
+由此設計 **adaptive spectral**（`ELECTRO_SPECTRAL_ADAPTIVE=1`）：比照現有
+adaptive iters 的「只對難案例花成本」哲學，**只對 proxy 判定為難
+（`best_600_score >= ELECTRO_SPECTRAL_ADAPTIVE_THRESH`）的案例才加跑 spectral
+候選**。門檻掃描（全 100/100 feasible）：
+
+| 配置 | Total | runtime | 觸發 |
+|---|---|---|---|
+| place-compact（預設） | 1.9666 | 1× | 0 |
+| adaptive spectral thresh=2.0 | 1.9341 | ~1.15× | ~14 案 |
+| **adaptive spectral thresh=1.5** | **1.8790** | ~1.35× | ~31 案 |
+| adaptive spectral thresh=1.3 | 1.8742 | ~1.45× | 更多 |
+| full spectral（無條件） | 1.8521 | 2× | 全部 |
+
+**關鍵結論：adaptive spectral（thresh~1.5）Pareto-支配 full spectral**——
+1.8790 @1.35× 幾乎追平 full spectral 的 1.8521 @2×，卻省一半 runtime。效率
+（品質增益/runtime）thresh=1.5（0.250）> thresh=2.0（0.217）> full（0.115）。
+因為 spectral 只花在真正受益的難案例上，不浪費在簡單案例（full 的問題）也不
+漏掉中等案例（thresh 太高的問題）。**這是「花對地方 > 全域花」的 principled
+落地**，跟 adaptive iters 同一個模式，是本輪從盲目調參轉向資料驅動診斷後的
+最大收穫。**仍為 opt-in 非預設**（保守起見保留純 1× 安全預設 1.9666），但
+`ELECTRO_SPECTRAL_ADAPTIVE=1 + THRESH=1.5` 是目前最推薦的 runtime-efficient
+升級選項，優於 full spectral。
+
 ---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

@@ -1573,5 +1573,35 @@ trade-off 曲線**。place-compact 給「排列精修」，seeds 給「初始多
 預算充足時才開」的選項**，是團隊層級決策。這條曲線是「若 runtime 免費，
 排列品質能到多低」的誠實上限，留給最終提交時依實際 runtime 預算取捨。
 
+**再追加：spectral / GiFt init（`ELECTRO_SPECTRAL`，新增）——有原理的正交
+多樣性優於隨機 seed**。實作 spectral graph drawing 初始化（用 b2b 圖 Laplacian
+的最低兩個非平凡特徵向量 v2/v3 當初始座標，這是「最小化連線方塊間加權平方
+距離」的全域最優 2D 嵌入，spectral 版的 wirelength 最小化，也是 jacobi 鄰居
+平均的全域最優版本）。9 案快篩：spectral 單獨用加權 Total 比 jacobi 差
+（2.9866 vs 2.4349），**但 mean area_gap 最低（119% vs jacobi 124% vs random
+153%）且在子集上大勝**（config_21 spectral 2.22 vs jacobi 3.60、config_51
+1.49 vs 3.44）——典型 portfolio 型態，spectral 提供 jacobi 拿不到的排列。
+接成**額外 base 候選**（`ELECTRO_SPECTRAL=1`，jacobi+spectral 兩個 base 都
+place-compact，proxy 逐案挑，永遠只加 1 個 spectral seed=0——jitter 會毀掉
+確定性嵌入的價值）。**完整 runtime/quality 表（全 100/100 feasible）**：
+
+| 配置 | Total（Neutral RT） | vs 起點 2.1230 | runtime |
+|---|---|---|---|
+| place-compact（**預設，安全**） | **1.9666** | −7.4% | 中性 |
+| + spectral（jacobi+spectral） | **1.8538** | **−12.7%** | ~2× |
+| （對照）+ seeds=2（同 runtime） | 1.8811 | −11.4% | ~2× |
+| + spectral + seeds=2 | 1.8362 | −13.5% | ~3× |
+| （對照）+ seeds=3（同 runtime） | 1.8363 | −13.5% | ~3× |
+
+**關鍵發現**：spectral+jacobi 在**同 runtime（2×）下打贏 seeds=2**（1.8538 vs
+1.8811，−1.5%）——**有原理的正交多樣性（一個確定性、topology-optimal 的不同
+排列）比隨機 seed 更聰明地用 runtime**。但這個優勢在低 runtime 倍數最大：3×
+時 spectral+seeds=2（1.8362）跟 seeds=3（1.8363）打平——spectral 加的是「一個」
+不同排列，候選少時最有價值，seeds 越多多樣性飽和後優勢收斂。**spectral 是
+GiFt 文獻（已查證真實，見 `literature_verified_citations.md`）直接落地的成果，
+也是「用文獻找方向、自己動手驗證」流程的正面案例。同 seeds 一樣是 runtime-
+traded、非預設**：正式送出若要開一級 runtime，`ELECTRO_SPECTRAL=1` 是比
+seeds=2 更好的選擇。
+
 ---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

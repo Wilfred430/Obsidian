@@ -1304,6 +1304,32 @@ block10(x=21.999999,w=21) 這一組，算出來的 `overlap_x =
 - electro 路線（`electro_optimized/`，冷啟動即得，正式，經正確性修復）：
   **2.1513**
 
+### 本輪總結與尚未取得的結果
+
+**已驗證的最佳配置**（seeds=1 篩選層，全 100 案，100/100 feasible）：
+
+```
+ELECTRO_PLACE_COMPACT=1
+ELECTRO_PLACE_COMPACT_BEST=0      # 對「所有」候選都做，不只最佳的那個
+```
+→ **1.5733**（基準 1.6780 的 **−6.2%**）
+
+**尚在執行、未取得的結果**（接手時請先確認，**不要引用任何外插推估的數字**）：
+1. `PLACE_COMPACT_BEST=0` 與 `MIB_PORTFOLIO` / `ITERS=250` 的組合掃描
+   （`ITERS=300` 這個已知谷底值與 `BEST=0` 的組合**尚未測試**，是最明顯的下一步）。
+2. `PLACE_COMPACT + MIB_PORTFOLIO` 的 **seeds=8 完整驗證**（報告會寫到
+   `collaborate/reports/case_report_electro_v2_seeds8.xlsx`）。這是真正要交出去的
+   設定，seeds=1 只是篩選層。
+
+**下一步的優先方向**（依預期價值）：現在最大的未攻克項目是
+**V_grouping=184** 與 **V_boundary=141**（V_mib 已查清不值得追）。文獻方向：
+[Slicing floorplan with clustering constraint](https://www.researchgate.net/publication/3224973_Slicing_floorplan_with_clustering_constraint)
+與 [Young & Wong, "Slicing Floorplans with Boundary Constraints" (TCAD 1999)](http://www.cse.cuhk.edu.hk/~fyyoung/paper/tcad99_9.pdf)。
+具體想法：在 `_cut_options` 增加「不要把同一 cluster 切開」的硬性偏好，比照
+現有 `_wall_groups`/`kpref` 對 boundary 的處理方式。
+
+交接簡報：`AI-deep-search/antigravity_brief_2026-07-29_slice_pack_handoff.md`。
+
 ---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]
 

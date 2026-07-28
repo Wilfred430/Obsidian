@@ -358,4 +358,23 @@
   Connected Papers 五個工具的分工與建議流程，並記錄「論文標題真實不代表引用的
   具體公式就是真的」這個查證教訓。
 
+## [2026-07-28] Add | Claude Code Skills 指令參考 + Electro Pipeline 架構畫布
+- **Context**: 使用者新裝了 `academic-research-skills` marketplace（`academic-paper`/
+  `academic-paper-reviewer`/`academic-pipeline`），問這些 skill 對專題有何幫助；
+  查證比賽規格 PDF 與 `SUBMISSION.md` 後確認**比賽本身不要求繳交論文**（純
+  code+binary 送出），但這套工具對使用者「準備讀研究所、想把專題寫成論文」的
+  個人目標仍有價值。
+- **Output**: 新增 [[ICCAD_code/10_Claude_Code_Skills_Reference|10. Claude Code
+  Skills 指令參考]]，依「遇到 bug / 推進論文 / 畫圖 / 存流程」等實際情境分類
+  整理目前可用的 skill（含 academic-* 三件套、superpowers 工程紀律套件、
+  dataviz、skill-creator 等），刻意排除跟本專題無關的 Airflow/SageMaker 類
+  skill 保持精簡。
+- **Add**: 新增 [[Electronic_Pipeline.canvas|Electronic_Pipeline 架構畫布]]（視覺化
+  electro pipeline：初始化來源 → analytical_place → legalize → soft_repair →
+  place-compact 回饋迴圈 → 困難案例才加開的 adaptive 候選 → proxy 排名 →
+  portfolio 選擇）+ 對照的 [[Electronic_Pipeline|方塊說明 md]]。**使用者要求：
+  往後 pipeline 有結構性改動（新增/移除階段、新增生產預設開啟的機制）時，
+  同步更新這張畫布與說明文件**——已記錄為標準維護規則，寫入
+  `Electronic_Pipeline.md` 開頭與 Claude Code 跨對話記憶。
+
 **回到索引**：[[index|🌐 全域索引 >>]]

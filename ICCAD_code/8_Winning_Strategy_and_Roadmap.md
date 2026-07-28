@@ -1311,15 +1311,36 @@ block10(x=21.999999,w=21) 這一組，算出來的 `overlap_x =
 ```
 ELECTRO_PLACE_COMPACT=1
 ELECTRO_PLACE_COMPACT_BEST=0      # 對「所有」候選都做，不只最佳的那個
+ELECTRO_MIB_PORTFOLIO=1
 ```
-→ **1.5733**（基準 1.6780 的 **−6.2%**）
+→ **1.5657**（基準 1.6780 的 **−6.7%**）
+
+完整的組合對照：
+
+| 配置 | Total Score |
+|---|---|
+| **`BEST=0` + `MIB_PORTFOLIO`（ITERS 預設 400）** | **1.5657** |
+| `BEST=0` + `MIB_PORTFOLIO` + `ITERS=250` | 1.5688 |
+| `BEST=0`（ITERS 預設 400） | 1.5733 |
+| `BEST=0` + `ITERS=250` | 1.5743 |
+| `BEST=1` + `MIB_PORTFOLIO` | 1.5955 |
+| `BEST=1` + `ITERS=300` | 1.5967 |
+
+**值得注意的交互作用**：開了 `BEST=0`（所有候選都做 place-compact）之後，
+**迭代數的最佳值從 250 移回 400**（1.5657 vs 1.5688；而 `BEST=1` 時是 250/300
+較好）。合理的解釋：只對單一候選精修時，短迭代就夠把它推進附近的更好盆地；
+但對**所有**候選都精修時，每個候選各自需要更充分的重排列才能發揮價值。
+**這也再次示範「參數最佳值會隨脈絡漂移」——不能把在某個設定下掃出來的最佳值
+直接搬到另一個設定用（§8.29 的同一個教訓）。**
 
 **尚在執行、未取得的結果**（接手時請先確認，**不要引用任何外插推估的數字**）：
-1. `PLACE_COMPACT_BEST=0` 與 `MIB_PORTFOLIO` / `ITERS=250` 的組合掃描
-   （`ITERS=300` 這個已知谷底值與 `BEST=0` 的組合**尚未測試**，是最明顯的下一步）。
-2. `PLACE_COMPACT + MIB_PORTFOLIO` 的 **seeds=8 完整驗證**（報告會寫到
-   `collaborate/reports/case_report_electro_v2_seeds8.xlsx`）。這是真正要交出去的
-   設定，seeds=1 只是篩選層。
+1. **最佳配置的 seeds=8 完整驗證**（`BEST=0 + MIB_PORTFOLIO`，報告會寫到
+   `collaborate/reports/case_report_electro_v2_BEST0_seeds8.xlsx`）。這是真正要
+   交出去的設定，seeds=1 只是篩選層。另有一份較早啟動、測 `BEST=1 +
+   MIB_PORTFOLIO`（已知次佳）的 seeds=8 驗證會寫到
+   `case_report_electro_v2_seeds8.xlsx`，可當對照。
+2. `BEST=0` 搭配 `ITERS=300/500` 尚未測試——`BEST=0` 下的迭代數曲線只有
+   250(1.5688) 與 400(1.5657) 兩點，真正的谷底可能在 400-500 之間。
 
 **下一步的優先方向**（依預期價值）：現在最大的未攻克項目是
 **V_grouping=184** 與 **V_boundary=141**（V_mib 已查清不值得追）。文獻方向：

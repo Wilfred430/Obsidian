@@ -45,7 +45,7 @@ date: 2026-07-01
 - [[ICCAD_code/4_Packing_and_Evaluation|4. 拓撲打包與座標推算]]
 - [[ICCAD_code/5_ML_Coordinate_Regression|5. ML 座標回歸與 Mode Collapse 診斷]]
 - [[ICCAD_code/6_ML_Generative_BTree|6. 生成式 B*-tree 拓樸模型]]
-- [[ICCAD_code/7_Electrostatic_Placer|7. 電靜力法擺放器]]
+- [[ICCAD_code/7_Electrostatic_Placer|7. 電靜力法擺放器]]（含 [[Electronic_Pipeline.canvas|架構畫布]] + [[Electronic_Pipeline|畫布方塊說明]]，pipeline 有結構性改動時同步更新）
 - [[ICCAD_code/8_Winning_Strategy_and_Roadmap|8. 奪冠策略總覽與現況路線圖]]
 - [[ICCAD_code/9_Research_Tool_Workflow|9. 研究工具分工流程（Claude Code/Antigravity/Gemini/NotebookLM/Connected Papers）]]
 - [[ICCAD_code/10_Claude_Code_Skills_Reference|10. Claude Code Skills 指令參考（有哪些 skill、怎麼用、什麼時候用）]]

@@ -1,34 +1,248 @@
 {
-	"nodes":[
-		{"id":"node-030","type":"group","x":980,"y":440,"width":620,"height":260,"label":"困難案例才加開的候選（opt-in，adaptive）"},
-		{"id":"node-002","type":"group","x":-40,"y":-60,"width":340,"height":400,"label":"初始化來源 (擇一)"},
-		{"id":"node-001","type":"text","text":"# Electro Pipeline 架構圖\n對應 `d:\\ICCAD-2026-C\\collaborate\\electro_optimized\\` — 每次 pipeline 有結構性改動（新增階段/新增預設開啟的機制）就更新這張圖。各方塊意義見同資料夾的 `Electronic_Pipeline.md`。","x":0,"y":-200,"width":1140,"height":90,"color":"6"},
-		{"id":"node-003","type":"text","text":"**Random init**\n`ELECTRO_JACOBI_MODE=off`\n隨機初始座標","x":0,"y":-20,"width":260,"height":90,"color":"5"},
-		{"id":"node-004","type":"text","text":"**Jacobi 暖啟動**\n（生產預設 `replace`）\nb2b 連線圖做 20 輪鄰居平均","x":0,"y":90,"width":260,"height":110,"color":"5"},
-		{"id":"node-005","type":"text","text":"**Spectral / GiFt**\n（opt-in，`ELECTRO_SPECTRAL=1`）\nanchored quadratic placement\n一步求解線性系統","x":0,"y":220,"width":260,"height":120,"color":"5"},
-		{"id":"node-010","type":"text","text":"## Stage 1\n**analytical_place()**\nAdam 梯度下降\nov / bb / wl / grp(0.4) / mib_shape(0.05)","x":380,"y":60,"width":260,"height":160,"color":"4"},
-		{"id":"node-011","type":"text","text":"## Stage 2\n**legalize()**\n1. 順序抽取\n2. 貪婪 或 LP 壓實（`ELECTRO_LEGALIZE_LP=1` 生產預設）\n3. `_cleanup()` 保底（`_PUSH_GAP=1e-4`）","x":680,"y":60,"width":260,"height":160,"color":"4"},
-		{"id":"node-020","type":"text","text":"**place-compact**（生產預設開，`ELECTRO_PLACE_COMPACT=1`）\n把這一輪結果的中心點當新初始化，再跑一輪短版 analytical_place（iters=400）→ 額外候選\n本季最大單一突破：2.1230→1.9666","x":680,"y":280,"width":560,"height":110,"color":"2"},
-		{"id":"node-040","type":"text","text":"**Proxy Cost 排名**\n預設：池平均正規化\nopt-in 池無關：`ELECTRO_PROXY_ABSAREA` / `ABSHPWL`\n(area/total_block_area, hpwl/√total_block_area)","x":680,"y":540,"width":260,"height":130,"color":"3"},
-		{"id":"node-050","type":"text","text":"## Portfolio 選擇\n每個候選都算一次 proxy cost，**逐案挑最低者送出**——不是調出單一最佳參數，是同時養一群候選","x":380,"y":730,"width":860,"height":90,"color":"6"},
-		{"id":"node-012","type":"text","text":"## Stage 3\n**soft_repair()**\nboundary snap / wide-swap（預設開）\ngrouping push-past（預設開）","x":980,"y":60,"width":260,"height":160,"color":"4"},
-		{"id":"node-031","type":"text","text":"**adaptive spectral**\n`ELECTRO_SPECTRAL_ADAPTIVE=1`\n只有 `best_600_score ≥ THRESH`（預設 1.5）才加跑 spectral 候選","x":1000,"y":470,"width":280,"height":110,"color":"1"},
-		{"id":"node-033","type":"text","text":"最佳已驗證組合：adaptive-spectral + escalated(SEED=3) + 池無關 proxy = **1.7279**（~2×runtime，opt-in，非預設）","x":1000,"y":600,"width":580,"height":80,"color":"1"},
-		{"id":"node-032","type":"text","text":"**escalated adaptive-seed**\n`ELECTRO_ADAPTIVE_SEED=N`\n給難案例加 N 個額外 jacobi seed","x":1300,"y":470,"width":280,"height":110,"color":"1"}
-	],
-	"edges":[
-		{"id":"edge-103","fromNode":"node-003","fromSide":"right","toNode":"node-010","toSide":"left"},
-		{"id":"edge-104","fromNode":"node-004","fromSide":"right","toNode":"node-010","toSide":"left"},
-		{"id":"edge-105","fromNode":"node-005","fromSide":"right","toNode":"node-010","toSide":"left"},
-		{"id":"edge-110","fromNode":"node-010","fromSide":"right","toNode":"node-011","toSide":"left"},
-		{"id":"edge-111","fromNode":"node-011","fromSide":"right","toNode":"node-012","toSide":"left"},
-		{"id":"edge-120","fromNode":"node-012","fromSide":"bottom","toNode":"node-020","toSide":"right","label":"產生額外候選"},
-		{"id":"edge-121","fromNode":"node-020","fromSide":"left","toNode":"node-010","toSide":"bottom","label":"中心點當新初始化，再跑短版"},
-		{"id":"edge-130","fromNode":"node-012","fromSide":"bottom","toNode":"node-031","toSide":"top","label":"best_600_score≥thresh 才觸發"},
-		{"id":"edge-131","fromNode":"node-031","fromSide":"right","toNode":"node-032","toSide":"left"},
-		{"id":"edge-140","fromNode":"node-012","fromSide":"bottom","toNode":"node-040","toSide":"top"},
-		{"id":"edge-141","fromNode":"node-020","fromSide":"bottom","toNode":"node-040","toSide":"top"},
-		{"id":"edge-142","fromNode":"node-033","fromSide":"left","toNode":"node-040","toSide":"right"},
-		{"id":"edge-150","fromNode":"node-040","fromSide":"bottom","toNode":"node-050","toSide":"top"}
-	]
+  "nodes": [
+    {
+      "id": "node-001",
+      "type": "text",
+      "x": 0,
+      "y": -260,
+      "width": 1500,
+      "height": 130,
+      "text": "# Electro Pipeline 架構圖\n\n完整方塊說明見同資料夾 `Electronic_Pipeline.md`。\npipeline 有結構性改動（新增/移除階段、新增生產預設開啟的機制）時同步更新此圖。",
+      "color": "6"
+    },
+    {
+      "id": "node-002",
+      "type": "group",
+      "x": -50,
+      "y": -60,
+      "width": 400,
+      "height": 520,
+      "label": "初始化來源（擇一）"
+    },
+    {
+      "id": "node-003",
+      "type": "text",
+      "x": 0,
+      "y": 20,
+      "width": 320,
+      "height": 120,
+      "text": "**Random init**\n\n`ELECTRO_JACOBI_MODE=off`\n\n隨機初始座標",
+      "color": "5"
+    },
+    {
+      "id": "node-004",
+      "type": "text",
+      "x": 0,
+      "y": 170,
+      "width": 320,
+      "height": 150,
+      "text": "**Jacobi 暖啟動**\n（生產預設 replace）\n\nb2b 連線圖做\n20 輪鄰居平均",
+      "color": "5"
+    },
+    {
+      "id": "node-005",
+      "type": "text",
+      "x": 0,
+      "y": 350,
+      "width": 320,
+      "height": 170,
+      "text": "**Spectral / GiFt**\n（opt-in\n`ELECTRO_SPECTRAL=1`）\n\nanchored quadratic\nplacement，一步求解",
+      "color": "5"
+    },
+    {
+      "id": "node-010",
+      "type": "text",
+      "x": 460,
+      "y": 60,
+      "width": 340,
+      "height": 260,
+      "text": "## Stage 1\n**analytical_place()**\n\nAdam 梯度下降：\nov / bb / wl /\ngrp(0.4) / mib_shape(0.05)",
+      "color": "4"
+    },
+    {
+      "id": "node-011",
+      "type": "text",
+      "x": 860,
+      "y": 60,
+      "width": 340,
+      "height": 260,
+      "text": "## Stage 2\n**legalize()**\n\n1. 順序抽取\n2. 貪婪 或 LP 壓實\n   （LP 生產預設已開）\n3. `_cleanup()` 保底\n   （PUSH_GAP=1e-4）",
+      "color": "4"
+    },
+    {
+      "id": "node-012",
+      "type": "text",
+      "x": 1260,
+      "y": 60,
+      "width": 340,
+      "height": 260,
+      "text": "## Stage 3\n**soft_repair()**\n\nboundary snap\n+ wide-swap（預設開）\n\ngrouping\npush-past（預設開）",
+      "color": "4"
+    },
+    {
+      "id": "node-020",
+      "type": "text",
+      "x": 860,
+      "y": 380,
+      "width": 740,
+      "height": 170,
+      "text": "**place-compact**（生產預設開，`ELECTRO_PLACE_COMPACT=1`）\n\n把這一輪結果的中心點當新初始化，\n再跑一輪短版 analytical_place → 額外候選\n\n本季最大單一突破：2.1230 → 1.9666",
+      "color": "2"
+    },
+    {
+      "id": "node-030",
+      "type": "group",
+      "x": 1260,
+      "y": 590,
+      "width": 760,
+      "height": 400,
+      "label": "困難案例才加開的候選（opt-in）"
+    },
+    {
+      "id": "node-031",
+      "type": "text",
+      "x": 1290,
+      "y": 660,
+      "width": 340,
+      "height": 160,
+      "text": "**adaptive spectral**\n`ELECTRO_SPECTRAL_ADAPTIVE=1`\n\n只有 proxy 判斷困難\n（best_600_score ≥ 門檻，\n預設 1.5）才加跑",
+      "color": "1"
+    },
+    {
+      "id": "node-032",
+      "type": "text",
+      "x": 1660,
+      "y": 660,
+      "width": 340,
+      "height": 160,
+      "text": "**escalated adaptive-seed**\n`ELECTRO_ADAPTIVE_SEED=N`\n\n給難案例再加 N 個\n額外 jacobi seed",
+      "color": "1"
+    },
+    {
+      "id": "node-033",
+      "type": "text",
+      "x": 1290,
+      "y": 840,
+      "width": 710,
+      "height": 120,
+      "text": "最佳已驗證組合：adaptive-spectral + escalated(SEED=3)\n+ 池無關 proxy = **1.7279**（約 2× runtime，opt-in，非預設）",
+      "color": "1"
+    },
+    {
+      "id": "node-040",
+      "type": "text",
+      "x": 860,
+      "y": 660,
+      "width": 340,
+      "height": 200,
+      "text": "**Proxy Cost 排名**\n\n預設：候選池平均正規化\n\nopt-in 池無關：\n`ELECTRO_PROXY_ABSAREA`\n`ELECTRO_PROXY_ABSHPWL`",
+      "color": "3"
+    },
+    {
+      "id": "node-050",
+      "type": "text",
+      "x": 460,
+      "y": 920,
+      "width": 1140,
+      "height": 140,
+      "text": "## Portfolio 選擇\n\n每個候選都算一次 proxy cost，**逐案挑最低者送出**\n——不是調出單一最佳參數，是同時養一群候選",
+      "color": "6"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-103",
+      "fromNode": "node-003",
+      "fromSide": "right",
+      "toNode": "node-010",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-104",
+      "fromNode": "node-004",
+      "fromSide": "right",
+      "toNode": "node-010",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-105",
+      "fromNode": "node-005",
+      "fromSide": "right",
+      "toNode": "node-010",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-110",
+      "fromNode": "node-010",
+      "fromSide": "right",
+      "toNode": "node-011",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-111",
+      "fromNode": "node-011",
+      "fromSide": "right",
+      "toNode": "node-012",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-120",
+      "fromNode": "node-012",
+      "fromSide": "bottom",
+      "toNode": "node-020",
+      "toSide": "right",
+      "label": "產生額外候選"
+    },
+    {
+      "id": "edge-121",
+      "fromNode": "node-020",
+      "fromSide": "left",
+      "toNode": "node-010",
+      "toSide": "bottom",
+      "label": "中心點當新初始化，再跑短版"
+    },
+    {
+      "id": "edge-130",
+      "fromNode": "node-012",
+      "fromSide": "bottom",
+      "toNode": "node-031",
+      "toSide": "top",
+      "label": "best_600_score≥門檻 才觸發"
+    },
+    {
+      "id": "edge-131",
+      "fromNode": "node-031",
+      "fromSide": "right",
+      "toNode": "node-032",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-140",
+      "fromNode": "node-012",
+      "fromSide": "bottom",
+      "toNode": "node-040",
+      "toSide": "top"
+    },
+    {
+      "id": "edge-141",
+      "fromNode": "node-020",
+      "fromSide": "bottom",
+      "toNode": "node-040",
+      "toSide": "top"
+    },
+    {
+      "id": "edge-142",
+      "fromNode": "node-033",
+      "fromSide": "left",
+      "toNode": "node-040",
+      "toSide": "right"
+    },
+    {
+      "id": "edge-150",
+      "fromNode": "node-040",
+      "fromSide": "bottom",
+      "toNode": "node-050",
+      "toSide": "top"
+    }
+  ]
 }

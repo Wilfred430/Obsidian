@@ -16,7 +16,7 @@ date: 2026-07-23
 | **Gemini Deep Research** | 開放式、沒有好種子論文時的廣泛搜尋 | 適合問概念性、跨主題的問題，但**輸出永遠要查證**——這個工具會編造看似合理的具體公式（見下方「已知的失敗模式」）。 |
 | **NotebookLM** | 在已驗證過的資料源上做有根據的問答 | 把 Connected Papers/Gemini 找到、且已查證為真的論文，加上專案自己的 `CLAUDE.md`/`WINNING_STRATEGY.md`，一起餵進一個 notebook，再針對這個可信任的語料庫問具體技術問題。因為它主要根據餵進去的資料回答，如果資料源都是已驗證的，答案可信度就高很多。 |
 | **Antigravity** | 大規模實作 + 100 案驗證的執行者 | 想法已經想清楚、設計好之後，交給 Antigravity 實際寫程式碼、跑滿 100 案驗證，不是用來發想點子的工具。 |
-| **Claude Code** | 陪讀、引導、審查，不是自動代勞 | 2026-07-23 起改為蘇格拉底式導師模式——陪你讀懂 codebase、一起推理、審查你寫的程式碼、用小測驗確認理解，不會再自己跑實驗或直接改 production 檔案，除非明講要它代勞。這個角色設定記在 Claude Code 自己的跨對話記憶裡（非本 vault 內容），不在此重複維護。 |
+| **Claude Code** | 陪讀、引導、審查，不是自動代勞 | 2026-07-23 起改為蘇格拉底式導師模式——陪你讀懂 codebase、一起推理、審查你寫的程式碼、用小測驗確認理解，不會再自己跑實驗或直接改 production 檔案，除非明講要它代勞。這個角色設定記在 Claude Code 自己的跨對話記憶裡（非本 vault 內容），不在此重複維護。底下實際有哪些 skill 可用、怎麼用，見 [[ICCAD_code/10_Claude_Code_Skills_Reference|第 10 篇]]。 |
 
 ## 建議的實際流程
 
@@ -27,5 +27,5 @@ Connected Papers（找到保證真實的鄰近文獻）→ 需要更廣的搜尋
 > [!info] **這套流程是怎麼演變出來的**：本 session 一開始只用 Gemini Deep Search → Antigravity 查證兩步，後來因為連續發現「論文標題是真的但公式是編的」這種局部幻覺，才加入 Connected Papers（從源頭避免幻覺）跟 NotebookLM（限制在已驗證語料庫內回答）這兩層。完整的方法論教訓另見 [[ICCAD_code/8_Winning_Strategy_and_Roadmap|第 8 篇]] §8.34。
 
 ---
-**相關筆記**：[[ICCAD_code/8_Winning_Strategy_and_Roadmap|奪冠策略總覽]] · [[user-wants-socratic-python-mentor]]
+**相關筆記**：[[ICCAD_code/8_Winning_Strategy_and_Roadmap|奪冠策略總覽]] · [[ICCAD_code/10_Claude_Code_Skills_Reference|10. Claude Code Skills 指令參考]] · [[user-wants-socratic-python-mentor]]
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

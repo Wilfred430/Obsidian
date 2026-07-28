@@ -48,6 +48,7 @@ date: 2026-07-01
 - [[ICCAD_code/7_Electrostatic_Placer|7. 電靜力法擺放器]]
 - [[ICCAD_code/8_Winning_Strategy_and_Roadmap|8. 奪冠策略總覽與現況路線圖]]
 - [[ICCAD_code/9_Research_Tool_Workflow|9. 研究工具分工流程（Claude Code/Antigravity/Gemini/NotebookLM/Connected Papers）]]
+- [[ICCAD_code/10_Claude_Code_Skills_Reference|10. Claude Code Skills 指令參考（有哪些 skill、怎麼用、什麼時候用）]]
 
 ## 🧬 EDA 領域背景
 - [[ICCAD/EDA-Paradigm-Shift|EDA 範式轉移]]：從傳統規則到 AI 驅動的轉變。

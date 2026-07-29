@@ -378,3 +378,23 @@
   `Electronic_Pipeline.md` 開頭與 Claude Code 跨對話記憶。
 
 **回到索引**：[[index|🌐 全域索引 >>]]
+
+## [2026-07-29] Optimize | 發現 R 因子被忽略 + runtime 優化拿下真實分數 −12.2%
+- **Context**: 隊友的 slice_pack 路線經三方驗證屬實（1.4480），取代我們自己的
+  `electro_optimized/`（1.7279）成為新基準。本輪先驗證其真偽、再做切點偏好探索
+  （完整否定），最後發現**全專題數週以來都在用「中性 RT」比較，完全忽略了真實
+  Cost 公式裡的 `R = max(0.7, (本案runtime ÷ 該案跨隊中位數)^0.3)`**。
+- **關鍵分析**: 我們的複雜度是 n^0.47、官方中位數 n^0.93（**我們成長慢一倍**）；
+  加權占比極度集中（n≥96 占 87.6%，n=21-45 只占 0.17%）→ **「100/100 都快過
+  中位數」是錯誤目標**。實機 cProfile 推翻兩個代碼閱讀的猜測（`_free()` 只占 1%
+  不是瓶頸；真正浪費是 `_overlap_matrix` 被呼叫 5,315 次）。
+- **Output**: 新增 `electro_v5/` 的增量式 `_cleanup`（`ELECTRO_FAST_CLEANUP=1`）
+  ——**真實 Total 1.3173 → 1.1567（−12.2%）、快過中位數 43 → 95 案、品質逐位元
+  不變**。過程中抓到一個順序依賴 bug（第一版座標差 9.33），教訓：「純粹重用計算」
+  不足以保證等價，加速類改動必須逐位元驗證。
+- **Update**: [[ICCAD_code/8_Winning_Strategy_and_Roadmap|第 8 篇]] §8.36-§8.39；
+  **改寫** [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]] 與
+  [[Electronic_Pipeline.canvas|畫布]]（主力路線已換成 slice_pack，舊畫布描述的
+  spectral/adaptive-spectral 已不在現行主力中；新增 slice_pack 節點——它貢獻
+  −25.7% 卻一直不在圖上）；更新 [[ICCAD/ICCAD-Dashboard|Dashboard]] 現況
+  （原本還停在 2026-07-01 的 Total 2.966）。

@@ -12,8 +12,27 @@ date: 2026-07-01
 > [!info] **說明**
 > 彙整 ICCAD 2026 各項問題規格、演算法研究與 EDA 理論背景，作為參賽的戰略中心。
 
-> [!success] **現況（2026-07-01）**
-> Alpha test 已過，進入 Beta→Final 衝刺。三條路線並存：[[ICCAD_code/2_SA_Optimizer_Engine|B*-tree+SA]]（主力，穩定）、[[ICCAD_code/6_ML_Generative_BTree|生成式拓樸模型]]（新，GPU 訓練中，`val_ptr_acc` 87%）、[[ICCAD_code/7_Electrostatic_Placer|電靜力法]]（**目前分數最佳** Total 2.966）。完整策略見 [[ICCAD_code/8_Winning_Strategy_and_Roadmap|奪冠策略總覽]]。
+> [!success] **現況（2026-07-29 更新）**
+> **主力路線已換成隊友的 slice_pack 切割式打包**（`collaborate/electro_v5/`），
+> 我們自己原本的 `electro_optimized/` 路線（1.7279）與生成式 B*-tree（3.3185）
+> 都已被超越。
+>
+> | 指標 | 數值 |
+> |---|---|
+> | **真實 Total Score**（含 runtime 因子 R） | **1.1567** |
+> | 中性 Total Score（只算品質） | 1.4127 |
+> | 快過官方逐案中位數 | **95/100 案** |
+> | Feasible | 100/100 |
+>
+> 對照 Alpha Top5（0.879 / 0.955 / 1.020 / 1.028 / 1.100）→ 已逼近第 5 名。
+>
+> **本輪（7/29）最大突破**：發現全專題數週以來都在用「中性 RT」比較，
+> **完全忽略了真實 Cost 公式裡的 `R` 因子**。修正後方向翻轉——runtime 優化
+> 成為投報比最高的方向，一個增量式 `_cleanup` 改動就拿到 **真實分數 −12.2%**，
+> 且**品質逐位元不變**。詳見
+> [[ICCAD_code/8_Winning_Strategy_and_Roadmap|第 8 篇]] §8.38-§8.39，
+> 架構現況見 [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]] +
+> [[Electronic_Pipeline.canvas|畫布]]。
 
 > [!abstract] **🔰 新手從這裡開始（零基礎閱讀動線）**
 > 這個 vault 的其他筆記大多假設你已經懂晶片設計基礎——如果不是，照下面順序讀，不要跳著看：

@@ -6,6 +6,22 @@ date: 2026-07-01
 
 # 7. 電靜力法擺放器 (Electrostatic Placer)
 
+> [!success] **現況（2026-07-29）—— 本篇描述的是早期版本，主力已換路線**
+> 電靜力法這條線目前的主力是**隊友的 slice_pack 切割式打包**
+> （`collaborate/electro_v5/`），不是本篇描述的 `electro_submission/`。
+>
+> | 指標 | 數值 |
+> |---|---|
+> | **真實 Total Score**（含 R 因子） | **1.1567** |
+> | 中性 Total（只算品質） | 1.4127 |
+> | 快過官方中位數 | 95/100 案 |
+>
+> 架構現況請看 [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]] +
+> [[Electronic_Pipeline.canvas|畫布]]；逐日推導見
+> [[ICCAD_code/8_Winning_Strategy_and_Roadmap|第 8 篇]] §8.36-§8.39。
+> 本篇保留作為電靜力法**原理**的說明（loss 各項、legalize 三步驟等仍然適用）。
+
+
 > **核心角色**：與 [[ICCAD_code/2_SA_Optimizer_Engine|B*-tree + SA]]、[[ICCAD_code/6_ML_Generative_BTree|生成式拓樸模型]] 完全獨立的**第三條路線**——不用離散拓樸搜尋，改用連續梯度下降直接優化座標。目前**分數最佳**（Total Score 2.966，100/100 feasible）。程式碼在 `collaborate/electro_submission/`。
 
 ## 7.1 核心思路：把 Block 當「帶電粒子」

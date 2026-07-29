@@ -1,34 +1,273 @@
 {
-	"nodes":[
-		{"id":"node-030","type":"group","x":1830,"y":730,"width":900,"height":560,"label":"困難案例才加開的候選（opt-in）"},
-		{"id":"node-002","type":"group","x":-70,"y":-100,"width":480,"height":780,"label":"初始化來源（擇一）"},
-		{"id":"node-003","type":"text","text":"**Random init**\n\n`ELECTRO_JACOBI_MODE=off`\n\n隨機初始座標","x":0,"y":-40,"width":340,"height":170,"color":"5"},
-		{"id":"node-004","type":"text","text":"**Jacobi 暖啟動**\n（生產預設 replace）\n\nb2b 連線圖做\n20 輪鄰居平均","x":0,"y":180,"width":340,"height":190,"color":"5"},
-		{"id":"node-032","type":"text","text":"**escalated adaptive-seed**\n`ELECTRO_ADAPTIVE_SEED=N`\n\n給難案例再加 N 個\n額外 jacobi seed","x":2300,"y":830,"width":400,"height":190,"color":"1"},
-		{"id":"node-033","type":"text","text":"最佳已驗證組合：adaptive-spectral + escalated(SEED=3)\n+ 池無關 proxy = **1.7279**（約 2× runtime，opt-in，非預設）","x":1860,"y":1090,"width":840,"height":130,"color":"1"},
-		{"id":"node-040","type":"text","text":"**Proxy Cost 排名**\n\n預設：候選池平均正規化\n\nopt-in 池無關：\n`ELECTRO_PROXY_ABSAREA`\n`ELECTRO_PROXY_ABSHPWL`","x":1230,"y":820,"width":380,"height":260,"color":"3"},
-		{"id":"node-005","type":"text","text":"**Spectral / GiFt**\n（opt-in `ELECTRO_SPECTRAL=1`）\n\nanchored quadratic\nplacement，一步求解","x":0,"y":420,"width":340,"height":230,"color":"5"},
-		{"id":"node-011","type":"text","text":"## Stage 2\n**legalize()**\n\n1. 順序抽取\n2. 貪婪 或 LP 壓實\n   （LP 生產預設已開）\n3. `_cleanup()` 保底\n   （PUSH_GAP=1e-4）","x":1230,"y":-50,"width":380,"height":340,"color":"4"},
-		{"id":"node-012","type":"text","text":"## Stage 3\n**soft_repair()**\n\nboundary snap\n+ wide-swap（預設開）\n\ngrouping\npush-past（預設開）","x":1830,"y":-35,"width":380,"height":310,"color":"4"},
-		{"id":"node-031","type":"text","text":"**adaptive spectral**\n`ELECTRO_SPECTRAL_ADAPTIVE=1`\n\n只有 proxy 判斷困難\n（best_600_score ≥ 門檻，\n預設 1.5）才加跑","x":1860,"y":810,"width":400,"height":230,"color":"1"},
-		{"id":"node-050","type":"text","text":"## Portfolio 選擇\n\n每個候選都算一次 proxy cost，**逐案挑最低者送出**\n——不是調出單一最佳參數，是同時養一群候選","x":1175,"y":1440,"width":490,"height":160,"color":"6"},
-		{"id":"node-020","type":"text","text":"**place-compact**（生產預設開，`ELECTRO_PLACE_COMPACT=1`）\n\n把這一輪結果的中心點當新初始化，再跑一輪短版 analytical_place → 額外候選\n\n本季最大單一突破：2.1230 → 1.9666","x":1100,"y":440,"width":760,"height":160,"color":"2"},
-		{"id":"node-001","type":"text","text":"# Electro Pipeline 架構圖\n\n完整方塊說明見同資料夾 `Electronic_Pipeline.md`。\npipeline 有結構性改動（新增/移除階段、新增生產預設開啟的機制）時同步更新此圖。","x":-70,"y":-440,"width":820,"height":160,"color":"6"},
-		{"id":"node-010","type":"text","text":"## Stage 1\n**analytical_place()**\n\nAdam 梯度下降：\nov / bb / wl /\ngrp(0.4) / mib_shape(0.05)","x":630,"y":-10,"width":380,"height":260,"color":"4"}
-	],
-	"edges":[
-		{"id":"edge-103","fromNode":"node-003","fromSide":"right","toNode":"node-010","toSide":"left"},
-		{"id":"edge-104","fromNode":"node-004","fromSide":"right","toNode":"node-010","toSide":"left"},
-		{"id":"edge-105","fromNode":"node-005","fromSide":"right","toNode":"node-010","toSide":"left"},
-		{"id":"edge-110","fromNode":"node-010","fromSide":"right","toNode":"node-011","toSide":"left"},
-		{"id":"edge-111","fromNode":"node-011","fromSide":"right","toNode":"node-012","toSide":"left"},
-		{"id":"edge-121","fromNode":"node-020","fromSide":"left","toNode":"node-010","toSide":"bottom","label":"中心點當新初始化，再跑短版"},
-		{"id":"edge-130","fromNode":"node-012","fromSide":"right","toNode":"node-031","toSide":"top","label":"best_600_score≥門檻 才觸發"},
-		{"id":"edge-131","fromNode":"node-031","fromSide":"right","toNode":"node-032","toSide":"left"},
-		{"id":"edge-140","fromNode":"node-020","fromSide":"bottom","toNode":"node-040","toSide":"top"},
-		{"id":"edge-141","fromNode":"node-033","fromSide":"left","toNode":"node-040","toSide":"right"},
-		{"id":"edge-150","fromNode":"node-040","fromSide":"bottom","toNode":"node-050","toSide":"top"},
-		{"id":"edge-151","fromNode":"node-033","fromSide":"bottom","toNode":"node-050","toSide":"top"},
-		{"id":"edge-120","fromNode":"node-012","fromSide":"bottom","toNode":"node-020","toSide":"right","label":"產生額外候選"}
-	]
+  "nodes": [
+    {
+      "id": "node-030",
+      "type": "group",
+      "x": 1830,
+      "y": 730,
+      "width": 900,
+      "height": 560,
+      "label": "本輪新增／測試的機制（2026-07-29）"
+    },
+    {
+      "id": "node-002",
+      "type": "group",
+      "x": -70,
+      "y": -100,
+      "width": 480,
+      "height": 780,
+      "label": "初始化來源（擇一）"
+    },
+    {
+      "id": "node-003",
+      "type": "text",
+      "text": "**Random init**\n\n`ELECTRO_JACOBI_MODE=off`\n\n隨機初始座標",
+      "x": 0,
+      "y": -40,
+      "width": 340,
+      "height": 170,
+      "color": "5"
+    },
+    {
+      "id": "node-004",
+      "type": "text",
+      "text": "**Jacobi 暖啟動**\n（生產預設 replace）\n\nb2b 連線圖做\n20 輪鄰居平均",
+      "x": 0,
+      "y": 180,
+      "width": 340,
+      "height": 190,
+      "color": "5"
+    },
+    {
+      "id": "node-032",
+      "type": "text",
+      "text": "**`ELECTRO_MIB_PORTFOLIO=1`**\n\nMIB 統一版當額外候選\n（非無條件套用）\n小幅正貢獻",
+      "x": 2300,
+      "y": 830,
+      "width": 400,
+      "height": 190,
+      "color": "1"
+    },
+    {
+      "id": "node-033",
+      "type": "text",
+      "text": "**已測不採用**：`SLICE_WALLS=0`（小贏但不穩健）、`SLICE_BUDGET=1200`（被兩端支配）、`_cut_options` 面積提早否決（等價但只有 1.01×）",
+      "x": 1860,
+      "y": 1090,
+      "width": 840,
+      "height": 130,
+      "color": "1"
+    },
+    {
+      "id": "node-040",
+      "type": "text",
+      "text": "**Proxy Cost 排名**\n\n`exp(2·V_rel)·(hpwl/ha + area/aa)`\n錨點跟候選池無關\n（aa = 總面積/0.966）",
+      "x": 1230,
+      "y": 820,
+      "width": 380,
+      "height": 220,
+      "color": "3"
+    },
+    {
+      "id": "node-005",
+      "type": "text",
+      "text": "**ML 暖啟動**\n（`ELECTRO_ML_INIT=1`）\n\nTransformer 預測\n每個方塊的中心點\n當梯度下降起點",
+      "x": 0,
+      "y": 420,
+      "width": 340,
+      "height": 200,
+      "color": "5"
+    },
+    {
+      "id": "node-011",
+      "type": "text",
+      "text": "## Stage 2a\n**legalize()**（梯度式）\n\n順序抽取 → 壓實 → `_cleanup` 保底\n\n⚡ `ELECTRO_FAST_CLEANUP=1`\n增量式重掃，只檢查動過的方塊\n**legalize 2.4× 加速**",
+      "x": 1230,
+      "y": -50,
+      "width": 380,
+      "height": 350,
+      "color": "4"
+    },
+    {
+      "id": "node-012",
+      "type": "text",
+      "text": "## Stage 3\n**soft_repair()**\n\nboundary snap\n+ wide-swap（預設開）\n\ngrouping\npush-past（預設開）",
+      "x": 1830,
+      "y": -35,
+      "width": 380,
+      "height": 310,
+      "color": "4"
+    },
+    {
+      "id": "node-031",
+      "type": "text",
+      "text": "⚡ **`ELECTRO_FAST_CLEANUP=1`**\n（本輪最大勝利）\n\n增量式 `_cleanup`\n**真實 Total −12.2%**\n快過中位數 43 → 95 案\n**品質逐位元不變**",
+      "x": 1860,
+      "y": 810,
+      "width": 400,
+      "height": 230,
+      "color": "1"
+    },
+    {
+      "id": "node-050",
+      "type": "text",
+      "text": "## Portfolio 選擇\n\n每個候選都算一次 proxy cost，**逐案挑最低者送出**\n——不是調出單一最佳參數，是同時養一群候選",
+      "x": 1175,
+      "y": 1440,
+      "width": 490,
+      "height": 170,
+      "color": "6"
+    },
+    {
+      "id": "node-020",
+      "type": "text",
+      "text": "**place-compact**（`ELECTRO_PLACE_COMPACT=1`）\n\n把已壓實佈局的中心點當新初始化，再跑一輪短版 analytical_place → 額外候選\n`PLACE_COMPACT_TOPK=3`：只對 prerank 前 3 名重拍，砍 75% 計算量",
+      "x": 1100,
+      "y": 440,
+      "width": 760,
+      "height": 180,
+      "color": "2"
+    },
+    {
+      "id": "node-001",
+      "type": "text",
+      "text": "# Electro Pipeline 架構圖\n\n**目前主力：`collaborate/electro_v5/`**（隊友 slice_pack 路線 + 本專題的加速/品質機制）\n完整方塊說明見同資料夾 `Electronic_Pipeline.md`。",
+      "x": -70,
+      "y": -440,
+      "width": 820,
+      "height": 170,
+      "color": "6"
+    },
+    {
+      "id": "node-010",
+      "type": "text",
+      "text": "## Stage 1\n**analytical_place()**\n\nAdam 梯度下降\n`ELECTRO_ITERS=300`\n（600→300 品質幾乎無損）",
+      "x": 630,
+      "y": -10,
+      "width": 380,
+      "height": 260,
+      "color": "4"
+    },
+    {
+      "id": "node-060",
+      "type": "text",
+      "x": 630,
+      "y": 400,
+      "width": 380,
+      "height": 330,
+      "color": "2",
+      "text": "## Stage 2b\n**slice_pack()**（切割式）\n\n面積比例遞迴 guillotine 切割\n軟方塊長寬比自由 → 填充率可近 100%\n\n**貢獻 −25.7%，是主力機制**\n（Otten 1982 切割式佈局）"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-103",
+      "fromNode": "node-003",
+      "fromSide": "right",
+      "toNode": "node-010",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-104",
+      "fromNode": "node-004",
+      "fromSide": "right",
+      "toNode": "node-010",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-105",
+      "fromNode": "node-005",
+      "fromSide": "right",
+      "toNode": "node-010",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-110",
+      "fromNode": "node-010",
+      "fromSide": "right",
+      "toNode": "node-011",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-111",
+      "fromNode": "node-011",
+      "fromSide": "right",
+      "toNode": "node-012",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-121",
+      "fromNode": "node-020",
+      "fromSide": "left",
+      "toNode": "node-010",
+      "toSide": "bottom",
+      "label": "中心點當新初始化，再跑短版"
+    },
+    {
+      "id": "edge-130",
+      "fromNode": "node-012",
+      "fromSide": "right",
+      "toNode": "node-031",
+      "toSide": "top",
+      "label": "best_600_score≥門檻 才觸發"
+    },
+    {
+      "id": "edge-131",
+      "fromNode": "node-031",
+      "fromSide": "right",
+      "toNode": "node-032",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-140",
+      "fromNode": "node-020",
+      "fromSide": "bottom",
+      "toNode": "node-040",
+      "toSide": "top"
+    },
+    {
+      "id": "edge-141",
+      "fromNode": "node-033",
+      "fromSide": "left",
+      "toNode": "node-040",
+      "toSide": "right"
+    },
+    {
+      "id": "edge-150",
+      "fromNode": "node-040",
+      "fromSide": "bottom",
+      "toNode": "node-050",
+      "toSide": "top"
+    },
+    {
+      "id": "edge-151",
+      "fromNode": "node-033",
+      "fromSide": "bottom",
+      "toNode": "node-050",
+      "toSide": "top"
+    },
+    {
+      "id": "edge-120",
+      "fromNode": "node-012",
+      "fromSide": "bottom",
+      "toNode": "node-020",
+      "toSide": "right",
+      "label": "產生額外候選"
+    },
+    {
+      "id": "edge-160",
+      "fromNode": "node-010",
+      "fromSide": "bottom",
+      "toNode": "node-060",
+      "toSide": "top",
+      "label": "另一條合法化路徑"
+    },
+    {
+      "id": "edge-161",
+      "fromNode": "node-060",
+      "fromSide": "right",
+      "toNode": "node-012",
+      "toSide": "left"
+    }
+  ]
 }

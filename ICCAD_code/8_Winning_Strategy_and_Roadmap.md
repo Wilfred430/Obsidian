@@ -1392,6 +1392,59 @@ ELECTRO_MIB_PORTFOLIO=1
 交接簡報：`AI-deep-search/antigravity_brief_2026-07-29_slice_pack_handoff.md`。
 
 ---
+
+## §8.37（2026-07-29 深夜）：診斷出 v3 cluster-cut「淨效果為零」的精確根因——排序鍵缺少 boundary 項
+
+### 現況（全部經報告檔查證屬實）
+
+| 版本 | Total Score | Avg Cost | RT/case | Vgrp | Vmib | Vbnd |
+|---|---|---|---|---|---|---|
+| 隊友原版 | 1.4480 | 1.4313 | 18.2s | 184 | 153 | 141 |
+| v2（BEST=0+MIB_PORTFOLIO） | 1.4144 | 1.3814 | 52.6s | 179 | 93 | 129 |
+| v2（TOPK=3，快速版） | 1.3840 | 1.3434 | **9.5s** | — | — | — |
+| v3（cluster-preserving cut） | 1.4137 | 1.3724 | 62.4s | **153** | 88 | **147** |
+| **v2 + ML 暖啟動 32-seed** | **1.3592** | **1.3276** | 17.8s | 125 | 86 | 112 |
+
+### 根因：v3 的切點排序鍵把 boundary 完全排除在外
+
+v3 的 `_cut_options` 在開啟 cluster 偏好時，排序鍵是：
+
+```python
+order = sorted(uniq_order, key=lambda k: (100 * cluster_splits[k] + abs(k - kb)))
+```
+
+**完全沒有 boundary 項**——既有的 `kpref`（`_wall_groups` 算出的邊界帶切點）
+只被用來**擴充候選清單**，卻不參與**排序**。所以一旦 cluster 偏好啟用，
+邊界考量就被稀釋掉了。
+
+**數據精確吻合這個推論**：v3 相對 v2 的 `V_grouping` 179→153（改善 26 個），
+但 `V_boundary` 129→147（惡化 18 個），兩者幾乎完全抵銷，最終 Total Score
+1.4144→1.4137 只差 0.0007（0.05%），**而 runtime 反而從 52.6s 漲到 62.4s**。
+這不是「cluster-preserving cut 沒用」，而是**它的收益被自己造成的邊界損失吃掉了**。
+
+### 修法：Young & Wong 式的複合切點鍵（`ELECTRO_SLICE_BNDCUT=1`，實作於 `electro_v4/`）
+
+切在 k 之後，前 k 個方塊進低側子樹、其餘進高側。`_wall_groups` 已經算出
+「需要貼低端牆的方塊數 nlo」與「需要貼高端牆的方塊數 nhi」，且 `_order` 已把
+它們分別排到序列最前/最後，所以切點造成的邊界違規數可以**直接算出來**：
+
+$$	ext{bnd\_viol}(k) = \max(0,\ nlo - k) + \max(0,\ nhi - (m - k))$$
+
+（nlo 個低端方塊若超出前 k 個的容量，多出來的會被推進高側子樹、永遠貼不到
+自己那面牆；高端同理。）合併成單一排序鍵：
+
+$$	ext{cut\_key}(k) = 1000 \cdot 	ext{bnd\_viol}(k) + 100 \cdot 	ext{cluster\_splits}(k) + |k - k_b|$$
+
+**權重 1000 > 100 的理由**（不是隨便設的）：邊界違規是**結構上再也救不回來**的
+——方塊一旦被分到錯的子樹，下游 `boundary_snap` 只能在自己的區域內滑動，
+碰不到那面牆；而 cluster 被切開至少還有 `grouping_repair` 的交換移動可以補救。
+**不可逆的損失優先避免**，這個排序才有原則。
+
+實作細節：`_wall_groups` 原本只在 walls 模式的前兩層被呼叫（產生 kpref），
+現在每一層都算——它只是一次 O(m) 的位元檢查，成本可忽略，但讓每一層的切點
+選擇都能避開會把邊界方塊推進錯誤子樹的位置。
+
+---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]
 
 > [!important] **追加關鍵資訊**：`electro_optimizer.py` 第 99-104 行

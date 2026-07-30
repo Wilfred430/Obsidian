@@ -1393,6 +1393,614 @@ ELECTRO_MIB_PORTFOLIO=1
 
 ---
 
+> [!important] **追加關鍵資訊**：`electro_optimizer.py` 第 99-104 行
+> `ELECTRO_SEEDS` 那段的原始碼註解，**作者自己已經做過這個確切的分析**：
+> 「更多 seeds → 分數更好（1→2.54、3→2.16、8→2.07，含 ML），但 runtime
+> 約 N 倍；比賽的 RT 懲罰（`R^0.3`，變慢不封頂）通常會讓 `seeds=1` 在
+> runtime 調整後的總分上獲勝，除非全場中位數 runtime 本來就很高」。也就是
+> 說，我測出來的 Neutral RT 數字（2.1731→1.9653）只講了一半的故事——
+> **在真實 Contest Grading 下，選 `seeds=1`（現行預設）很可能才是對的
+> 選擇，除非確定其他隊伍普遍跑得比我們慢**。這進一步支持「這個決定不該
+> 我自己下」的判斷，也代表這不只是使用者個人偏好，是程式碼作者本來就
+> 已經權衡過的已知取捨。也順帶修正了 brief 裡原本猜測「平行開銷可以優化
+> 掉」的想法——同一份程式碼的另一段註解（105-108 行）說明這是已知的
+> CPU/OpenMP 架構限制，真正的解法要用 GPU 批次處理（作者自己標記
+> TODO，尚未實作），不是能快速修的小問題。
+
+---
+
+## §8.34（2026-07-21，重大突破）：官方 Alpha 排名曝光巨大差距，追出 legalize.py 的貪婪演算法瓶頸，LP 替換法驗證 −31.0%
+
+**觸發**：使用者發現官方公佈的 Alpha 正式排名（`C_Alpha_Top5(20260720).csv`）——
+前五名 Total Score 落在 **0.879–1.100**，遠低於我們目前最佳（electro，
+2.1513）。追出**不是靠 runtime 贏**：第一名 100 案總耗時 266.8s
+（均 2.67s/案），並不比我們快多少。搭配同時公佈的
+`C_Median Runtime per Testcase(Alpha).csv`（每個 test case 的跨隊伍真實
+median runtime，例如 n=21 中位數 2.0s，n=120 中位數 11.8s），確認前五名
+贏在**擺放品質**（gap≈0、V_rel≈0），不是速度。這跟先前 §8.23 的診斷完全
+吻合：gap 項若歸零可省 45% Total Score，比 V_rel 項（24%）更關鍵，且
+electro 現有架構上所有 loss 權重旋鈕（13 個）都已驗證榨乾，沒有免費分數。
+
+**根因追查**：重讀 `electro_optimized/legalize.py` 逐行確認，發現它的
+`_compact()` 是**單一 pass 的貪婪 longest-path 壓縮**——只保證滿足非重疊
+約束（feasibility），完全不管 HPWL/面積這個目標函數本身，是「能動就動到
+剛好卡住為止」的貪婪解，不是最優解。這正是先前 §8.8/§8.9 驗證過
+sequence-pair+LP（1.15 倍面積比，比 B*-tree 的 1.40 倍好）的核心優勢
+所在——但那次從零建構 sequence-pair 的嘗試卡在 preplaced anchor 矛盾
+（用啟發式對角線排序推導出的順序，跟 preplaced 方塊的真實座標關係衝突，
+被判定需要研究等級的多日工程）。
+
+**關鍵洞察**：`legalize.py` 自己 Step 1（`_overlap_matrix`+
+`triu_indices`+取重疊較少的軸）已經在**讀取 analytical_place() 收斂後的
+真實幾何**來決定每一對方塊的分離軸（不是憑空發明的啟發式），而且這個
+順序在正式 pipeline 已經跑了大半年、已知正確——只是 Step 2（`_compact`）
+拿到這個正確的順序後，用貪婪法而非最優法去解位置。**如果直接複用
+Step 1 完全不改的順序，只把 Step 2 換成 LP（最小化跟 analytical
+placement 的總位移，而非「貪婪推到剛好卡住」），理論上能同時吃到
+sequence-pair+LP 的密度優勢，又不會撞上讓那次從零嘗試失敗的 anchor
+矛盾**——因為順序來源不同：這次是已經跟 preplaced 座標自洽的真實幾何，
+不是會跟它衝突的獨立啟發式。
+
+**第一次嘗試就撞牆，但抓出了為什麼**：把全部 order 約束（含 movable→
+preplaced 兩個方向）都丟進 LP，9 案全部 infeasible。診斷發現：即使一個
+41-block case 只有 2 個 preplaced 方塊，強制滿足全部 pairwise 約束就會
+infeasible（不是圖論上的環，兩軸個別驗證都是 DAG）——真正原因是**一個
+movable 方塊被兩個各自獨立釘死座標的 preplaced anchor 兩面夾殺**，數值上
+無解。回頭看 `_compact()` 原始碼才發現：production 本來就**刻意跳過
+「後繼是 preplaced」的約束**（`if is_pre[succ]: continue`），把這類
+「卡在兩個錨點之間」的情況留給 `_cleanup()` 的 pairwise push-apart backstop
+處理——這不是疏漏，是必要的設計。改成套用同一條跳過規則後，LP 立刻全部
+feasible。
+
+**驗證結果（100 案全跑，單一 seed=0、iters=600、無 portfolio，兩邊接上
+完全相同的 repair chain）**：
+- **0 個 LP-infeasible，100/100 feasible 兩邊都成立**
+- **加權 Total Score（e^(n/12)）：貪婪法 5.3029 → LP 法 3.6592，相對改善
+  −31.0%**
+- 100 案裡 82 案改善、約 18 案小幅退步（例如 config_51 +10%、config_36
+  +26%），但大 n 案例（e^(n/12) 權重最重）幾乎全面大勝
+  （config_120: 6.58→2.43 −63%；config_112: 7.57→2.32 −69%；
+  config_113: 5.28→1.90 −64%；config_105: 7.03→2.95 −58%），所以加權
+  總分改善幅度遠大於簡單平均。
+- 單獨這一個子程式替換，就吃掉了 §8.23 估計「gap 項全歸零可省 45%」
+  裡的一大半，且完全沒動任何既有 loss 權重、seeds、Jacobi、portfolio
+  機制。
+
+**已實作為 opt-in（`ELECTRO_LEGALIZE_LP=1`，預設關閉）**：
+`legalize.py` 新增 `_compact_lp()`（LP 版 `_compact`，跟現行版本共用完全
+相同的順序抽取邏輯與「跳過 preplaced 後繼」規則，用 scipy
+`linprog`／HiGHS 求解「最小化跟 analytical placement 的總位移」，LP 失敗
+時 fallback 回原本的貪婪 `legalize()`，絕不會比現行更差）+
+`legalize_lp()`（跟 `legalize()` 結構一致的 drop-in 替代，共用 Step 1/3）。
+`electro_parallel.py::post_place_repair` 依環境變數選擇兩者之一。
+`requirements.txt` 補上 `scipy`（雖然 Beta 指南說評測環境即使
+requirements.txt 是空的也會提供 scipy，但既然真的引用了就明確列出）。
+
+**完整正式 pipeline 對照結果（重要修正，−31% 沒有直接疊加）**：跑了四組
+100 案對照（含全部 seeds/Jacobi/portfolio/adaptive iters 的完整正式
+pipeline，vs. 精簡設定=只用 Jacobi replace、關掉 wideswap/grouping-
+pushpast/adaptive-iters-portfolio）：
+
+| 設定 | Legalizer | Total Score |
+|---|---|---|
+| 完整 portfolio（現行預設） | 貪婪法 | 2.1513（已知官方分數） |
+| 完整 portfolio | LP | **2.1230（−1.3%）** |
+| 精簡（僅 Jacobi replace） | 貪婪法 | 2.2474 |
+| 精簡 | LP | 2.2134（−1.5%） |
+
+**關鍵誠實結論**：隔離測試量到的 −31.0% 並沒有直接疊加進正式 pipeline。
+真正原因是**現有 portfolio 機制（多候選挑最好）本身就貢獻了 −4.3%**
+（精簡貪婪法 2.2474 → 完整 portfolio 貪婪法 2.1513），跟 LP 法能補的
+品質缺口高度重疊——portfolio 靠「多跑幾種候選、挑最好的」已經吸收掉了
+LP 法在單一候選情境下能貢獻的大部分價值。精簡+LP（2.2134）甚至打不贏
+完整 portfolio+貪婪法（2.1513），證實「更多候選多樣性」目前仍是比
+「單一候選品質」更強的槓桿。**但 LP 法在兩種設定下都是一致、可重現的
+正向改善**（−1.3%、−1.5%），沒有任何反例，且是嚴格加法式（LP 失敗
+自動 fallback 回貪婪法，絕不會更差）——**已將 `ELECTRO_LEGALIZE_LP`
+預設改為 `"1"`**（`electro_optimizer.py`），冷啟動（無任何環境變數覆寫）
+獨立確認：`Total Score=2.1230 Vgrp=380 Vmib=0 Vbnd=282 feasible=100/100`，
+完全吻合。**electro 路線正式定案更新為 2.1230**（原始基準 2.9007 的
+−26.8%，即測正確性修復後的 2.1513 再 −1.3%）。
+
+**對「如何追上 Alpha Top5（0.879-1.100）」這個問題的誠實回答**：這次
+LP 法是一個乾淨、低風險、已驗證的小改善，但**不是能拉近那 2 倍差距的
+答案**。真正有意義的訊號反而是隔離測試量到的 −31%——它證明了「給定同一個
+順序，存在遠比目前 portfolio 找到的候選更好的解」，但現有 portfolio
+的候選生成方式（多 seed/Jacobi/wideswap 變體）顯然**不擅長穩定產出
+這種高品質候選**，只是在一堆普通候選裡挑相對最好的。這代表下一步的
+真正槓桿不是「再加一種 portfolio 花招」（已知報酬遞減）也不是「換更好的
+legalizer 接上同樣的候選」（剛驗證只值 1.3%），而是**候選生成機制本身
+需要架構級的重新思考**——例如：(1) 重啟先前擱置的 sequence-pair+LP
+從零建構路線（§8.8-8.9，已驗證面積比 1.15 倍優於 B*-tree 的 1.40 倍），
+但這次用「讀取 analytical_place() 收斂幾何的順序」當作額外的 warm-start
+候選餵給 LP（而非單純的對角線啟發式排序），或許能繞開當初卡住那條線的
+anchor 矛盾；(2) 認真評估這個 2 倍差距是否本質上需要一個結構不同的
+placement 典範（例如生成式 B*-tree 路線的 reward fine-tuning，或
+electro 之外的第三條路徑），而非目前 electro 架構的任何微調能達到的
+——這是研究等級的投入，需要使用者決定是否值得繼續砸時間。
+
+**同日追加（負面結果，已驗證，記錄避免重複踩）**：既然 LP 求解本身很快
+（<1s），嘗試把 LP 目標函數從「最小化跟 analytical placement 的位移」
+直接換成「最小化真實加權 HPWL（用 b2b/p2b 實際連線權重）+ 一個很小的
+位移正則化項」，同一套順序約束不變。9 案抽樣結果：**加權平均反而變差
++37.2%**，且大案例特別慘（n=120: +57.6%、n=106: +15.6%），小案例
+（n=21/31/41）結果甚至跟位移版完全相同（正則化項太弱、對這幾個 case
+沒起作用）。**根因**：純 WL 目標配上薄弱的位移正則化，LP 沒有足夠誘因
+維持佈局緊湊性——為了壓低某一軸的 WL，會把方塊硬擠成一線，代價是把
+bbox 面積撐大，area_gap 反而惡化。這正是「最小化位移」這個目標函數
+反而更穩健的原因：analytical_place() 本身已經用多項損失（WL+重疊+
+面積+分組+邊界）平衡過，位移量小天然保留了那個平衡；換成單一目標的
+WL 就打破了這個平衡。**結論：不追加 bbox/緊湊性約束的話，直接 WL 目標
+不可行，此變體不整合進正式程式碼**。若要繼續這個方向，需要同時加入
+bbox span 最小化項做聯合目標，屬於下一輪可再嘗試的變體，非本輪投入。
+
+**同日追加（Antigravity 查證深度研究報告 + 負面結果）**：請使用者透過
+Antigravity 查證上一份 Gemini Deep Search 報告引用的 7 項文獻/公式。
+**結果**：TCG（Lin & Chang, DAC2001/TVLSI2005）、UFO（Lin & Hung,
+ASP-DAC2010/TCAD2011）、"Placement Constraints in Floorplan Design"
+（Young/Chu/Ho, TVLSI2004）、QinFer（Ji et al., Computers & Operations
+Research 2021）**全部確認真實存在**；但 **DREAMPlace 3.0 的密度權重更新
+公式是編造的**（報告寫的 $\alpha_k=\alpha_L+(\alpha_H-\alpha_L)/(1+\ln(1+
+\beta D_k/D_0))$ 不存在，真正公式是有界乘法式成長
+$\alpha_{t+1}=\alpha_t^{\ln(\mu\Vert D_t\odot P_\lambda\Vert_2)/(1+\ln(\mu
+\Vert D_t\odot P_\lambda\Vert_2))}\cdot(\alpha_h-\alpha_l)+\alpha_l$，
+$\alpha_l=1.03,\alpha_h=1.04$）；**AutoDMP 用的是貝葉斯優化（Optuna），
+不是 RL/MDP**（報告誤植，跟 Google 的 RL macro placer 搞混了）；
+**RePlAce-ld 的局部密度懲罰公式 $\nu_j=e^{\alpha(\text{BinDemand}_j-
+\text{BinCapacity}_j)}$ 確認為真**（Lu et al., RePlAce, TCAD2019）。
+
+**基於確認為真的 RePlAce-ld 公式，實作並測試局部密度權重**（
+`analytical_place.py` 新增 `ELECTRO_LOCAL_DENSITY_ALPHA`，掛在既有
+`ELECTRO_EDENSITY` 的 DCT 密度場機制上，對超過目標密度的網格額外加壓）。
+**結果為明確負面**：9 案抽樣，A（現行預設，eDensity 關閉）加權 Total=
+2.9579；B（單純打開均勻 eDensity）暴增到 6.5944；C（局部權重 α=5）
+5.7123；D（α=20）8.4341，n=120 甚至衝到 cost=10.0。**根因**：eDensity
+原本設計是要「取代」現有的 pairwise-overlap 擴散力（`lam_ov`）跟 bbox
+壓實力（`lam_bb`），但程式碼只有 `lam_out`（浮動包覆框）在 eDensity 開啟
+時會自動關閉，`lam_ov`/`lam_bb` 這兩個舊機制仍全程作用——兩套擴散力互相
+打架，導致品質崩潰。**這不是「局部密度權重概念不行」的證據，而是「不能
+只打開 eDensity 環境變數就指望能用」的證據**：eDensity 機制本身需要先
+跟 `lam_ov`/`lam_bb` 重新配合調校（例如 eDensity 開啟時同步關閉/降低
+`lam_ov`），才能公平評估局部密度權重這個真正的技術點——這是比預期更大
+的工程量，本輪不繼續投入，**不整合進正式程式碼**。
+
+**同時發現**：`C_QA_20260618.pdf`（官方正式 Q&A）確認：(1) 硬體規格
+= A100 80GB GPU + 48 核 Icelake CPU + 128GB RAM，測資逐一序列評測，
+但**單一測資內部允許 multiprocessing/multithreading**（Q3/A3）；
+(2) 最終提交是包裝好的 executable，由官方 `op_wrapper.py` 呼叫，仍需
+相容 `MyOptimizer.solve()` 介面（Q7-11）；(3) soft block 面積容差是
+對稱雙向 1%，不能靠放大面積去湊 boundary/grouping（Q6/A6）；
+(4) preplaced 位置是硬約束、boundary touching 是軟約束，衝突時一律保留
+preplaced 不動（Q5/A5，我們的實作已經是這樣做）。這些都跟現行實作方向
+一致，沒有需要修正的落差。
+
+---
+
+## §8.35（2026-07-25，重大突破）：place-compact 重擺放候選，2.1230→1.9666（−7.4%），且揭示「哪些改進能轉移到完整 pipeline」的判準
+
+**背景**：使用者切回自主優化模式，要求「不斷試錯挑戰最低 cost」。上一輪
+（§8.34）確認了核心瓶頸是 **area_gap（密度），不是 runtime**——第一名
+（Alpha Top5，Total 0.879）跟我們速度幾乎一樣（2.67s vs 2.83s），但 Cost
+只有我們的 40%。本輪系統性攻擊 area_gap。
+
+**四個實驗（9 案快篩 → 值得的才 full-100 驗證），只有一個轉移成功**：
+
+1. **eDensity 純模式（`ELECTRO_EDENSITY_PURE`，把 lam_ov/lam_bb 關掉讓
+   eDensity 當唯一密度力）**：❌ 否決。假說是「§8.34 的 eDensity 失敗只是被
+   舊擴散力干擾」，但即使正確關掉 lam_ov/lam_bb，9 案加權還是從 2.96 暴增到
+   5.7-7.0，mean area_gap 反而**上升**（153%→176-221%）。eDensity 根本不適合
+   這個小規模問題，不是配置問題。
+
+2. **LP legalizer 加 bbox 跨度最小化項（`M_x ≥ 所有右邊界`，最小化外框）**：
+   ❌ 無效（2.9579→2.9641，幾乎沒動）。**這個負面結果最有診斷價值**：加了
+   外框壓縮項卻壓不動，證明**空白不是「方塊之間的間距」（順序約束早就壓緊
+   了），而是結構性地烙印在 analytical placement 的「排列方式」裡**——哪些
+   方塊當鄰居。用實測再次坐實 §8.34 的 B*-tree 1.403 倍面積比結論：GT 的高
+   密度來自拼圖式互鎖排列，不是把現有排列壓緊就能得到。
+
+3. **密度旋鈕重掃（LP legalizer 加入後）**：`BB1=0.15`（bbox 壓縮終值，原
+   0.04）在 9 案隔離測試 **−14.7%**（2.9579→2.5219），`OV1=1.5`（重疊擴散
+   終值）**−8.4%**。兩者都是「讓 analytical placement 更密，靠 LP legalizer
+   收拾多出來的重疊」。**但 full-100 完整 pipeline 驗證：BB1=0.15 反而變差
+   到 2.1957（+3.4%）**。原因：完整 pipeline 已透過 jacobi 初始化 + adaptive
+   延伸 + portfolio 榨取了大部分密度紅利，再加 BB1 過度壓縮、互相干擾。
+   **這是隔離贏、完整輸的又一例（跟 LP legalizer 隔離 −31%→完整 −1.3% 同
+   模式）**。BB1+OV1 疊加更是災難（9 案 3.88，兩個同方向旋鈕過度壓縮）。
+   **BB1/OV1 都否決**。
+
+4. **place↔compact 重擺放候選（`ELECTRO_PLACE_COMPACT`，新增）**：✅ **確認
+   贏面**。機制：把已 legalize+repair 的緊密佈局的中心點當 init，重跑一輪短
+   analytical placement（250 迭代），再 legalize+repair，當**額外 portfolio
+   候選**，由既有 proxy 排名擇優。9 案 place-compact 讓 mean area_gap 大降
+   153%→90%，但**極度逐案分歧**（config_91 大勝 5.29→2.88、config_41 大敗
+   1.82→5.39）——正是 portfolio 型態。先驗證 proxy 挑選正確：proxy-picked
+   2.7938 幾乎等於 oracle-min 2.7875（−5.5%），所有災難案例都正確拒絕。
+   **full-100 完整 pipeline（第二輪 250 迭代）：2.1230→2.0562（−3.1%），
+   100/100 feasible，Vgrp 380→328、Vbnd 282→266，runtime 相當甚至更快**
+   （place-compact 常提供好候選讓 adaptive 延伸觸發更少，避開 1200 迭代）。
+   **接著掃第二輪迭代數（`ELECTRO_PLACE_COMPACT_ITERS`），發現非單調峰值在
+   400**：250→2.0562、350→2.0069、**400→1.9666（最佳）**、450→1.9695、
+   600→2.0237（太多會 re-spread 漂回原本較鬆的平衡）。**iters2=400 冷啟動
+   確認 1.9666，已設為預設**（`ELECTRO_PLACE_COMPACT=1`、
+   `ELECTRO_PLACE_COMPACT_ITERS` 預設 400）。**對 session 起點 2.1230 是
+   −7.4%。**
+
+**為什麼 place-compact 轉移成功、BB1 卻失敗？——本輪最重要的方法論產出**：
+能轉移到完整 pipeline 的改進，只有做「**pipeline 裡沒有任何其他機制在做的
+genuinely 新的事**」的。place-compact 重新推導**排列**（哪些方塊當鄰居），
+這是 jacobi/adaptive/wideswap/pushpast 全都沒碰的維度，所以疊加有效。BB1
+只是把「密度」這個既有機制已經榨乾的維度再推一把，必然互相干擾。**判斷一
+個隔離測試的贏面值不值得 full-100，先問：它跟現有 pipeline 機制是否作用在
+同一個維度？同維度的大概率被蓋掉，正交維度才可能疊加。**
+
+**目前 electro 路線正式冷啟動分數：1.9666**（原始 electro 基準 2.9007 的
+**−32.2%**；session 起點正確性修復後 2.1513 的 −8.6%）。程式碼改動：
+`electro_parallel.py` 新增 `place_compact_variant()`（支援
+`ELECTRO_PLACE_COMPACT_ITERS` 迭代數與 `ELECTRO_PLACE_COMPACT_ROUNDS`
+多輪），`electro_optimizer.py` solve() 新增 opt-in 候選區塊 + 翻預設，
+`analytical_place.py` 新增 `ELECTRO_EDENSITY_PURE`（否決但保留 opt-in，
+預設關）。
+
+**追加：place-compact 與 seeds（多起點）正交可疊加，畫出 runtime/quality
+trade-off 曲線**。place-compact 給「排列精修」，seeds 給「初始多樣性」，兩者
+作用維度不同 → 疊加有效（正是上面判準的正面例子）：
+
+| 配置 | Total（Neutral RT） | vs 起點 2.1230 | runtime |
+|---|---|---|---|
+| place-compact（seeds=1，**預設**） | **1.9666** | −7.4% | 中性/略快 |
+| + seeds=2 | 1.8811 | −11.4% | ~2× |
+| + seeds=3 | 1.8363 | −13.5% | ~3× |
+
+全部 100/100 feasible。報酬遞減（s1→s2 −4.3%、s2→s3 −2.4%）。**但 seeds>1
+沒有設為預設**——`electro_optimizer.py` 原作者註解已權衡過：Neutral RT 只講
+一半故事，真實 Contest RT 對變慢無封頂懲罰（`RT^0.3`），seeds=N 讓 runtime
+約 N 倍，若慢到全場中位數數倍，RT 懲罰會吃掉品質紅利。**因此正式送出建議
+用 seeds=1 + place-compact（1.9666，runtime 安全）；seeds=2/3 是「確定 runtime
+預算充足時才開」的選項**，是團隊層級決策。這條曲線是「若 runtime 免費，
+排列品質能到多低」的誠實上限，留給最終提交時依實際 runtime 預算取捨。
+
+**再追加：spectral / GiFt init（`ELECTRO_SPECTRAL`，新增）——有原理的正交
+多樣性優於隨機 seed**。實作 spectral graph drawing 初始化（用 b2b 圖 Laplacian
+的最低兩個非平凡特徵向量 v2/v3 當初始座標，這是「最小化連線方塊間加權平方
+距離」的全域最優 2D 嵌入，spectral 版的 wirelength 最小化，也是 jacobi 鄰居
+平均的全域最優版本）。9 案快篩：spectral 單獨用加權 Total 比 jacobi 差
+（2.9866 vs 2.4349），**但 mean area_gap 最低（119% vs jacobi 124% vs random
+153%）且在子集上大勝**（config_21 spectral 2.22 vs jacobi 3.60、config_51
+1.49 vs 3.44）——典型 portfolio 型態，spectral 提供 jacobi 拿不到的排列。
+接成**額外 base 候選**（`ELECTRO_SPECTRAL=1`，jacobi+spectral 兩個 base 都
+place-compact，proxy 逐案挑，永遠只加 1 個 spectral seed=0——jitter 會毀掉
+確定性嵌入的價值）。**完整 runtime/quality 表（全 100/100 feasible）**：
+
+| 配置 | Total（Neutral RT） | vs 起點 2.1230 | runtime |
+|---|---|---|---|
+| place-compact（**預設，安全**） | **1.9666** | −7.4% | 中性 |
+| + spectral（jacobi+spectral） | **1.8521** | **−12.7%** | ~2× |
+| （對照）+ seeds=2（同 runtime） | 1.8811 | −11.4% | ~2× |
+| + spectral + seeds=2 | 1.8362 | −13.5% | ~3× |
+| （對照）+ seeds=3（同 runtime） | 1.8363 | −13.5% | ~3× |
+
+**關鍵發現**：spectral+jacobi 在**同 runtime（2×）下打贏 seeds=2**（1.8538 vs
+1.8811，−1.5%）——**有原理的正交多樣性（一個確定性、topology-optimal 的不同
+排列）比隨機 seed 更聰明地用 runtime**。但這個優勢在低 runtime 倍數最大：3×
+時 spectral+seeds=2（1.8362）跟 seeds=3（1.8363）打平——spectral 加的是「一個」
+不同排列，候選少時最有價值，seeds 越多多樣性飽和後優勢收斂。**spectral 是
+GiFt 文獻（已查證真實，見 `literature_verified_citations.md`）直接落地的成果，
+也是「用文獻找方向、自己動手驗證」流程的正面案例。同 seeds 一樣是 runtime-
+traded、非預設**：正式送出若要開一級 runtime，`ELECTRO_SPECTRAL=1` 是比
+seeds=2 更好的選擇。
+
+**最後追加（資料驅動診斷 → adaptive spectral，本輪最有價值的設計）**：
+不再盲目調參，改為分析 1.9666 的逐案加權貢獻，發現**殘留損失集中在 ~10 個
+大案例**（n≥108 佔加權 79%），且分兩種失血模式：密度受限（area_gap 60-72%、
+低 vrel）與邊界受限（Vb=9-14、vrel 0.27-0.29）。異常值 config_110（area 129%、
+單案佔 13.9%）所有 init 都落進同一壞 basin——直到夠多樣性的組合才壓到
+area 57%，證明**難案例需要更多多樣性，但全域給多樣性要花 runtime**。
+
+由此設計 **adaptive spectral**（`ELECTRO_SPECTRAL_ADAPTIVE=1`）：比照現有
+adaptive iters 的「只對難案例花成本」哲學，**只對 proxy 判定為難
+（`best_600_score >= ELECTRO_SPECTRAL_ADAPTIVE_THRESH`）的案例才加跑 spectral
+候選**。門檻掃描（全 100/100 feasible）：
+
+| 配置 | Total | runtime | 觸發 |
+|---|---|---|---|
+| place-compact（預設） | 1.9666 | 1× | 0 |
+| adaptive spectral thresh=2.0 | 1.9341 | ~1.15× | ~14 案 |
+| **adaptive spectral thresh=1.5** | **1.8790** | ~1.35× | ~31 案 |
+| adaptive spectral thresh=1.3 | 1.8742 | ~1.45× | 更多 |
+| **escalated（spectral+額外 jacobi seed）thresh=1.5** | **1.8449** | ~1.6× | ~31 案 |
+| full spectral（無條件） | 1.8521 | 2× | 全部 |
+| spectral+seeds（無條件） | 1.836 | 3× | 全部 |
+
+**關鍵結論：adaptive spectral（thresh~1.5）Pareto-支配 full spectral**——
+1.8790 @1.35× 幾乎追平 full spectral 的 1.8521 @2×，卻省一半 runtime。效率
+（品質增益/runtime）thresh=1.5（0.250）> thresh=2.0（0.217）> full（0.115）。
+因為 spectral 只花在真正受益的難案例上，不浪費在簡單案例（full 的問題）也不
+漏掉中等案例（thresh 太高的問題）。**這是「花對地方 > 全域花」的 principled
+落地**，跟 adaptive iters 同一個模式，是本輪從盲目調參轉向資料驅動診斷後的
+最大收穫。**仍為 opt-in 非預設**（保守起見保留純 1× 安全預設 1.9666），但
+`ELECTRO_SPECTRAL_ADAPTIVE=1 + THRESH=1.5` 是目前最推薦的 runtime-efficient
+升級選項，優於 full spectral。
+
+**最後追加（診斷驅動的 proxy 缺陷修正，本輪最深入的一擊）**：診斷發現
+config_110（area_gap 129%、單案佔加權 13.9%）的「好候選」（area 57%）明明
+在候選池中卻沒被選——追根究柢是**候選排名 proxy 的結構性缺陷**。proxy 用
+`area/候選池平均` 當 area_gap 代理，但難案例所有候選都遠離 baseline、平均被
+拉高，壓縮了差異、讓 `exp(2·vrel)` 項主導而選錯。**第一原理修正**
+（`ELECTRO_PROXY_ABSAREA=1`）：`baseline_area ≈ total_block_area/GT_util
+(~0.965) ≈ total_block_area`（solve 時已知常數），所以 `area/total_block_area
+≈ 1+area_gap` 是 pool 無關、忠實追蹤真實 area_gap 的參考，取代 pool-mean。
+**結果（豐富候選池下）**：escalated adaptive + absarea =
+**1.8096（−14.8% vs 起點 2.1230）**，config_110 從 3.985 破解到 2.694，是
+目前最低的**已驗證** runtime-efficient 分數（@~1.6×，且打贏 spec+seeds 的
+1.836 @3×，更好又更便宜）。absarea-only 一開始好壞參半（幫 escalated 卻傷 spec+seeds 1.836→1.8556），
+因為它只修了 area 項、hpwl 項還是 pool-mean，不平衡。**完成修正——把 hpwl
+項也做成 pool 無關**（`ELECTRO_PROXY_ABSHPWL=1`）：HPWL 的自然長度尺度是
+`sqrt(total_block_area)`，所以 `hpwl/sqrt(total_block_area)` 是 pool 無關的
+hpwl 參考。**完全 pool 無關 proxy（absarea+abshpwl）變得穩健**：
+
+| 配置 | pool-mean（原） | absarea only | **完全 pool 無關** |
+|---|---|---|---|
+| escalated adaptive（豐富池） | 1.8449 | 1.8096 | **1.7535** |
+| spec+seeds（豐富池） | 1.836 | 1.8556（傷） | 1.834（恢復） |
+| 預設（稀疏池） | 1.9666 | 1.9710 | 1.9866（傷） |
+
+**規律**：完全 pool 無關 proxy **只在豐富候選池有益**（pool-mean 失真在
+「難案例有大量跨度大的候選」時最嚴重）；稀疏預設池候選少、pool-mean 本身
+就是合理局部參考，換掉反而傷。**所以 proxy 修正要跟多樣性機制一起開，不上
+預設**。**目前最低已驗證組合：`ELECTRO_SPECTRAL_ADAPTIVE=1 THRESH=1.5
+ELECTRO_ADAPTIVE_SEED=1 ELECTRO_PROXY_ABSAREA=1 ELECTRO_PROXY_ABSHPWL=1` =
+1.7535 @~1.6×（−17.4% vs 起點 2.1230，−39.6% vs 原始基準 2.9007）**，config_110
+從 3.985 破解到 2.694。純安全預設仍為 place-compact 1.9666。
+
+**這是本輪最深入的一擊**：從盲目調參一路深入到**診斷並修正候選選擇機制
+本身的第一原理缺陷**（pool-mean 對真實 gap 的失真），比任何旋鈕都根本，
+且穩健（兩個 pool 無關參考互相平衡）。是「持續逼問為什麼」而非「多試幾組
+參數」的成果。
+
+**再追加：escalated 的 `ELECTRO_ADAPTIVE_SEED` 改成「數量」**（給最難案例
+加 N 個額外 jacobi seed，而非只 1 個），配合完全 pool 無關 proxy 掃描（全
+100/100 feasible）：SEED=1→1.7535(~1.6×)、**SEED=2→1.7342(~1.8×，效率甜蜜
+點)**、SEED=3→1.7279(~2×，遞減)。報酬遞減（−1.1%→−0.4%）。（註：config_110
+的 2.220 好候選即使給了完整多樣性配方仍選不出，卡在 2.694——因 proxy 對 area
+有好 baseline 估計 total_block_area，但 hpwl 無幾何 baseline 估計、永遠是近似，
+這個案例是 hpwl 驅動的排名反轉，是 proxy 無 baseline 的根本限制，不追單一案例。）
+
+**更新後的完整 Pareto frontier（全 100/100 feasible）**：1×→1.9666（預設）、
+~1.35×→adaptive-spectral 1.8790、**~1.6×→escalated+完全proxy 1.7535**、
+~1.8×→+adaptive-seed=2 1.7342、**~2×→+adaptive-seed=3 1.7279（本輪最低已驗證，
+−40.4% vs 原始基準 2.9007）**、（對照）2×→full spectral 1.8521、3×→spec+seeds
+1.836。
+
+---
+
+## §8.36（2026-07-29）：隊友的 slice_pack 路線經三方獨立驗證屬實（1.4480），成本結構翻轉，V_mib 被證明可完全歸零
+
+### 起點：隊友回報 Total Score 1.5048，先查證再採信
+
+隊友的 `electro_teammate/` 版本回報 100 案 Total Score = **1.5048 @ 2.97s/case**，
+遠優於我們自己路線當時的最佳 1.7279。依本專題一貫紀律（不照單全收，先獨立
+驗證），把她的 6 個檔案複製到獨立資料夾，用**兩套完全獨立的評測邏輯**各跑一次
+完整 100 案：
+
+| 驗證來源 | Total Score | Avg Cost | Feasible | 備註 |
+|---|---|---|---|---|
+| 隊友原始回報 | 1.5048 | — | 100/100 | 平行執行、含 ML 暖啟動 |
+| 我們自己工具（`ml/case_report_electro.py`） | — | **1.4480** | 100/100 | 循序執行，**有**找到 ML v2 權重 |
+| 官方 `iccad2026_evaluate.py` | 1.5747 | **1.4995** | 100/100 | 循序執行，**沒**找到 `ml/`，純隨機 8-seed |
+
+三個數字彼此差距都在 4% 以內、全部 100/100 feasible。**判定：分數屬實，無誇大。**
+（官方那欄的 Total Score 1.5747 高於 Avg Cost 1.4995，是因為 Windows 無 `fork()`
+導致 8 個 seed 循序跑、Avg Runtime 18.1s，真的把 RT 懲罰算進去了；跟隊友平行
+執行的數字不同基準，可比的是 Avg Cost。）
+
+### 消融實驗：主力是 slice_pack，不是「多開幾個 seed」
+
+使用者質疑「是不是單純多開 seed 擇優」。做三層消融（同一套評測工具，全 100 案）：
+
+| 配置 | Total Score | 該層貢獻 |
+|---|---|---|
+| 基礎架構（seeds=1、slice_pack 關） | 2.2594 | — |
+| +slice_pack（seeds=1） | **1.6780** | **−25.7%** |
+| +8-seed portfolio（含 ML） | **1.4480** | 再 −13.7% |
+
+**結論：slice_pack 這個切割式（guillotine）打包演算法貢獻 −25.7%，接近 seed
+portfolio 貢獻（−13.7%）的兩倍。** 跟我們自己既有數據一致（我們測 seeds 1→3
+只從 1.9666 進步到 1.8363，約 6.6%，報酬遞減很快）——多起點是放大器，不是主因。
+
+### 文獻查證（沿用 §8.34 的紀律）
+
+`slice_pack.py` 註解引用的兩篇：
+
+- **Otten 1982, "Automatic Floorplan Design", DAC 1982** — 查證**屬實**，是切割式
+  佈局的奠基論文（用 Schoenberg 定理做模組空間嵌入，導出 slicing structure 的
+  structure tree）。
+- **Stockmeyer 1983, "Optimal Orientations of Cells in Slicing Floorplan Designs",
+  Information and Control** — 論文**屬實**，但**歸功不精確**：它處理的是**剛性
+  矩形的離散 90° 旋轉**選擇（並證明非切割式情況是強 NP-complete），跟
+  slice_pack 實際依賴的「軟方塊長寬比連續自由」不是同一回事。註解裡「填充率
+  恰好 100%」這個宣稱**本身是對的**（自由長寬比下面積比例遞迴切割天生 100%），
+  只是這個結果不需要 Stockmeyer 來背書。**再次印證 §8.34 的教訓：論文標題屬實
+  ≠ 引用的技術細節對得上。**
+
+### 重大發現一：成本結構已經翻轉，vrel 項超越 gap 項
+
+對 1.4480 基準做加權成本拆解（同 §8.23 的方法）：
+
+| 項目 | 加權平均值 | 若壓到 0，Total 約為 |
+|---|---|---|
+| gap 項 `1+0.5·(hpwl_gap+area_gap)` | **1.1721** | 1.2349 |
+| vrel 項 `exp(2·V_rel)` | **1.2349** | 1.1721 |
+
+加權平均 area_gap 僅 15.13%、hpwl_gap 19.28%（對比我們自己路線當時 area_gap
+還有 60-72%）。**slice_pack 把面積問題解得太好，導致軟約束違規反而成為主要
+殘留** —— 這跟 §8.23 當時的診斷（gap 1.8386 遠大於 vrel 1.3132）**完全相反**，
+代表未來的使力方向必須跟著翻轉。
+
+軟違規組成：`V_grouping=184`、**`V_mib=153`**、`V_boundary=141`（總計 478）。
+
+### 重大發現二：V_mib 的真實不可約下限是 0（實測證明，非推論）
+
+V_mib=153 佔全部違規 32%，是最大單一槓桿。寫探針掃描全 100 案的原始資料驗證
+「這 153 個違規到底有沒有可能歸零」：
+
+- **100 個 MIB 群組全部都是等面積**（0 個不等面積群組）→ 不存在「面積不同所以
+  形狀必定不同」的不可約違規。
+- 群組組成：44 個純軟方塊群組、**56 個混合（剛性錨點+軟成員）群組**、0 個純
+  剛性群組。
+- 在 56 個混合群組裡：剛性錨點的尺寸**全部一致**，且其 `w*h` **全部精確等於**
+  該群組的共享目標面積（56/56 命中，0 個面積不符、0 個多錨點尺寸衝突）。
+
+**結論：軟成員採用剛性錨點的精確 `(w,h)` 時，面積仍精確命中目標、1% 硬約束
+毫髮無傷 → V_mib 的真實不可約下限 = 0，153 個違規全部可修。**
+
+### 根因：`_unify_mib` 把剛性成員排除在群組之外
+
+追 `slice_pack._unify_mib` 找到明確的邏輯缺口：
+
+```python
+mem = [i for i in ... if mib[i] == g and not (is_fixed[i] or is_pre[i])]  # 排除剛性
+```
+
+它只讓**軟成員彼此**統一，完全不看剛性錨點。但官方 V_mib 數的是「整個 MIB
+群組的相異形狀數 − 1」，剛性成員也算在內——軟成員統一到某個區域推導出來的
+寬度，幾乎不可能剛好等於錨點形狀，**所以 56 個混合群組永遠至少殘留 1 個違規，
+形成 ≥56 的地板**。純梯度路徑（`ELECTRO_SLICE=0`）實測 V_mib=56，跟混合群組數
+56 精確吻合，交叉印證這個根因。
+
+### 修法與教訓：必須做成 portfolio，不能無條件套用
+
+實作了兩個層次的修正（都在獨立的 `electro_v2/`，不動 `electro_teammate/`）：
+
+1. `ELECTRO_MIB_ANCHOR=1`：在 `analytical_place` 的**輸出階段**（不是
+   `shapes()` 裡）讓混合群組的軟成員採用錨點形狀，保留中心點以最小化位移，
+   後續的 `legalize()` 本來就是設計來吸收這種小重疊的。**這是 §8.11 失敗招式
+   的正確版本**——§8.11 是在 `shapes()` 裡從第 0 輪就鎖死，等於整輪拿掉長寬比
+   這個自由度，實測 area_gap 暴增 183.9%、cost 1.8485→5.335；改在輸出階段做，
+   優化過程完全不受影響。同時修正 `_unify_mib` 讓它優先採用剛性錨點形狀。
+2. `ELECTRO_MIB_PORTFOLIO=1`：把 MIB 統一版當**額外候選**（不重跑 `place()`，
+   只改形狀 + 一次 `remove_overlap`，成本極低），兩份都進候選池由 proxy 逐案挑。
+
+**為什麼需要 portfolio**：小案例 smoke test 顯示無條件套用會有副作用——改形狀
+挪動方塊邊緣，把原本貼齊的 boundary 弄歪、把原本相鄰的 grouping 拆開
+（實測 V_mib 9→5 但 V_boundary 5→9，淨分數反而變差 1.7933→1.8746）。**這是
+§8.13-8.14「同一招無條件套用退步、做成 portfolio 淨勝」教訓的第三次獨立印證。**
+
+### 實測結果：預測完全命中，但誠實地說收益很小
+
+全 100 案驗證（seeds=1 篩選層，基準 = 隊友版同設定的 1.6780）：
+
+| 配置 | Total Score | vs 基準 |
+|---|---|---|
+| **`MIB_PORTFOLIO=1`（額外候選）** | **1.6692** | **−0.5%** ✓ |
+| `MIB_PORTFOLIO=1 + MIB_ANCHOR=1` | 1.6786 | 持平 |
+| `MIB_ANCHOR=1`（無條件深層修正） | 1.6916 | **+0.8% 退步** ✗ |
+
+**方法論上這是漂亮的驗證**：無條件套用退步、做成 portfolio 淨勝，跟事前預測
+完全一致，是這個教訓的第四次獨立印證。
+
+**但收益層面必須誠實**：−0.5% 很小。V_mib=153 已經被證明**理論上完全可以歸零**
+（不可約下限 = 0），但實測**不值得歸零**——把軟成員改成錨點形狀所需的尺寸變動，
+會挪動方塊邊緣，對 boundary 貼齊與 grouping 相鄰造成的破壞，大於 MIB 本身省下
+的違規。這是一個「理論上限很誘人、實際報酬很薄」的典型案例，記錄下來避免未來
+有人重新被 V_mib=153 這個數字吸引而重做一次。
+
+### 參數空間已挖乾（seeds=1，全 100 案）
+
+| 配置 | Total Score | vs 基準 1.6780 |
+|---|---|---|
+| `SLICE_ASPECTS=0.55,0.7,1.0,1.4` | 1.6748 | −0.2% |
+| `SLICE_TOPK=3` | 1.6773 | 持平 |
+| `SLICE_BUDGET=12000` | 1.6776 | 持平 |
+| `SLICE_STEPS=4` | 1.7046 | **+1.6% 退步** |
+| `SLICE_UTIL_HI=0.999` | 1.7100 | **+1.9% 退步** |
+
+全部落在 ±2% 內，且兩個「直覺上該更好」的方向（更多二分搜尋步數、更貼近 1.0 的
+util 上界）**實測都是退步**——util 壓太緊會讓第一次 attempt 幾乎必定失敗、並讓
+剛性方塊更容易卡住切割。**結論與 §8.26 一致：外部已調過的旋鈕都在局部最佳，
+不要重複掃描。**
+
+### 重大發現三：place-compact 能跟 slice_pack 疊加（−4.6%），推翻了事前的正交性疑慮
+
+把我們自己路線本季最大的單一突破 **place-compact**（§8.35，貢獻 −7.4%）移植進
+隊友的架構：拿 legalize + 軟約束修復之後的緊密佈局，用它的中心點當**新的初始化**
+再跑一輪短版解析佈局，legalize + 修復後當額外候選。
+
+**事前的疑慮**：依 §8.35 建立的正交性判準，「同維度的機制大概率互相蓋掉」——
+而 slice_pack 也是在重做排列（離散切割），place-compact 也是在重做排列（連續
+梯度），看起來是同一個維度，應該會互相吸收。
+
+**實測推翻了這個疑慮**（seeds=1 篩選層，基準 1.6780）：
+
+| 配置 | Total Score | vs 基準 |
+|---|---|---|
+| **`PLACE_COMPACT=1, ITERS=250`** | **1.6001** | **−4.6%** ✓✓ |
+| `PLACE_COMPACT=1 + MIB_PORTFOLIO + MIB_ANCHOR` | 1.6130 | −3.9% |
+
+**這是本輪最大的單一改善**，遠超過 MIB portfolio（−0.5%）與所有參數微調（±2%）。
+
+**正交性判準需要修正**：「都在重做排列」不足以判定同維度。**連續梯度重排列**與
+**離散切割重排列**雖然目標維度名稱相同，但搜索的解空間結構完全不同——切割式
+受限於 guillotine 結構（遞迴二分），梯度式則沒有這個限制，兩者找到的排列彼此
+補足。**更精確的判準應該是「兩個機制的解空間是否互相包含」，而不是「它們想
+改善的指標名稱是否相同」。**
+
+附帶發現：最佳迭代數是 **250**，比我們自己路線的 400 低——合理，因為 slice_pack
+已經先做了一輪重排列，第二輪需要的修正量比較小。
+
+### 疊加驗證與迭代數掃描（seeds=1 篩選層，全 100 案，基準 1.6780）
+
+| 配置 | Total Score | vs 基準 |
+|---|---|---|
+| **`PLACE_COMPACT` 套用到全部候選（`PLACE_COMPACT_BEST=0`）** | **1.5733** | **−6.2%**（本輪最佳） |
+| `PLACE_COMPACT + MIB_PORTFOLIO`（只對最佳候選） | 1.5955 | −4.9% |
+| `PLACE_COMPACT, ITERS=250` | 1.6001 | −4.6% |
+| `PLACE_COMPACT`（預設 ITERS=400） | 1.6038 | −4.4% |
+| `PLACE_COMPACT + MIB_PORTFOLIO + MIB_ANCHOR` | 1.6130 | −3.9% |
+| `PLACE_COMPACT, ITERS=600` | 1.6200 | −3.5% |
+
+**place-compact 第二輪迭代數的完整曲線**（非單調，峰值在 300，250-400 之間是平坦的低谷）：
+
+| ITERS | 150 | 200 | 250 | **300** | 400 | 600 |
+|---|---|---|---|---|---|---|
+| Total Score | 1.6540 | 1.6196 | 1.6001 | **1.5967** | 1.6038 | 1.6200 |
+
+另外兩個負面結果（都是全 100 案）：`PROXY_ABSHPWL=1`（HPWL 錨點改用
+`sqrt(總面積)` 這個純尺度常數，取代 seed 0 候選的實測 HPWL）得 1.6014，比
+不開的 1.6001 略差——隊友原版用 `cands[0]` 當錨點雖然不是常數，但它永遠存在
+且不隨候選池增減而變，已經足夠穩定，不需要再抽象化。`HPWL_POLISH` 疊在
+place-compact 上得 1.6614，同樣退步。
+
+跟我們自己路線在 400 出現非單調峰值是同一種現象——太少來不及重排列、太多則
+把 slice_pack 已經找到的好結構又推散掉。這裡峰值比我們自己路線略低（300 vs 400），
+合理：slice_pack 已先做過一輪重排列，第二輪需要的修正量比較小。
+place-compact 與 MIB portfolio **可以疊加**（1.6001 → 1.5955），但加上
+`MIB_ANCHOR` 反而退步（1.6130）——再次印證無條件深層修正的副作用。
+
+**額外發現：place-compact 套用到「全部候選」比只套用到「目前最佳候選」更好**
+（1.5733 vs 1.6038，差 1.9%）。原本為了控制 runtime 而預設只對最佳候選做，
+但實測顯示多樣性的價值高於省下的運算——每個候選（不同 slice 長寬比、walls
+模式、梯度式）各自再做一次連續精修，產生的候選池明顯更好。這跟本專題
+「候選多樣性常常比單點品質更強」的既有結論一致。
+
+### 回歸檢查（重要的正確性驗證）
+
+`electro_v2/` 在**所有新旗標關閉**時跑出 **1.6780**，與隊友原版同設定的 1.6780
+**完全一致** —— 證明本輪所有程式碼修改都是乾淨的 opt-in，沒有意外改動預設行為。
+這是每次動別人程式碼時都該做、但很容易略過的一步。
+
+### 負面結果：區域內 HPWL 微調（`ELECTRO_HPWL_POLISH`）
+
+觀察到 slice_pack 把每顆方塊固定在自己區域的**左下角**，但方塊比區域小
+（區域面積 ≈ a/util，util 收在 0.90-0.93，所以每軸約有 5% 餘裕）——**這個位置
+自由度完全沒被使用**。實作了逐軸座標下降（固定其他方塊時，單一方塊的加權 L1
+線長最佳解是鄰居座標的加權中位數，再夾回自己的區域範圍），且因為每顆方塊只在
+自己的區域內移動、區域彼此不重疊，**理論上不可能製造新的重疊、也不會撐大 bbox**。
+
+**完整 100 案實測 1.7295，比基準 1.6780 退步 +3.1%**（小樣本的中性偏負訊號在全尺度下被放大確認）。根因是一個本專題反覆出現的張力：**HPWL 想把方塊
+拉開/置中，grouping 卻要求方塊彼此相鄰（abut）**——在區域內滑動會破壞原本貼齊
+的邊，V_grouping 上升抵銷掉 HPWL 的收益。這跟 §8.29 的「權重不能脫離脈絡單獨
+驗證」是同一類現象：一個看似「免費」的自由度，實際上被另一個軟約束佔用著。
+
 ## §8.37（2026-07-29 深夜）：診斷出 v3 cluster-cut「淨效果為零」的精確根因——排序鍵缺少 boundary 項
 
 ### 現況（全部經報告檔查證屬實）
@@ -2005,617 +2613,6 @@ log-aspect 後軟成員的 `(w,h)` 與錨點**逐位元相同** → `V_mib = 0`�
 
 **結論：`ELECTRO_MIB_SHAPE` 維持預設 0.03。**
 
-
----
-**回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]
-
-> [!important] **追加關鍵資訊**：`electro_optimizer.py` 第 99-104 行
-> `ELECTRO_SEEDS` 那段的原始碼註解，**作者自己已經做過這個確切的分析**：
-> 「更多 seeds → 分數更好（1→2.54、3→2.16、8→2.07，含 ML），但 runtime
-> 約 N 倍；比賽的 RT 懲罰（`R^0.3`，變慢不封頂）通常會讓 `seeds=1` 在
-> runtime 調整後的總分上獲勝，除非全場中位數 runtime 本來就很高」。也就是
-> 說，我測出來的 Neutral RT 數字（2.1731→1.9653）只講了一半的故事——
-> **在真實 Contest Grading 下，選 `seeds=1`（現行預設）很可能才是對的
-> 選擇，除非確定其他隊伍普遍跑得比我們慢**。這進一步支持「這個決定不該
-> 我自己下」的判斷，也代表這不只是使用者個人偏好，是程式碼作者本來就
-> 已經權衡過的已知取捨。也順帶修正了 brief 裡原本猜測「平行開銷可以優化
-> 掉」的想法——同一份程式碼的另一段註解（105-108 行）說明這是已知的
-> CPU/OpenMP 架構限制，真正的解法要用 GPU 批次處理（作者自己標記
-> TODO，尚未實作），不是能快速修的小問題。
-
----
-
-## §8.34（2026-07-21，重大突破）：官方 Alpha 排名曝光巨大差距，追出 legalize.py 的貪婪演算法瓶頸，LP 替換法驗證 −31.0%
-
-**觸發**：使用者發現官方公佈的 Alpha 正式排名（`C_Alpha_Top5(20260720).csv`）——
-前五名 Total Score 落在 **0.879–1.100**，遠低於我們目前最佳（electro，
-2.1513）。追出**不是靠 runtime 贏**：第一名 100 案總耗時 266.8s
-（均 2.67s/案），並不比我們快多少。搭配同時公佈的
-`C_Median Runtime per Testcase(Alpha).csv`（每個 test case 的跨隊伍真實
-median runtime，例如 n=21 中位數 2.0s，n=120 中位數 11.8s），確認前五名
-贏在**擺放品質**（gap≈0、V_rel≈0），不是速度。這跟先前 §8.23 的診斷完全
-吻合：gap 項若歸零可省 45% Total Score，比 V_rel 項（24%）更關鍵，且
-electro 現有架構上所有 loss 權重旋鈕（13 個）都已驗證榨乾，沒有免費分數。
-
-**根因追查**：重讀 `electro_optimized/legalize.py` 逐行確認，發現它的
-`_compact()` 是**單一 pass 的貪婪 longest-path 壓縮**——只保證滿足非重疊
-約束（feasibility），完全不管 HPWL/面積這個目標函數本身，是「能動就動到
-剛好卡住為止」的貪婪解，不是最優解。這正是先前 §8.8/§8.9 驗證過
-sequence-pair+LP（1.15 倍面積比，比 B*-tree 的 1.40 倍好）的核心優勢
-所在——但那次從零建構 sequence-pair 的嘗試卡在 preplaced anchor 矛盾
-（用啟發式對角線排序推導出的順序，跟 preplaced 方塊的真實座標關係衝突，
-被判定需要研究等級的多日工程）。
-
-**關鍵洞察**：`legalize.py` 自己 Step 1（`_overlap_matrix`+
-`triu_indices`+取重疊較少的軸）已經在**讀取 analytical_place() 收斂後的
-真實幾何**來決定每一對方塊的分離軸（不是憑空發明的啟發式），而且這個
-順序在正式 pipeline 已經跑了大半年、已知正確——只是 Step 2（`_compact`）
-拿到這個正確的順序後，用貪婪法而非最優法去解位置。**如果直接複用
-Step 1 完全不改的順序，只把 Step 2 換成 LP（最小化跟 analytical
-placement 的總位移，而非「貪婪推到剛好卡住」），理論上能同時吃到
-sequence-pair+LP 的密度優勢，又不會撞上讓那次從零嘗試失敗的 anchor
-矛盾**——因為順序來源不同：這次是已經跟 preplaced 座標自洽的真實幾何，
-不是會跟它衝突的獨立啟發式。
-
-**第一次嘗試就撞牆，但抓出了為什麼**：把全部 order 約束（含 movable→
-preplaced 兩個方向）都丟進 LP，9 案全部 infeasible。診斷發現：即使一個
-41-block case 只有 2 個 preplaced 方塊，強制滿足全部 pairwise 約束就會
-infeasible（不是圖論上的環，兩軸個別驗證都是 DAG）——真正原因是**一個
-movable 方塊被兩個各自獨立釘死座標的 preplaced anchor 兩面夾殺**，數值上
-無解。回頭看 `_compact()` 原始碼才發現：production 本來就**刻意跳過
-「後繼是 preplaced」的約束**（`if is_pre[succ]: continue`），把這類
-「卡在兩個錨點之間」的情況留給 `_cleanup()` 的 pairwise push-apart backstop
-處理——這不是疏漏，是必要的設計。改成套用同一條跳過規則後，LP 立刻全部
-feasible。
-
-**驗證結果（100 案全跑，單一 seed=0、iters=600、無 portfolio，兩邊接上
-完全相同的 repair chain）**：
-- **0 個 LP-infeasible，100/100 feasible 兩邊都成立**
-- **加權 Total Score（e^(n/12)）：貪婪法 5.3029 → LP 法 3.6592，相對改善
-  −31.0%**
-- 100 案裡 82 案改善、約 18 案小幅退步（例如 config_51 +10%、config_36
-  +26%），但大 n 案例（e^(n/12) 權重最重）幾乎全面大勝
-  （config_120: 6.58→2.43 −63%；config_112: 7.57→2.32 −69%；
-  config_113: 5.28→1.90 −64%；config_105: 7.03→2.95 −58%），所以加權
-  總分改善幅度遠大於簡單平均。
-- 單獨這一個子程式替換，就吃掉了 §8.23 估計「gap 項全歸零可省 45%」
-  裡的一大半，且完全沒動任何既有 loss 權重、seeds、Jacobi、portfolio
-  機制。
-
-**已實作為 opt-in（`ELECTRO_LEGALIZE_LP=1`，預設關閉）**：
-`legalize.py` 新增 `_compact_lp()`（LP 版 `_compact`，跟現行版本共用完全
-相同的順序抽取邏輯與「跳過 preplaced 後繼」規則，用 scipy
-`linprog`／HiGHS 求解「最小化跟 analytical placement 的總位移」，LP 失敗
-時 fallback 回原本的貪婪 `legalize()`，絕不會比現行更差）+
-`legalize_lp()`（跟 `legalize()` 結構一致的 drop-in 替代，共用 Step 1/3）。
-`electro_parallel.py::post_place_repair` 依環境變數選擇兩者之一。
-`requirements.txt` 補上 `scipy`（雖然 Beta 指南說評測環境即使
-requirements.txt 是空的也會提供 scipy，但既然真的引用了就明確列出）。
-
-**完整正式 pipeline 對照結果（重要修正，−31% 沒有直接疊加）**：跑了四組
-100 案對照（含全部 seeds/Jacobi/portfolio/adaptive iters 的完整正式
-pipeline，vs. 精簡設定=只用 Jacobi replace、關掉 wideswap/grouping-
-pushpast/adaptive-iters-portfolio）：
-
-| 設定 | Legalizer | Total Score |
-|---|---|---|
-| 完整 portfolio（現行預設） | 貪婪法 | 2.1513（已知官方分數） |
-| 完整 portfolio | LP | **2.1230（−1.3%）** |
-| 精簡（僅 Jacobi replace） | 貪婪法 | 2.2474 |
-| 精簡 | LP | 2.2134（−1.5%） |
-
-**關鍵誠實結論**：隔離測試量到的 −31.0% 並沒有直接疊加進正式 pipeline。
-真正原因是**現有 portfolio 機制（多候選挑最好）本身就貢獻了 −4.3%**
-（精簡貪婪法 2.2474 → 完整 portfolio 貪婪法 2.1513），跟 LP 法能補的
-品質缺口高度重疊——portfolio 靠「多跑幾種候選、挑最好的」已經吸收掉了
-LP 法在單一候選情境下能貢獻的大部分價值。精簡+LP（2.2134）甚至打不贏
-完整 portfolio+貪婪法（2.1513），證實「更多候選多樣性」目前仍是比
-「單一候選品質」更強的槓桿。**但 LP 法在兩種設定下都是一致、可重現的
-正向改善**（−1.3%、−1.5%），沒有任何反例，且是嚴格加法式（LP 失敗
-自動 fallback 回貪婪法，絕不會更差）——**已將 `ELECTRO_LEGALIZE_LP`
-預設改為 `"1"`**（`electro_optimizer.py`），冷啟動（無任何環境變數覆寫）
-獨立確認：`Total Score=2.1230 Vgrp=380 Vmib=0 Vbnd=282 feasible=100/100`，
-完全吻合。**electro 路線正式定案更新為 2.1230**（原始基準 2.9007 的
-−26.8%，即測正確性修復後的 2.1513 再 −1.3%）。
-
-**對「如何追上 Alpha Top5（0.879-1.100）」這個問題的誠實回答**：這次
-LP 法是一個乾淨、低風險、已驗證的小改善，但**不是能拉近那 2 倍差距的
-答案**。真正有意義的訊號反而是隔離測試量到的 −31%——它證明了「給定同一個
-順序，存在遠比目前 portfolio 找到的候選更好的解」，但現有 portfolio
-的候選生成方式（多 seed/Jacobi/wideswap 變體）顯然**不擅長穩定產出
-這種高品質候選**，只是在一堆普通候選裡挑相對最好的。這代表下一步的
-真正槓桿不是「再加一種 portfolio 花招」（已知報酬遞減）也不是「換更好的
-legalizer 接上同樣的候選」（剛驗證只值 1.3%），而是**候選生成機制本身
-需要架構級的重新思考**——例如：(1) 重啟先前擱置的 sequence-pair+LP
-從零建構路線（§8.8-8.9，已驗證面積比 1.15 倍優於 B*-tree 的 1.40 倍），
-但這次用「讀取 analytical_place() 收斂幾何的順序」當作額外的 warm-start
-候選餵給 LP（而非單純的對角線啟發式排序），或許能繞開當初卡住那條線的
-anchor 矛盾；(2) 認真評估這個 2 倍差距是否本質上需要一個結構不同的
-placement 典範（例如生成式 B*-tree 路線的 reward fine-tuning，或
-electro 之外的第三條路徑），而非目前 electro 架構的任何微調能達到的
-——這是研究等級的投入，需要使用者決定是否值得繼續砸時間。
-
-**同日追加（負面結果，已驗證，記錄避免重複踩）**：既然 LP 求解本身很快
-（<1s），嘗試把 LP 目標函數從「最小化跟 analytical placement 的位移」
-直接換成「最小化真實加權 HPWL（用 b2b/p2b 實際連線權重）+ 一個很小的
-位移正則化項」，同一套順序約束不變。9 案抽樣結果：**加權平均反而變差
-+37.2%**，且大案例特別慘（n=120: +57.6%、n=106: +15.6%），小案例
-（n=21/31/41）結果甚至跟位移版完全相同（正則化項太弱、對這幾個 case
-沒起作用）。**根因**：純 WL 目標配上薄弱的位移正則化，LP 沒有足夠誘因
-維持佈局緊湊性——為了壓低某一軸的 WL，會把方塊硬擠成一線，代價是把
-bbox 面積撐大，area_gap 反而惡化。這正是「最小化位移」這個目標函數
-反而更穩健的原因：analytical_place() 本身已經用多項損失（WL+重疊+
-面積+分組+邊界）平衡過，位移量小天然保留了那個平衡；換成單一目標的
-WL 就打破了這個平衡。**結論：不追加 bbox/緊湊性約束的話，直接 WL 目標
-不可行，此變體不整合進正式程式碼**。若要繼續這個方向，需要同時加入
-bbox span 最小化項做聯合目標，屬於下一輪可再嘗試的變體，非本輪投入。
-
-**同日追加（Antigravity 查證深度研究報告 + 負面結果）**：請使用者透過
-Antigravity 查證上一份 Gemini Deep Search 報告引用的 7 項文獻/公式。
-**結果**：TCG（Lin & Chang, DAC2001/TVLSI2005）、UFO（Lin & Hung,
-ASP-DAC2010/TCAD2011）、"Placement Constraints in Floorplan Design"
-（Young/Chu/Ho, TVLSI2004）、QinFer（Ji et al., Computers & Operations
-Research 2021）**全部確認真實存在**；但 **DREAMPlace 3.0 的密度權重更新
-公式是編造的**（報告寫的 $\alpha_k=\alpha_L+(\alpha_H-\alpha_L)/(1+\ln(1+
-\beta D_k/D_0))$ 不存在，真正公式是有界乘法式成長
-$\alpha_{t+1}=\alpha_t^{\ln(\mu\Vert D_t\odot P_\lambda\Vert_2)/(1+\ln(\mu
-\Vert D_t\odot P_\lambda\Vert_2))}\cdot(\alpha_h-\alpha_l)+\alpha_l$，
-$\alpha_l=1.03,\alpha_h=1.04$）；**AutoDMP 用的是貝葉斯優化（Optuna），
-不是 RL/MDP**（報告誤植，跟 Google 的 RL macro placer 搞混了）；
-**RePlAce-ld 的局部密度懲罰公式 $\nu_j=e^{\alpha(\text{BinDemand}_j-
-\text{BinCapacity}_j)}$ 確認為真**（Lu et al., RePlAce, TCAD2019）。
-
-**基於確認為真的 RePlAce-ld 公式，實作並測試局部密度權重**（
-`analytical_place.py` 新增 `ELECTRO_LOCAL_DENSITY_ALPHA`，掛在既有
-`ELECTRO_EDENSITY` 的 DCT 密度場機制上，對超過目標密度的網格額外加壓）。
-**結果為明確負面**：9 案抽樣，A（現行預設，eDensity 關閉）加權 Total=
-2.9579；B（單純打開均勻 eDensity）暴增到 6.5944；C（局部權重 α=5）
-5.7123；D（α=20）8.4341，n=120 甚至衝到 cost=10.0。**根因**：eDensity
-原本設計是要「取代」現有的 pairwise-overlap 擴散力（`lam_ov`）跟 bbox
-壓實力（`lam_bb`），但程式碼只有 `lam_out`（浮動包覆框）在 eDensity 開啟
-時會自動關閉，`lam_ov`/`lam_bb` 這兩個舊機制仍全程作用——兩套擴散力互相
-打架，導致品質崩潰。**這不是「局部密度權重概念不行」的證據，而是「不能
-只打開 eDensity 環境變數就指望能用」的證據**：eDensity 機制本身需要先
-跟 `lam_ov`/`lam_bb` 重新配合調校（例如 eDensity 開啟時同步關閉/降低
-`lam_ov`），才能公平評估局部密度權重這個真正的技術點——這是比預期更大
-的工程量，本輪不繼續投入，**不整合進正式程式碼**。
-
-**同時發現**：`C_QA_20260618.pdf`（官方正式 Q&A）確認：(1) 硬體規格
-= A100 80GB GPU + 48 核 Icelake CPU + 128GB RAM，測資逐一序列評測，
-但**單一測資內部允許 multiprocessing/multithreading**（Q3/A3）；
-(2) 最終提交是包裝好的 executable，由官方 `op_wrapper.py` 呼叫，仍需
-相容 `MyOptimizer.solve()` 介面（Q7-11）；(3) soft block 面積容差是
-對稱雙向 1%，不能靠放大面積去湊 boundary/grouping（Q6/A6）；
-(4) preplaced 位置是硬約束、boundary touching 是軟約束，衝突時一律保留
-preplaced 不動（Q5/A5，我們的實作已經是這樣做）。這些都跟現行實作方向
-一致，沒有需要修正的落差。
-
----
-
-## §8.35（2026-07-25，重大突破）：place-compact 重擺放候選，2.1230→1.9666（−7.4%），且揭示「哪些改進能轉移到完整 pipeline」的判準
-
-**背景**：使用者切回自主優化模式，要求「不斷試錯挑戰最低 cost」。上一輪
-（§8.34）確認了核心瓶頸是 **area_gap（密度），不是 runtime**——第一名
-（Alpha Top5，Total 0.879）跟我們速度幾乎一樣（2.67s vs 2.83s），但 Cost
-只有我們的 40%。本輪系統性攻擊 area_gap。
-
-**四個實驗（9 案快篩 → 值得的才 full-100 驗證），只有一個轉移成功**：
-
-1. **eDensity 純模式（`ELECTRO_EDENSITY_PURE`，把 lam_ov/lam_bb 關掉讓
-   eDensity 當唯一密度力）**：❌ 否決。假說是「§8.34 的 eDensity 失敗只是被
-   舊擴散力干擾」，但即使正確關掉 lam_ov/lam_bb，9 案加權還是從 2.96 暴增到
-   5.7-7.0，mean area_gap 反而**上升**（153%→176-221%）。eDensity 根本不適合
-   這個小規模問題，不是配置問題。
-
-2. **LP legalizer 加 bbox 跨度最小化項（`M_x ≥ 所有右邊界`，最小化外框）**：
-   ❌ 無效（2.9579→2.9641，幾乎沒動）。**這個負面結果最有診斷價值**：加了
-   外框壓縮項卻壓不動，證明**空白不是「方塊之間的間距」（順序約束早就壓緊
-   了），而是結構性地烙印在 analytical placement 的「排列方式」裡**——哪些
-   方塊當鄰居。用實測再次坐實 §8.34 的 B*-tree 1.403 倍面積比結論：GT 的高
-   密度來自拼圖式互鎖排列，不是把現有排列壓緊就能得到。
-
-3. **密度旋鈕重掃（LP legalizer 加入後）**：`BB1=0.15`（bbox 壓縮終值，原
-   0.04）在 9 案隔離測試 **−14.7%**（2.9579→2.5219），`OV1=1.5`（重疊擴散
-   終值）**−8.4%**。兩者都是「讓 analytical placement 更密，靠 LP legalizer
-   收拾多出來的重疊」。**但 full-100 完整 pipeline 驗證：BB1=0.15 反而變差
-   到 2.1957（+3.4%）**。原因：完整 pipeline 已透過 jacobi 初始化 + adaptive
-   延伸 + portfolio 榨取了大部分密度紅利，再加 BB1 過度壓縮、互相干擾。
-   **這是隔離贏、完整輸的又一例（跟 LP legalizer 隔離 −31%→完整 −1.3% 同
-   模式）**。BB1+OV1 疊加更是災難（9 案 3.88，兩個同方向旋鈕過度壓縮）。
-   **BB1/OV1 都否決**。
-
-4. **place↔compact 重擺放候選（`ELECTRO_PLACE_COMPACT`，新增）**：✅ **確認
-   贏面**。機制：把已 legalize+repair 的緊密佈局的中心點當 init，重跑一輪短
-   analytical placement（250 迭代），再 legalize+repair，當**額外 portfolio
-   候選**，由既有 proxy 排名擇優。9 案 place-compact 讓 mean area_gap 大降
-   153%→90%，但**極度逐案分歧**（config_91 大勝 5.29→2.88、config_41 大敗
-   1.82→5.39）——正是 portfolio 型態。先驗證 proxy 挑選正確：proxy-picked
-   2.7938 幾乎等於 oracle-min 2.7875（−5.5%），所有災難案例都正確拒絕。
-   **full-100 完整 pipeline（第二輪 250 迭代）：2.1230→2.0562（−3.1%），
-   100/100 feasible，Vgrp 380→328、Vbnd 282→266，runtime 相當甚至更快**
-   （place-compact 常提供好候選讓 adaptive 延伸觸發更少，避開 1200 迭代）。
-   **接著掃第二輪迭代數（`ELECTRO_PLACE_COMPACT_ITERS`），發現非單調峰值在
-   400**：250→2.0562、350→2.0069、**400→1.9666（最佳）**、450→1.9695、
-   600→2.0237（太多會 re-spread 漂回原本較鬆的平衡）。**iters2=400 冷啟動
-   確認 1.9666，已設為預設**（`ELECTRO_PLACE_COMPACT=1`、
-   `ELECTRO_PLACE_COMPACT_ITERS` 預設 400）。**對 session 起點 2.1230 是
-   −7.4%。**
-
-**為什麼 place-compact 轉移成功、BB1 卻失敗？——本輪最重要的方法論產出**：
-能轉移到完整 pipeline 的改進，只有做「**pipeline 裡沒有任何其他機制在做的
-genuinely 新的事**」的。place-compact 重新推導**排列**（哪些方塊當鄰居），
-這是 jacobi/adaptive/wideswap/pushpast 全都沒碰的維度，所以疊加有效。BB1
-只是把「密度」這個既有機制已經榨乾的維度再推一把，必然互相干擾。**判斷一
-個隔離測試的贏面值不值得 full-100，先問：它跟現有 pipeline 機制是否作用在
-同一個維度？同維度的大概率被蓋掉，正交維度才可能疊加。**
-
-**目前 electro 路線正式冷啟動分數：1.9666**（原始 electro 基準 2.9007 的
-**−32.2%**；session 起點正確性修復後 2.1513 的 −8.6%）。程式碼改動：
-`electro_parallel.py` 新增 `place_compact_variant()`（支援
-`ELECTRO_PLACE_COMPACT_ITERS` 迭代數與 `ELECTRO_PLACE_COMPACT_ROUNDS`
-多輪），`electro_optimizer.py` solve() 新增 opt-in 候選區塊 + 翻預設，
-`analytical_place.py` 新增 `ELECTRO_EDENSITY_PURE`（否決但保留 opt-in，
-預設關）。
-
-**追加：place-compact 與 seeds（多起點）正交可疊加，畫出 runtime/quality
-trade-off 曲線**。place-compact 給「排列精修」，seeds 給「初始多樣性」，兩者
-作用維度不同 → 疊加有效（正是上面判準的正面例子）：
-
-| 配置 | Total（Neutral RT） | vs 起點 2.1230 | runtime |
-|---|---|---|---|
-| place-compact（seeds=1，**預設**） | **1.9666** | −7.4% | 中性/略快 |
-| + seeds=2 | 1.8811 | −11.4% | ~2× |
-| + seeds=3 | 1.8363 | −13.5% | ~3× |
-
-全部 100/100 feasible。報酬遞減（s1→s2 −4.3%、s2→s3 −2.4%）。**但 seeds>1
-沒有設為預設**——`electro_optimizer.py` 原作者註解已權衡過：Neutral RT 只講
-一半故事，真實 Contest RT 對變慢無封頂懲罰（`RT^0.3`），seeds=N 讓 runtime
-約 N 倍，若慢到全場中位數數倍，RT 懲罰會吃掉品質紅利。**因此正式送出建議
-用 seeds=1 + place-compact（1.9666，runtime 安全）；seeds=2/3 是「確定 runtime
-預算充足時才開」的選項**，是團隊層級決策。這條曲線是「若 runtime 免費，
-排列品質能到多低」的誠實上限，留給最終提交時依實際 runtime 預算取捨。
-
-**再追加：spectral / GiFt init（`ELECTRO_SPECTRAL`，新增）——有原理的正交
-多樣性優於隨機 seed**。實作 spectral graph drawing 初始化（用 b2b 圖 Laplacian
-的最低兩個非平凡特徵向量 v2/v3 當初始座標，這是「最小化連線方塊間加權平方
-距離」的全域最優 2D 嵌入，spectral 版的 wirelength 最小化，也是 jacobi 鄰居
-平均的全域最優版本）。9 案快篩：spectral 單獨用加權 Total 比 jacobi 差
-（2.9866 vs 2.4349），**但 mean area_gap 最低（119% vs jacobi 124% vs random
-153%）且在子集上大勝**（config_21 spectral 2.22 vs jacobi 3.60、config_51
-1.49 vs 3.44）——典型 portfolio 型態，spectral 提供 jacobi 拿不到的排列。
-接成**額外 base 候選**（`ELECTRO_SPECTRAL=1`，jacobi+spectral 兩個 base 都
-place-compact，proxy 逐案挑，永遠只加 1 個 spectral seed=0——jitter 會毀掉
-確定性嵌入的價值）。**完整 runtime/quality 表（全 100/100 feasible）**：
-
-| 配置 | Total（Neutral RT） | vs 起點 2.1230 | runtime |
-|---|---|---|---|
-| place-compact（**預設，安全**） | **1.9666** | −7.4% | 中性 |
-| + spectral（jacobi+spectral） | **1.8521** | **−12.7%** | ~2× |
-| （對照）+ seeds=2（同 runtime） | 1.8811 | −11.4% | ~2× |
-| + spectral + seeds=2 | 1.8362 | −13.5% | ~3× |
-| （對照）+ seeds=3（同 runtime） | 1.8363 | −13.5% | ~3× |
-
-**關鍵發現**：spectral+jacobi 在**同 runtime（2×）下打贏 seeds=2**（1.8538 vs
-1.8811，−1.5%）——**有原理的正交多樣性（一個確定性、topology-optimal 的不同
-排列）比隨機 seed 更聰明地用 runtime**。但這個優勢在低 runtime 倍數最大：3×
-時 spectral+seeds=2（1.8362）跟 seeds=3（1.8363）打平——spectral 加的是「一個」
-不同排列，候選少時最有價值，seeds 越多多樣性飽和後優勢收斂。**spectral 是
-GiFt 文獻（已查證真實，見 `literature_verified_citations.md`）直接落地的成果，
-也是「用文獻找方向、自己動手驗證」流程的正面案例。同 seeds 一樣是 runtime-
-traded、非預設**：正式送出若要開一級 runtime，`ELECTRO_SPECTRAL=1` 是比
-seeds=2 更好的選擇。
-
-**最後追加（資料驅動診斷 → adaptive spectral，本輪最有價值的設計）**：
-不再盲目調參，改為分析 1.9666 的逐案加權貢獻，發現**殘留損失集中在 ~10 個
-大案例**（n≥108 佔加權 79%），且分兩種失血模式：密度受限（area_gap 60-72%、
-低 vrel）與邊界受限（Vb=9-14、vrel 0.27-0.29）。異常值 config_110（area 129%、
-單案佔 13.9%）所有 init 都落進同一壞 basin——直到夠多樣性的組合才壓到
-area 57%，證明**難案例需要更多多樣性，但全域給多樣性要花 runtime**。
-
-由此設計 **adaptive spectral**（`ELECTRO_SPECTRAL_ADAPTIVE=1`）：比照現有
-adaptive iters 的「只對難案例花成本」哲學，**只對 proxy 判定為難
-（`best_600_score >= ELECTRO_SPECTRAL_ADAPTIVE_THRESH`）的案例才加跑 spectral
-候選**。門檻掃描（全 100/100 feasible）：
-
-| 配置 | Total | runtime | 觸發 |
-|---|---|---|---|
-| place-compact（預設） | 1.9666 | 1× | 0 |
-| adaptive spectral thresh=2.0 | 1.9341 | ~1.15× | ~14 案 |
-| **adaptive spectral thresh=1.5** | **1.8790** | ~1.35× | ~31 案 |
-| adaptive spectral thresh=1.3 | 1.8742 | ~1.45× | 更多 |
-| **escalated（spectral+額外 jacobi seed）thresh=1.5** | **1.8449** | ~1.6× | ~31 案 |
-| full spectral（無條件） | 1.8521 | 2× | 全部 |
-| spectral+seeds（無條件） | 1.836 | 3× | 全部 |
-
-**關鍵結論：adaptive spectral（thresh~1.5）Pareto-支配 full spectral**——
-1.8790 @1.35× 幾乎追平 full spectral 的 1.8521 @2×，卻省一半 runtime。效率
-（品質增益/runtime）thresh=1.5（0.250）> thresh=2.0（0.217）> full（0.115）。
-因為 spectral 只花在真正受益的難案例上，不浪費在簡單案例（full 的問題）也不
-漏掉中等案例（thresh 太高的問題）。**這是「花對地方 > 全域花」的 principled
-落地**，跟 adaptive iters 同一個模式，是本輪從盲目調參轉向資料驅動診斷後的
-最大收穫。**仍為 opt-in 非預設**（保守起見保留純 1× 安全預設 1.9666），但
-`ELECTRO_SPECTRAL_ADAPTIVE=1 + THRESH=1.5` 是目前最推薦的 runtime-efficient
-升級選項，優於 full spectral。
-
-**最後追加（診斷驅動的 proxy 缺陷修正，本輪最深入的一擊）**：診斷發現
-config_110（area_gap 129%、單案佔加權 13.9%）的「好候選」（area 57%）明明
-在候選池中卻沒被選——追根究柢是**候選排名 proxy 的結構性缺陷**。proxy 用
-`area/候選池平均` 當 area_gap 代理，但難案例所有候選都遠離 baseline、平均被
-拉高，壓縮了差異、讓 `exp(2·vrel)` 項主導而選錯。**第一原理修正**
-（`ELECTRO_PROXY_ABSAREA=1`）：`baseline_area ≈ total_block_area/GT_util
-(~0.965) ≈ total_block_area`（solve 時已知常數），所以 `area/total_block_area
-≈ 1+area_gap` 是 pool 無關、忠實追蹤真實 area_gap 的參考，取代 pool-mean。
-**結果（豐富候選池下）**：escalated adaptive + absarea =
-**1.8096（−14.8% vs 起點 2.1230）**，config_110 從 3.985 破解到 2.694，是
-目前最低的**已驗證** runtime-efficient 分數（@~1.6×，且打贏 spec+seeds 的
-1.836 @3×，更好又更便宜）。absarea-only 一開始好壞參半（幫 escalated 卻傷 spec+seeds 1.836→1.8556），
-因為它只修了 area 項、hpwl 項還是 pool-mean，不平衡。**完成修正——把 hpwl
-項也做成 pool 無關**（`ELECTRO_PROXY_ABSHPWL=1`）：HPWL 的自然長度尺度是
-`sqrt(total_block_area)`，所以 `hpwl/sqrt(total_block_area)` 是 pool 無關的
-hpwl 參考。**完全 pool 無關 proxy（absarea+abshpwl）變得穩健**：
-
-| 配置 | pool-mean（原） | absarea only | **完全 pool 無關** |
-|---|---|---|---|
-| escalated adaptive（豐富池） | 1.8449 | 1.8096 | **1.7535** |
-| spec+seeds（豐富池） | 1.836 | 1.8556（傷） | 1.834（恢復） |
-| 預設（稀疏池） | 1.9666 | 1.9710 | 1.9866（傷） |
-
-**規律**：完全 pool 無關 proxy **只在豐富候選池有益**（pool-mean 失真在
-「難案例有大量跨度大的候選」時最嚴重）；稀疏預設池候選少、pool-mean 本身
-就是合理局部參考，換掉反而傷。**所以 proxy 修正要跟多樣性機制一起開，不上
-預設**。**目前最低已驗證組合：`ELECTRO_SPECTRAL_ADAPTIVE=1 THRESH=1.5
-ELECTRO_ADAPTIVE_SEED=1 ELECTRO_PROXY_ABSAREA=1 ELECTRO_PROXY_ABSHPWL=1` =
-1.7535 @~1.6×（−17.4% vs 起點 2.1230，−39.6% vs 原始基準 2.9007）**，config_110
-從 3.985 破解到 2.694。純安全預設仍為 place-compact 1.9666。
-
-**這是本輪最深入的一擊**：從盲目調參一路深入到**診斷並修正候選選擇機制
-本身的第一原理缺陷**（pool-mean 對真實 gap 的失真），比任何旋鈕都根本，
-且穩健（兩個 pool 無關參考互相平衡）。是「持續逼問為什麼」而非「多試幾組
-參數」的成果。
-
-**再追加：escalated 的 `ELECTRO_ADAPTIVE_SEED` 改成「數量」**（給最難案例
-加 N 個額外 jacobi seed，而非只 1 個），配合完全 pool 無關 proxy 掃描（全
-100/100 feasible）：SEED=1→1.7535(~1.6×)、**SEED=2→1.7342(~1.8×，效率甜蜜
-點)**、SEED=3→1.7279(~2×，遞減)。報酬遞減（−1.1%→−0.4%）。（註：config_110
-的 2.220 好候選即使給了完整多樣性配方仍選不出，卡在 2.694——因 proxy 對 area
-有好 baseline 估計 total_block_area，但 hpwl 無幾何 baseline 估計、永遠是近似，
-這個案例是 hpwl 驅動的排名反轉，是 proxy 無 baseline 的根本限制，不追單一案例。）
-
-**更新後的完整 Pareto frontier（全 100/100 feasible）**：1×→1.9666（預設）、
-~1.35×→adaptive-spectral 1.8790、**~1.6×→escalated+完全proxy 1.7535**、
-~1.8×→+adaptive-seed=2 1.7342、**~2×→+adaptive-seed=3 1.7279（本輪最低已驗證，
-−40.4% vs 原始基準 2.9007）**、（對照）2×→full spectral 1.8521、3×→spec+seeds
-1.836。
-
----
-
-## §8.36（2026-07-29）：隊友的 slice_pack 路線經三方獨立驗證屬實（1.4480），成本結構翻轉，V_mib 被證明可完全歸零
-
-### 起點：隊友回報 Total Score 1.5048，先查證再採信
-
-隊友的 `electro_teammate/` 版本回報 100 案 Total Score = **1.5048 @ 2.97s/case**，
-遠優於我們自己路線當時的最佳 1.7279。依本專題一貫紀律（不照單全收，先獨立
-驗證），把她的 6 個檔案複製到獨立資料夾，用**兩套完全獨立的評測邏輯**各跑一次
-完整 100 案：
-
-| 驗證來源 | Total Score | Avg Cost | Feasible | 備註 |
-|---|---|---|---|---|
-| 隊友原始回報 | 1.5048 | — | 100/100 | 平行執行、含 ML 暖啟動 |
-| 我們自己工具（`ml/case_report_electro.py`） | — | **1.4480** | 100/100 | 循序執行，**有**找到 ML v2 權重 |
-| 官方 `iccad2026_evaluate.py` | 1.5747 | **1.4995** | 100/100 | 循序執行，**沒**找到 `ml/`，純隨機 8-seed |
-
-三個數字彼此差距都在 4% 以內、全部 100/100 feasible。**判定：分數屬實，無誇大。**
-（官方那欄的 Total Score 1.5747 高於 Avg Cost 1.4995，是因為 Windows 無 `fork()`
-導致 8 個 seed 循序跑、Avg Runtime 18.1s，真的把 RT 懲罰算進去了；跟隊友平行
-執行的數字不同基準，可比的是 Avg Cost。）
-
-### 消融實驗：主力是 slice_pack，不是「多開幾個 seed」
-
-使用者質疑「是不是單純多開 seed 擇優」。做三層消融（同一套評測工具，全 100 案）：
-
-| 配置 | Total Score | 該層貢獻 |
-|---|---|---|
-| 基礎架構（seeds=1、slice_pack 關） | 2.2594 | — |
-| +slice_pack（seeds=1） | **1.6780** | **−25.7%** |
-| +8-seed portfolio（含 ML） | **1.4480** | 再 −13.7% |
-
-**結論：slice_pack 這個切割式（guillotine）打包演算法貢獻 −25.7%，接近 seed
-portfolio 貢獻（−13.7%）的兩倍。** 跟我們自己既有數據一致（我們測 seeds 1→3
-只從 1.9666 進步到 1.8363，約 6.6%，報酬遞減很快）——多起點是放大器，不是主因。
-
-### 文獻查證（沿用 §8.34 的紀律）
-
-`slice_pack.py` 註解引用的兩篇：
-
-- **Otten 1982, "Automatic Floorplan Design", DAC 1982** — 查證**屬實**，是切割式
-  佈局的奠基論文（用 Schoenberg 定理做模組空間嵌入，導出 slicing structure 的
-  structure tree）。
-- **Stockmeyer 1983, "Optimal Orientations of Cells in Slicing Floorplan Designs",
-  Information and Control** — 論文**屬實**，但**歸功不精確**：它處理的是**剛性
-  矩形的離散 90° 旋轉**選擇（並證明非切割式情況是強 NP-complete），跟
-  slice_pack 實際依賴的「軟方塊長寬比連續自由」不是同一回事。註解裡「填充率
-  恰好 100%」這個宣稱**本身是對的**（自由長寬比下面積比例遞迴切割天生 100%），
-  只是這個結果不需要 Stockmeyer 來背書。**再次印證 §8.34 的教訓：論文標題屬實
-  ≠ 引用的技術細節對得上。**
-
-### 重大發現一：成本結構已經翻轉，vrel 項超越 gap 項
-
-對 1.4480 基準做加權成本拆解（同 §8.23 的方法）：
-
-| 項目 | 加權平均值 | 若壓到 0，Total 約為 |
-|---|---|---|
-| gap 項 `1+0.5·(hpwl_gap+area_gap)` | **1.1721** | 1.2349 |
-| vrel 項 `exp(2·V_rel)` | **1.2349** | 1.1721 |
-
-加權平均 area_gap 僅 15.13%、hpwl_gap 19.28%（對比我們自己路線當時 area_gap
-還有 60-72%）。**slice_pack 把面積問題解得太好，導致軟約束違規反而成為主要
-殘留** —— 這跟 §8.23 當時的診斷（gap 1.8386 遠大於 vrel 1.3132）**完全相反**，
-代表未來的使力方向必須跟著翻轉。
-
-軟違規組成：`V_grouping=184`、**`V_mib=153`**、`V_boundary=141`（總計 478）。
-
-### 重大發現二：V_mib 的真實不可約下限是 0（實測證明，非推論）
-
-V_mib=153 佔全部違規 32%，是最大單一槓桿。寫探針掃描全 100 案的原始資料驗證
-「這 153 個違規到底有沒有可能歸零」：
-
-- **100 個 MIB 群組全部都是等面積**（0 個不等面積群組）→ 不存在「面積不同所以
-  形狀必定不同」的不可約違規。
-- 群組組成：44 個純軟方塊群組、**56 個混合（剛性錨點+軟成員）群組**、0 個純
-  剛性群組。
-- 在 56 個混合群組裡：剛性錨點的尺寸**全部一致**，且其 `w*h` **全部精確等於**
-  該群組的共享目標面積（56/56 命中，0 個面積不符、0 個多錨點尺寸衝突）。
-
-**結論：軟成員採用剛性錨點的精確 `(w,h)` 時，面積仍精確命中目標、1% 硬約束
-毫髮無傷 → V_mib 的真實不可約下限 = 0，153 個違規全部可修。**
-
-### 根因：`_unify_mib` 把剛性成員排除在群組之外
-
-追 `slice_pack._unify_mib` 找到明確的邏輯缺口：
-
-```python
-mem = [i for i in ... if mib[i] == g and not (is_fixed[i] or is_pre[i])]  # 排除剛性
-```
-
-它只讓**軟成員彼此**統一，完全不看剛性錨點。但官方 V_mib 數的是「整個 MIB
-群組的相異形狀數 − 1」，剛性成員也算在內——軟成員統一到某個區域推導出來的
-寬度，幾乎不可能剛好等於錨點形狀，**所以 56 個混合群組永遠至少殘留 1 個違規，
-形成 ≥56 的地板**。純梯度路徑（`ELECTRO_SLICE=0`）實測 V_mib=56，跟混合群組數
-56 精確吻合，交叉印證這個根因。
-
-### 修法與教訓：必須做成 portfolio，不能無條件套用
-
-實作了兩個層次的修正（都在獨立的 `electro_v2/`，不動 `electro_teammate/`）：
-
-1. `ELECTRO_MIB_ANCHOR=1`：在 `analytical_place` 的**輸出階段**（不是
-   `shapes()` 裡）讓混合群組的軟成員採用錨點形狀，保留中心點以最小化位移，
-   後續的 `legalize()` 本來就是設計來吸收這種小重疊的。**這是 §8.11 失敗招式
-   的正確版本**——§8.11 是在 `shapes()` 裡從第 0 輪就鎖死，等於整輪拿掉長寬比
-   這個自由度，實測 area_gap 暴增 183.9%、cost 1.8485→5.335；改在輸出階段做，
-   優化過程完全不受影響。同時修正 `_unify_mib` 讓它優先採用剛性錨點形狀。
-2. `ELECTRO_MIB_PORTFOLIO=1`：把 MIB 統一版當**額外候選**（不重跑 `place()`，
-   只改形狀 + 一次 `remove_overlap`，成本極低），兩份都進候選池由 proxy 逐案挑。
-
-**為什麼需要 portfolio**：小案例 smoke test 顯示無條件套用會有副作用——改形狀
-挪動方塊邊緣，把原本貼齊的 boundary 弄歪、把原本相鄰的 grouping 拆開
-（實測 V_mib 9→5 但 V_boundary 5→9，淨分數反而變差 1.7933→1.8746）。**這是
-§8.13-8.14「同一招無條件套用退步、做成 portfolio 淨勝」教訓的第三次獨立印證。**
-
-### 實測結果：預測完全命中，但誠實地說收益很小
-
-全 100 案驗證（seeds=1 篩選層，基準 = 隊友版同設定的 1.6780）：
-
-| 配置 | Total Score | vs 基準 |
-|---|---|---|
-| **`MIB_PORTFOLIO=1`（額外候選）** | **1.6692** | **−0.5%** ✓ |
-| `MIB_PORTFOLIO=1 + MIB_ANCHOR=1` | 1.6786 | 持平 |
-| `MIB_ANCHOR=1`（無條件深層修正） | 1.6916 | **+0.8% 退步** ✗ |
-
-**方法論上這是漂亮的驗證**：無條件套用退步、做成 portfolio 淨勝，跟事前預測
-完全一致，是這個教訓的第四次獨立印證。
-
-**但收益層面必須誠實**：−0.5% 很小。V_mib=153 已經被證明**理論上完全可以歸零**
-（不可約下限 = 0），但實測**不值得歸零**——把軟成員改成錨點形狀所需的尺寸變動，
-會挪動方塊邊緣，對 boundary 貼齊與 grouping 相鄰造成的破壞，大於 MIB 本身省下
-的違規。這是一個「理論上限很誘人、實際報酬很薄」的典型案例，記錄下來避免未來
-有人重新被 V_mib=153 這個數字吸引而重做一次。
-
-### 參數空間已挖乾（seeds=1，全 100 案）
-
-| 配置 | Total Score | vs 基準 1.6780 |
-|---|---|---|
-| `SLICE_ASPECTS=0.55,0.7,1.0,1.4` | 1.6748 | −0.2% |
-| `SLICE_TOPK=3` | 1.6773 | 持平 |
-| `SLICE_BUDGET=12000` | 1.6776 | 持平 |
-| `SLICE_STEPS=4` | 1.7046 | **+1.6% 退步** |
-| `SLICE_UTIL_HI=0.999` | 1.7100 | **+1.9% 退步** |
-
-全部落在 ±2% 內，且兩個「直覺上該更好」的方向（更多二分搜尋步數、更貼近 1.0 的
-util 上界）**實測都是退步**——util 壓太緊會讓第一次 attempt 幾乎必定失敗、並讓
-剛性方塊更容易卡住切割。**結論與 §8.26 一致：外部已調過的旋鈕都在局部最佳，
-不要重複掃描。**
-
-### 重大發現三：place-compact 能跟 slice_pack 疊加（−4.6%），推翻了事前的正交性疑慮
-
-把我們自己路線本季最大的單一突破 **place-compact**（§8.35，貢獻 −7.4%）移植進
-隊友的架構：拿 legalize + 軟約束修復之後的緊密佈局，用它的中心點當**新的初始化**
-再跑一輪短版解析佈局，legalize + 修復後當額外候選。
-
-**事前的疑慮**：依 §8.35 建立的正交性判準，「同維度的機制大概率互相蓋掉」——
-而 slice_pack 也是在重做排列（離散切割），place-compact 也是在重做排列（連續
-梯度），看起來是同一個維度，應該會互相吸收。
-
-**實測推翻了這個疑慮**（seeds=1 篩選層，基準 1.6780）：
-
-| 配置 | Total Score | vs 基準 |
-|---|---|---|
-| **`PLACE_COMPACT=1, ITERS=250`** | **1.6001** | **−4.6%** ✓✓ |
-| `PLACE_COMPACT=1 + MIB_PORTFOLIO + MIB_ANCHOR` | 1.6130 | −3.9% |
-
-**這是本輪最大的單一改善**，遠超過 MIB portfolio（−0.5%）與所有參數微調（±2%）。
-
-**正交性判準需要修正**：「都在重做排列」不足以判定同維度。**連續梯度重排列**與
-**離散切割重排列**雖然目標維度名稱相同，但搜索的解空間結構完全不同——切割式
-受限於 guillotine 結構（遞迴二分），梯度式則沒有這個限制，兩者找到的排列彼此
-補足。**更精確的判準應該是「兩個機制的解空間是否互相包含」，而不是「它們想
-改善的指標名稱是否相同」。**
-
-附帶發現：最佳迭代數是 **250**，比我們自己路線的 400 低——合理，因為 slice_pack
-已經先做了一輪重排列，第二輪需要的修正量比較小。
-
-### 疊加驗證與迭代數掃描（seeds=1 篩選層，全 100 案，基準 1.6780）
-
-| 配置 | Total Score | vs 基準 |
-|---|---|---|
-| **`PLACE_COMPACT` 套用到全部候選（`PLACE_COMPACT_BEST=0`）** | **1.5733** | **−6.2%**（本輪最佳） |
-| `PLACE_COMPACT + MIB_PORTFOLIO`（只對最佳候選） | 1.5955 | −4.9% |
-| `PLACE_COMPACT, ITERS=250` | 1.6001 | −4.6% |
-| `PLACE_COMPACT`（預設 ITERS=400） | 1.6038 | −4.4% |
-| `PLACE_COMPACT + MIB_PORTFOLIO + MIB_ANCHOR` | 1.6130 | −3.9% |
-| `PLACE_COMPACT, ITERS=600` | 1.6200 | −3.5% |
-
-**place-compact 第二輪迭代數的完整曲線**（非單調，峰值在 300，250-400 之間是平坦的低谷）：
-
-| ITERS | 150 | 200 | 250 | **300** | 400 | 600 |
-|---|---|---|---|---|---|---|
-| Total Score | 1.6540 | 1.6196 | 1.6001 | **1.5967** | 1.6038 | 1.6200 |
-
-另外兩個負面結果（都是全 100 案）：`PROXY_ABSHPWL=1`（HPWL 錨點改用
-`sqrt(總面積)` 這個純尺度常數，取代 seed 0 候選的實測 HPWL）得 1.6014，比
-不開的 1.6001 略差——隊友原版用 `cands[0]` 當錨點雖然不是常數，但它永遠存在
-且不隨候選池增減而變，已經足夠穩定，不需要再抽象化。`HPWL_POLISH` 疊在
-place-compact 上得 1.6614，同樣退步。
-
-跟我們自己路線在 400 出現非單調峰值是同一種現象——太少來不及重排列、太多則
-把 slice_pack 已經找到的好結構又推散掉。這裡峰值比我們自己路線略低（300 vs 400），
-合理：slice_pack 已先做過一輪重排列，第二輪需要的修正量比較小。
-place-compact 與 MIB portfolio **可以疊加**（1.6001 → 1.5955），但加上
-`MIB_ANCHOR` 反而退步（1.6130）——再次印證無條件深層修正的副作用。
-
-**額外發現：place-compact 套用到「全部候選」比只套用到「目前最佳候選」更好**
-（1.5733 vs 1.6038，差 1.9%）。原本為了控制 runtime 而預設只對最佳候選做，
-但實測顯示多樣性的價值高於省下的運算——每個候選（不同 slice 長寬比、walls
-模式、梯度式）各自再做一次連續精修，產生的候選池明顯更好。這跟本專題
-「候選多樣性常常比單點品質更強」的既有結論一致。
-
-### 回歸檢查（重要的正確性驗證）
-
-`electro_v2/` 在**所有新旗標關閉**時跑出 **1.6780**，與隊友原版同設定的 1.6780
-**完全一致** —— 證明本輪所有程式碼修改都是乾淨的 opt-in，沒有意外改動預設行為。
-這是每次動別人程式碼時都該做、但很容易略過的一步。
-
-### 負面結果：區域內 HPWL 微調（`ELECTRO_HPWL_POLISH`）
-
-觀察到 slice_pack 把每顆方塊固定在自己區域的**左下角**，但方塊比區域小
-（區域面積 ≈ a/util，util 收在 0.90-0.93，所以每軸約有 5% 餘裕）——**這個位置
-自由度完全沒被使用**。實作了逐軸座標下降（固定其他方塊時，單一方塊的加權 L1
-線長最佳解是鄰居座標的加權中位數，再夾回自己的區域範圍），且因為每顆方塊只在
-自己的區域內移動、區域彼此不重疊，**理論上不可能製造新的重疊、也不會撐大 bbox**。
-
-**完整 100 案實測 1.7295，比基準 1.6780 退步 +3.1%**（小樣本的中性偏負訊號在全尺度下被放大確認）。根因是一個本專題反覆出現的張力：**HPWL 想把方塊
-拉開/置中，grouping 卻要求方塊彼此相鄰（abut）**——在區域內滑動會破壞原本貼齊
-的邊，V_grouping 上升抵銷掉 HPWL 的收益。這跟 §8.29 的「權重不能脫離脈絡單獨
-驗證」是同一類現象：一個看似「免費」的自由度，實際上被另一個軟約束佔用著。
 
 ---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

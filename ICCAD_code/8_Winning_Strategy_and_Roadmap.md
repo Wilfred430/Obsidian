@@ -2953,6 +2953,37 @@ multiprocessing 的時鐘問題）。
 | REAL Total Score | 1.0385 | **1.0723** | 穩居 Alpha Top5 區間 (0.879-1.100) |
 
 ---
+## §8.47（2026-07-31）：精準大會 Q*P 篩選與 Soft-Repair 搜尋空間雙重優化
+
+**背景**：在全案 100% Slice 成功率解開後，針對剩餘軟違規（$V_{\text{grouping}}, V_{\text{boundary}}$）與 Candidate 篩選品質進行深層代理成本與修復演算法升級。
+
+### 核心改進
+
+1. **Exact $Q \times P$ Official Metric Score Proxy (`score()`)**：
+   - **原機制**：採用簡化比值 `hp/ha + ar/aa` 作為代理 Cost 排序 Candidate。當 HPWL 低於基準時，無法真實反映大會 $Q$ 因子截斷機制。
+   - **升級機制**：對齊大會官方標籤計算公式：
+     $$Q = 1 + 0.5 \cdot (\max(0, \text{hpwl\_gap}) + \max(0, \text{area\_gap}))$$
+     $$P = \exp(2.0 \cdot V_{\text{rel}})$$
+   - **實測結果**：精準識別真正優質佈局，成功將 $V_{\text{grouping}}$ 違規數由 187 處降至 **184 處**！
+
+2. **Expanded Cluster Attachment Search Space (`near=12`)**：
+   - **升級機制**：在 `soft_repair.py::grouping_repair` 中，將落單 Cluster 成員接回主體的近鄰搜尋範圍由 6 個擴大至 12 個（`near[:12]`），雙倍解鎖大尺寸案例（n > 80）在密擠空間下的接回自由度。
+
+---
+
+### 全 100 案最新評測總表
+
+| 指標 | Baseline (`electro_v7`+SNAP) | **`electro_v10` 最佳版** | 累積改善 |
+|---|---|---|---|
+| **Slice 成功率** | 97/100 | **100/100 (100% Feasible!)** | **+3 案全解開** |
+| **V_mib (MIB 違規)** | 61 | **52** | **-9 處違規 (−14.8%)** |
+| **V_boundary (貼牆違規)** | 188 | **175** | **-13 處違規 (−6.9%)** |
+| **V_grouping (聚攏違規)** | 187 | **184** | **-3 處違規 (−1.6%)** |
+| 快過 Alpha 中位數 | 99/100 | **99/100** | 保持極速 |
+| REAL Total Score | 1.0385 | **1.0758** | 穩居 Alpha Top5 區間 |
+
+---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]
+
 
 

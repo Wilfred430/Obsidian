@@ -2614,5 +2614,82 @@ log-aspect 後軟成員的 `(w,h)` 與錨點**逐位元相同** → `V_mib = 0`�
 **結論：`ELECTRO_MIB_SHAPE` 維持預設 0.03。**
 
 
+## §8.41（2026-07-30）：Brainstorming 設計文件 —— 多重排列 portfolio（增加自由度總量，方向一）
+
+**背景**：§8.40 的 `ELECTRO_MIB_SHAPE` 權重掃描發現「三個軟違規在爭奪同一組
+自由度」——在既有的單一 order 裡重新分配收益有限。使用者用
+`/superpowers:brainstorming` 正式走一次設計流程，決定下一步方向。
+
+**已確認的限制**：
+- Runtime 預算：使用者同意動用已釋放的餘裕（Stage 1 FAST_CLEANUP + 隊友的
+  slice_pack 加速已讓 95-99% 案例遠快於中位數），條件是任何一案的 R 不能真的
+  掉出 0.7 地板。
+- 新機制必須是 portfolio 候選，不能無條件取代（本專題確立超過 5 次的規則）。
+
+**考慮過的三個方案**（選定方案 1 優先執行）：
+
+| 方案 | 說明 | 工作量 | 風險 |
+|---|---|---|---|
+| **1. 多重排列 portfolio（選定）** | 同一個收斂佈局，用不同排序啟發式各跑一次 slice_pack，portfolio 選優 | 小（幾小時） | 低——100% 沿用既有合法性檢查 |
+| 2. 上游拓樸多樣化 | 不同 seed 用質性不同的初始化策略（而非只是數值抖動） | 中（半天-1天） | 中——每個候選要多跑一次 analytical_place |
+| 3. Young & Wong 結構性分離 | 貼牆需求方塊獨立分割打包，結構上分開三個違規的自由度池 | 大（1-2 天+） | 高——全新演算法，需從零建立合法性驗證 |
+
+### 詳細設計（方案 1）
+
+**架構**：新增 `ELECTRO_SLICE_ORDER_PORTFOLIO=1`（沿用 `ELECTRO_MIB_PORTFOLIO` /
+`ELECTRO_SLICE_ALIGN_PORTFOLIO` 命名慣例）。開啟後，每個 seed 收斂出的連續
+佈局，除了現有的 order（centroid，預設不變）之外，額外用兩種新排序策略各跑
+一次 `slice_pack()`，產出的候選跟現有 aspect/walls/MIB 變體丟進同一個
+proxy-cost 候選池——不新增選擇機制。
+
+**兩種新排序策略**：
+1. **蛇形掃描（serpentine）**：外框依 cross 軸切成 ~√N 條帶狀，同帶內沿 cut
+   軸排序，相鄰帶排序方向相反（像除草機來回割草）。
+2. **最近鄰鏈（nearest-neighbor chain）**：從角落方塊開始貪婪走訪歐氏距離
+   最近的剩餘方塊，序列 = 走訪順序。
+
+**元件改動**（已對照 `electro_v7/slice_pack.py` 現有程式碼確認）：
+- `_Ctx.__init__`（目前 `self.kx = self.cx.copy()`，cluster 內取平均）：改成
+  先算「模式相關的 base key」，再套用完全相同的 cluster 平均迴圈。**`_order()`
+  函式本身不用改一行**，因為它只認 `ctx.kx`/`ctx.ky`，不管這兩個陣列怎麼算
+  出來的——這是最小風險的整合點。
+- `slice_pack()` 簽名加 `order_mode="centroid"`（預設值 = 目前行為，逐位元
+  不變）。
+- `electro_parallel.py` 既有的 portfolio 迴圈（跑 aspect/walls/MIB 變體的
+  地方）：加一段迴圈跑 `order_mode="serpentine"` / `"nnchain"`，結果併入既有
+  `done` 候選清單。下游合法性檢查、proxy cost、選擇邏輯完全不動。
+
+**資料流**：`slice_pack()` 介面不變，只多一個不影響預設行為的參數。每個排序
+變體獨立產生候選，彼此不耦合。
+
+**錯誤處理**：沿用既有模式——`slice_pack()` 任何一步不合法就回傳 `None`，
+呼叫端跳過該候選。新排序模式不產生新的失敗型態；最壞情況是某案這個變體找不到
+合法解、少一個候選，不影響其他候選。
+
+**測試計畫**：
+1. **回歸檢查**：`ELECTRO_SLICE_ORDER_PORTFOLIO=0`（預設關）→ 跟目前
+   `electro_v7` 基準逐位元相同，100 案全跑一次確認。
+2. **合法性**：新排序候選一樣要通過既有 `_dissect`/`_try_cut` 合法性檢查——
+   這段完全不用碰。
+3. **多樣性檢查（關鍵）**：埋計數器統計 100 案裡 serpentine/nnchain/centroid
+   各自被 proxy cost 選中幾次；若新變體 0/100 被選中，代表沒有真正貢獻，
+   及早停損，不用往下投入更多變體。
+4. **Runtime 檢查**：確認新增呼叫沒有讓任何一案的 R 掉出 0.7 地板。
+5. **全 100 案中性 + 真實分數**，對照目前最佳（`electro_v7` + MIB_ANCHOR_SNAP，
+   真實 1.0385）。
+
+**第一版範圍**：只做這兩種新排序，開新資料夾 `electro_v8/`（從 `electro_v7`
+複製，帶著目前最佳的 MIB 修法基準）。程式改動預估 1-2 小時，驗證 1-2 小時。
+
+**已知風險**：候選池每多一種排序，legalize/repair/proxy-cost 全部要對它跑
+一次——即使 `slice_pack` 本身很便宜（0.007-0.07s/次），下游步驟不是免費的。
+若 seeds=4 × 既有 aspect/walls 變體 × 3 種排序，候選數可能長得比預期快，
+需要實測「每加一種排序實際多花多少 runtime」，超出餘裕就砍到只留貢獻最大的
+變體。
+
+**狀態**：架構/元件/資料流已經使用者確認（「你覺得對就繼續」）。此文件為
+完整 spec，待使用者對本文件做最終確認後，交給 writing-plans 產出實作計畫。
+
+---
 ---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]

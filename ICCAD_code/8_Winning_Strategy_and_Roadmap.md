@@ -2897,4 +2897,27 @@ multiprocessing 的時鐘問題）。
 
 ---
 ---
+## §8.45（2026-07-31）：Net-Aware Sort Key 與 ext_wl 實驗 —— 免費品質的嘗試與邊界對齊耦合
+
+**背景**：依據 §8.44 的結論「candidate-pool 已到極限，必須追求不加候選數的免費品質」，設計並實作 `electro_v10/` 的 Net-Aware Sort Key（`_net_pull`）與 `analytical_place` 的 `ELECTRO_EXT_WL` 加權探索。
+
+### 1. Net-Aware Sort Key（`_net_pull`）實驗結果
+- **回歸驗證**：`electro_v10` 在 $\beta=0.00$（預設關閉）時，與 `electro_v7` 達成 100% 逐位元完全一致（max diff = 0.000e+00）。
+- **單案掃描（Phase 2）**：$\beta=0.05$ 在中小案例成功降低 HPWL（config_45 總 HPWL -2.53%，config_95 內部 HPWL -5.15%），並讓最重權重案 `config_120` 的 `area_gap` 從 0.2897 大幅下降至 0.1634（-12.63pp）。
+- **全 100 案 WSL 評測（Phase 3）**：
+  - 未加入 Cluster 連續性保護前：中性 Total = 1.4446，Vbnd 從 188 降至 171（改善 17 處貼牆！），但 Vmib 從 61 竄升至 77（同 cluster 成員在 sort key 空間被拉散）。
+  - 加入 Cluster 重平均保護後：Vmib 恢復至 60（優於基準 61），但中性 Total 為 1.4505（基準 1.4376）。
+  - **根因分析**：在切割階段擾動 sort key 雖然有助於局部連線，但改變了與解析佈局 (x, y) 幾何邊界的相對對齊，導致 guillotine 切割與上游連續優化器發揮的全局平衡產生輕微錯位。
+
+### 2. Pin-to-Block 梯度加權（`ELECTRO_EXT_WL`）實驗
+- **假設**：`ext_wl` 預設放大 10 倍 Pin-to-Block 拉力，但 Pin-to-Block 只佔 HPWL 的 7.7%。降低 `ext_wl=2.0` 理論上能讓 92.3% 的 Block-to-Block 線長拿到更多梯度關注。
+- **實測結果**：100 案 WSL 評測中性 Total 升至 1.5019，`Vbnd` 貼牆違規從 188 大幅惡化至 221（+33）。
+- **發現**：`ext_wl=10.0` 的 10 倍 Pin 拉力不僅僅是在優化線長，同時擔負著將外圍方塊牽引至 Layout 邊界的重要作用（協助邊界貼齊）。大幅降低它直接破壞了 `Vbnd` 的貼邊約束。
+
+### 結論與策略對齊
+- 幾何 Q 與軟違規 P 之間的 1:1.17 兌換率與邊界耦合極為緊密。
+- 現有 `electro_v7` + `MIB_ANCHOR_SNAP=1` 仍為最穩定且品質最高之主力配置（中性 1.4376，真實 1.0385）。
+
+---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]
+

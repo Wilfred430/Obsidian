@@ -3114,6 +3114,60 @@ flag 全關時逐位元等同 v7，經含負向對照的安全網驗證）。
 > 的下一步。
 
 ---
+
+## §8.48（2026-08-02）：DG-RePlAce 排程方向翻轉 —— 首次乾淨雙贏,合併進新 `electro_v16`
+
+讀 DG-RePlAce（Kahng & Wang, dataflow-driven GPU 加速佈局）找 idea 時，發現它
+處理 cluster adjacency 約束用的是**隨迭代衰減**的懲罰權重（強→弱），跟本專案
+`analytical_place.py` 既有的 `lam_grp`/`lam_bnd`/`lam_mib_shape` 排程方向剛好
+**相反**（本專案原本是弱→強：`grp0+ (grp1-grp0)*frac`，預設 `0.2→1.8`）。
+`grp0/grp1`、`bnd0/bnd1` 早已是可調環境變數，`mib_shape` 端點原本寫死，補上
+`ELECTRO_MIB0`/`ELECTRO_MIB1` 使其同樣可調（向下相容，預設值不變則行為不變）。
+
+**踩坑記錄（已寫進 [[obsidian-vault-knowledge-base]] 同等級的 skill 記憶）**：
+1. 兩次以為「基準線」是可信的，結果其實漏開了 `ELECTRO_MIB_ANCHOR_SNAP`/
+   `ELECTRO_MIB_ANCHOR`——這兩個 v11 血緣裡已確認的關鍵機制沒設，Vmib 因此
+   虛高（117/103，而非正常的 50 幾）。
+2. `electro_v14` 只是靠 sys.path 順序借用 `electro_v11`/`electro_optimized`
+   模組的薄包裝，拿來疊加新實驗風險高——已把 LP-displacement-portfolio 機制
+   直接合併進 `electro_v16`，自成一體（新增 `lp_legalize.py` 本機副本，不再
+   跨目錄找 `electro_optimized/legalize.py`）。
+3. Windows 原生 Python 沒有 `fork()`，`ELECTRO_SEEDS>1` 會靜默退化成序列執行
+   （4 個 seed 變成序列跑，慢 ~4 倍且無任何錯誤訊息）——所有多 seed 驗證
+   之後一律走 WSL；已寫進 `floorplan-guard` skill §6a。
+
+**最終驗證**（`electro_v16` = v11 + v14 LP-displacement-portfolio + MIB anchor
+機制合併為自足版本，這是目前已知最佳可重現配置的忠實重建，Real Total
+1.0754 對比文獻記載的 1.0745，誤差 0.08%）：
+
+| 配置 | Neutral $Q\cdot P$ | Real $Q\cdot P\cdot R$ | Vgrp | Vmib | Vbnd | 快於 median |
+|---|---:|---:|---:|---:|---:|---:|
+| 最佳配置，原排程（弱→強） | 1.4269 | 1.0754 | 163 | 59 | 186 | 96/100 |
+| 最佳配置，翻轉排程（強→弱） | **1.4018** | **1.0578** | **148** | **55** | **167** | **99/100** |
+| 變化 | **−1.76%** | **−1.64%** | −15 | −4 | −19 | +3 |
+
+**這是本專案 Q/P 零和現象 8 次現身以來，第一次乾淨雙贏**：Neutral 分數下降
+代表 Q 沒有被犧牲去換 P，三項違規（Vgrp/Vmib/Vbnd）同時下降，且 runtime 也
+沒有變慢（faster-than-median 反而增加）。加權 case-level 差分
+（`scripts/compare_electro_reports.py`）確認：
+
+- 前 15 名加權改善案例集中在高權重（n≥79，多數 n≥100）案例，正好對上
+  $e^{n/12}$ 權重最重的區間。
+- 退步案例分散於中高 n，單筆幅度普遍小於改善案例，無單一案例災難性退步。
+- 無系統性 faster→slower 翻轉（`floorplan-guard` §7 的既有戒律）。
+
+已升格為 `electro_v16` 的預設方向（`ELECTRO_GRP0/1`、`ELECTRO_BND0/1`、
+`ELECTRO_MIB0/1` 六個環境變數仍可覆寫回原方向做對照，未改動 v7/v11/v14 等
+既有版本）。
+
+> 💡 **可能的機制解讀**：本專案原本「弱→強」的設計理由是「先讓佈局自由成形，
+> 再逐步收緊約束」；DG-RePlAce「強→弱」的理由是「趁佈局還自由時就先滿足
+> cluster 鄰接（幾乎不用犧牲什麼），後期放鬆讓線長/密度微調不用跟約束搶
+> 梯度預算」。兩種直覺都合理，但實測顯示後者在本問題上更優——這暗示「何時
+> 對優化器最有利去滿足一個結構性約束」比「該用多強的懲罰」更關鍵，值得
+> 對其他排程式懲罰項（`lam_ov`/`lam_bb`）也做同樣的方向測試。
+
+---
 ---
 **回到**：[[ICCAD/ICCAD-Dashboard|ICCAD 儀表板]]
 

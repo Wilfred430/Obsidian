@@ -398,3 +398,8 @@
   spectral/adaptive-spectral 已不在現行主力中；新增 slice_pack 節點——它貢獻
   −25.7% 卻一直不在圖上）；更新 [[ICCAD/ICCAD-Dashboard|Dashboard]] 現況
   （原本還停在 2026-07-01 的 Total 2.966）。
+
+## [2026-08-04] Update | Electro pipeline 全面更新畫布：electro_v19 融合版現況 + 3 個負面研究方向收斂
+- **Context**: 使用者要求依序把 RT 改善（L-BFGS 打磨）、Per-RMAP 可行性追尋、完整 ADMM 邊界一致性變數分裂這三個更大方向都試過一輪（不用 Antigravity，自主 subagent-driven-development，及時止損）。三個方向全部收斂到乾淨的負面結果。趁此機會把畫布/文件從舊版 electro_v5（slice_pack 單一路線）更新成現行真正的生產配置——electro_v19（slice_pack + electro_optimized 的 MIB anchor 血緣 + LP 位移候選的融合版），已經跟畫布上次更新（2026-07-29）時的架構有明顯落差（Jacobi 暖啟動已被 Dirichlet 調和延拓初始化取代、新增 MIB_ANCHOR/MIB_ANCHOR_SNAP、LP_DISPLACEMENT_PORTFOLIO、SLICE_ALIGN_PORTFOLIO 三個新機制）。
+- **關鍵發現**: ADMM/L-BFGS/Per-RMAP 三者全部輸給更簡單的既有機制（對偶上升 boundary，`ELECTRO_DUAL_ASCENT_BND=1 K=40`，Neutral 1.3776→1.3691）。三個「更先進」方向失敗模式高度相似——不只目標項變差，連沒被直接動到的其他軟約束項也一起變差——因為它們都還是在同一個 `analytical_place()` 主迴圈裡跟其他 loss 項共用同一份梯度預算，只是換了懲罰項的數學包裝，不是真的把子問題拆成獨立變數。這是本 session 反覆驗證過的「共用梯度預算耦合」結構性發現，在第三種不同的數學形式下再次出現。
+- **Output**: 全面改寫 [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]]（新增 Dirichlet init、MIB anchor 兩段式機制、LP 位移候選、slice align portfolio 四個小節；新增「研究方向紀錄」表格）與 [[Electronic_Pipeline.canvas|畫布]]（重寫初始化鏈三個節點、Stage 1/2b 追加機制說明、新增 LP 位移候選節點、新增研究方向紀錄群組含 4 張卡片）。

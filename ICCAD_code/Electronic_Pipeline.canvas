@@ -1,322 +1,42 @@
 {
-	"nodes": [
-		{
-			"id": "node-001",
-			"type": "text",
-			"x": -70,
-			"y": -550,
-			"width": 820,
-			"height": 100,
-			"color": "6",
-			"text": "# Electro Pipeline v19\n**生產預設** Neutral=1.3776, 100/100 合法, 99/100 快過中位數"
-		},
-		{
-			"id": "node-002",
-			"type": "group",
-			"x": -70,
-			"y": -100,
-			"width": 480,
-			"height": 1100,
-			"label": "初始化（優先序退回：Dirichlet→ML→Random）"
-		},
-		{
-			"id": "node-003",
-			"type": "text",
-			"x": 0,
-			"y": -40,
-			"width": 380,
-			"height": 140,
-			"color": "5",
-			"text": "**Random Init**\n最終備援"
-		},
-		{
-			"id": "node-004",
-			"type": "text",
-			"x": 0,
-			"y": 120,
-			"width": 380,
-			"height": 180,
-			"color": "5",
-			"text": "**Dirichlet 調和延拓**\n生產預設\n1.4018→1.3776 (-1.73%)"
-		},
-		{
-			"id": "node-005",
-			"type": "text",
-			"x": 0,
-			"y": 320,
-			"width": 380,
-			"height": 140,
-			"color": "5",
-			"text": "**ML 暖啟動**\nseeds>1 才用"
-		},
-		{
-			"id": "node-010",
-			"type": "text",
-			"x": 630,
-			"y": -50,
-			"width": 380,
-			"height": 220,
-			"color": "4",
-			"text": "## Stage 1\n**analytical_place()**\nAdam 300 步\n+MIB_ANCHOR_SNAP/SNAP"
-		},
-		{
-			"id": "node-011",
-			"type": "text",
-			"x": 1230,
-			"y": -50,
-			"width": 380,
-			"height": 180,
-			"color": "4",
-			"text": "## Stage 2a\n**legalize()**\n+FAST_CLEANUP (2.4×)"
-		},
-		{
-			"id": "node-060",
-			"type": "text",
-			"x": 630,
-			"y": 200,
-			"width": 380,
-			"height": 180,
-			"color": "2",
-			"text": "## Stage 2b\n**slice_pack()**\n+SLICE_ALIGN_PORTFOLIO"
-		},
-		{
-			"id": "node-012",
-			"type": "text",
-			"x": 1830,
-			"y": -35,
-			"width": 380,
-			"height": 150,
-			"color": "4",
-			"text": "## Stage 3\n**soft_repair()**"
-		},
-		{
-			"id": "node-020",
-			"type": "text",
-			"x": 1100,
-			"y": 450,
-			"width": 380,
-			"height": 150,
-			"color": "2",
-			"text": "**place-compact**\n額外候選 (TOPK=3)"
-		},
-		{
-			"id": "node-021",
-			"type": "text",
-			"x": 1900,
-			"y": 450,
-			"width": 380,
-			"height": 150,
-			"color": "2",
-			"text": "**LP 位移最小化**\n獨立額外候選"
-		},
-		{
-			"id": "node-040",
-			"type": "text",
-			"x": 1230,
-			"y": 850,
-			"width": 380,
-			"height": 150,
-			"color": "3",
-			"text": "**Proxy Cost 排名**\nexp(2·V_rel)·(...)"
-		},
-		{
-			"id": "node-050",
-			"type": "text",
-			"x": 1175,
-			"y": 1100,
-			"width": 490,
-			"height": 120,
-			"color": "6",
-			"text": "## Portfolio 選擇\n逐案挑最低 proxy cost 送出"
-		},
-		{
-			"id": "node-031",
-			"type": "text",
-			"x": 1860,
-			"y": 750,
-			"width": 400,
-			"height": 140,
-			"color": "1",
-			"text": "**FAST_CLEANUP**\n真實 Total −12.2%"
-		},
-		{
-			"id": "node-032",
-			"type": "text",
-			"x": 2300,
-			"y": 750,
-			"width": 400,
-			"height": 100,
-			"color": "1",
-			"text": "**MIB_PORTFOLIO**\n小幅正貢獻"
-		},
-		{
-			"id": "node-033",
-			"type": "text",
-			"x": 1860,
-			"y": 920,
-			"width": 400,
-			"height": 120,
-			"color": "1",
-			"text": "**已測不採用**\nSLICE_WALLS / BUDGET / ..."
-		},
-		{
-			"id": "node-070",
-			"type": "group",
-			"x": 1830,
-			"y": 1300,
-			"width": 1030,
-			"height": 880,
-			"label": "研究方向（3 個負面 + 1 個驗證正面未預設）"
-		},
-		{
-			"id": "node-071",
-			"type": "text",
-			"x": 1860,
-			"y": 1380,
-			"width": 450,
-			"height": 200,
-			"color": "1",
-			"text": "**L-BFGS (負面)**\n3.35-6.54× 更慢\n品質更差"
-		},
-		{
-			"id": "node-072",
-			"type": "text",
-			"x": 2360,
-			"y": 1380,
-			"width": 450,
-			"height": 200,
-			"color": "1",
-			"text": "**Per-RMAP (負面)**\nV_rel +28.2%\n慢 33 倍"
-		},
-		{
-			"id": "node-073",
-			"type": "text",
-			"x": 1860,
-			"y": 1620,
-			"width": 450,
-			"height": 200,
-			"color": "1",
-			"text": "**ADMM 邊界 (負面)**\nNeutral +8.1%\nVgrp/Vmib/Vbnd 全差"
-		},
-		{
-			"id": "node-074",
-			"type": "text",
-			"x": 2360,
-			"y": 1620,
-			"width": 450,
-			"height": 200,
-			"color": "4",
-			"text": "**對偶上升 boundary**\n(驗證正面，未預設)\nNeutral -0.62%"
-		}
+	"nodes":[
+		{"id":"node-070","type":"group","x":1830,"y":1300,"width":1030,"height":880,"label":"研究方向（3 個負面 + 1 個驗證正面未預設）"},
+		{"id":"node-002","type":"group","x":-70,"y":-100,"width":480,"height":1100,"label":"初始化（優先序退回：Dirichlet→ML→Random）"},
+		{"id":"node-003","type":"text","text":"**Random Init**\n最終備援","x":0,"y":-40,"width":380,"height":140,"color":"5"},
+		{"id":"node-004","type":"text","text":"**Dirichlet 調和延拓**\n生產預設\n1.4018→1.3776 (-1.73%)","x":0,"y":120,"width":380,"height":180,"color":"5"},
+		{"id":"node-005","type":"text","text":"**ML 暖啟動**\nseeds>1 才用","x":0,"y":320,"width":380,"height":140,"color":"5"},
+		{"id":"node-001","type":"text","text":"# Electro Pipeline v19\n**生產預設** Neutral=1.3776, 100/100 合法, 99/100 快過中位數","x":-70,"y":-550,"width":820,"height":100,"color":"6"},
+		{"id":"node-010","type":"text","text":"## Stage 1\n**analytical_place()**\nAdam 300 步\n+MIB_ANCHOR_SNAP/SNAP","x":630,"y":-50,"width":380,"height":220,"color":"4"},
+		{"id":"node-071","type":"text","text":"**L-BFGS (負面)**\n3.35-6.54× 更慢\n品質更差","x":1860,"y":1380,"width":450,"height":200,"color":"1"},
+		{"id":"node-072","type":"text","text":"**Per-RMAP (負面)**\nV_rel +28.2%\n慢 33 倍","x":2360,"y":1380,"width":450,"height":200,"color":"1"},
+		{"id":"node-073","type":"text","text":"**ADMM 邊界 (負面)**\nNeutral +8.1%\nVgrp/Vmib/Vbnd 全差","x":1860,"y":1620,"width":450,"height":200,"color":"1"},
+		{"id":"node-074","type":"text","text":"**對偶上升 boundary**\n(驗證正面，未預設)\nNeutral -0.62%","x":2360,"y":1620,"width":450,"height":200,"color":"4"},
+		{"id":"node-011","type":"text","text":"## Stage 2a\n**legalize()**\n+FAST_CLEANUP (2.4×)","x":1100,"y":-30,"width":380,"height":180,"color":"4"},
+		{"id":"node-012","type":"text","text":"## Stage 3\n**soft_repair()**","x":1610,"y":-15,"width":380,"height":150,"color":"4"},
+		{"id":"node-020","type":"text","text":"**place-compact**\n額外候選 (TOPK=3)","x":1350,"y":375,"width":380,"height":150,"color":"2"},
+		{"id":"node-032","type":"text","text":"**MIB_PORTFOLIO**\n小幅正貢獻","x":2740,"y":10,"width":400,"height":100,"color":"1"},
+		{"id":"node-031","type":"text","text":"**FAST_CLEANUP**\n真實 Total −12.2%","x":2280,"y":-10,"width":400,"height":140,"color":"1"},
+		{"id":"node-033","type":"text","text":"**已測不採用**\nSLICE_WALLS / BUDGET / ...","x":2280,"y":210,"width":400,"height":120,"color":"1"},
+		{"id":"node-021","type":"text","text":"**LP 位移最小化**\n獨立額外候選","x":1860,"y":375,"width":380,"height":150,"color":"2"},
+		{"id":"node-040","type":"text","text":"**Proxy Cost 排名**\nexp(2·V_rel)·(...)","x":1615,"y":720,"width":380,"height":150,"color":"3"},
+		{"id":"node-050","type":"text","text":"## Portfolio 選擇\n逐案挑最低 proxy cost 送出","x":1560,"y":970,"width":490,"height":120,"color":"6"},
+		{"id":"node-060","type":"text","text":"## Stage 2b\n**slice_pack()**\n+SLICE_ALIGN_PORTFOLIO","x":1100,"y":-320,"width":380,"height":180,"color":"2"}
 	],
-	"edges": [
-		{
-			"id": "edge-103",
-			"fromNode": "node-003",
-			"fromSide": "right",
-			"toNode": "node-010",
-			"toSide": "left"
-		},
-		{
-			"id": "edge-104",
-			"fromNode": "node-004",
-			"fromSide": "right",
-			"toNode": "node-010",
-			"toSide": "left"
-		},
-		{
-			"id": "edge-105",
-			"fromNode": "node-005",
-			"fromSide": "right",
-			"toNode": "node-010",
-			"toSide": "left"
-		},
-		{
-			"id": "edge-110",
-			"fromNode": "node-010",
-			"fromSide": "right",
-			"toNode": "node-011",
-			"toSide": "left"
-		},
-		{
-			"id": "edge-111",
-			"fromNode": "node-011",
-			"fromSide": "right",
-			"toNode": "node-012",
-			"toSide": "left"
-		},
-		{
-			"id": "edge-160",
-			"fromNode": "node-010",
-			"fromSide": "bottom",
-			"toNode": "node-060",
-			"toSide": "top",
-			"label": "另一路徑"
-		},
-		{
-			"id": "edge-161",
-			"fromNode": "node-060",
-			"fromSide": "right",
-			"toNode": "node-012",
-			"toSide": "left"
-		},
-		{
-			"id": "edge-120",
-			"fromNode": "node-012",
-			"fromSide": "bottom",
-			"toNode": "node-020",
-			"toSide": "top",
-			"label": "額外候選"
-		},
-		{
-			"id": "edge-170",
-			"fromNode": "node-012",
-			"fromSide": "bottom",
-			"toNode": "node-021",
-			"toSide": "top",
-			"label": "LP 候選"
-		},
-		{
-			"id": "edge-140",
-			"fromNode": "node-020",
-			"fromSide": "right",
-			"toNode": "node-040",
-			"toSide": "top"
-		},
-		{
-			"id": "edge-141",
-			"fromNode": "node-021",
-			"fromSide": "right",
-			"toNode": "node-040",
-			"toSide": "top"
-		},
-		{
-			"id": "edge-150",
-			"fromNode": "node-040",
-			"fromSide": "bottom",
-			"toNode": "node-050",
-			"toSide": "top"
-		},
-		{
-			"id": "edge-130",
-			"fromNode": "node-012",
-			"fromSide": "right",
-			"toNode": "node-031",
-			"toSide": "top"
-		},
-		{
-			"id": "edge-131",
-			"fromNode": "node-031",
-			"fromSide": "right",
-			"toNode": "node-032",
-			"toSide": "left"
-		},
-		{
-			"id": "edge-132",
-			"fromNode": "node-031",
-			"fromSide": "bottom",
-			"toNode": "node-033",
-			"toSide": "top"
-		}
+	"edges":[
+		{"id":"edge-103","fromNode":"node-003","fromSide":"right","toNode":"node-010","toSide":"left"},
+		{"id":"edge-104","fromNode":"node-004","fromSide":"right","toNode":"node-010","toSide":"left"},
+		{"id":"edge-105","fromNode":"node-005","fromSide":"right","toNode":"node-010","toSide":"left"},
+		{"id":"edge-110","fromNode":"node-010","fromSide":"right","toNode":"node-011","toSide":"left"},
+		{"id":"edge-111","fromNode":"node-011","fromSide":"right","toNode":"node-012","toSide":"left"},
+		{"id":"edge-130","fromNode":"node-012","fromSide":"right","toNode":"node-031","toSide":"left"},
+		{"id":"edge-131","fromNode":"node-031","fromSide":"right","toNode":"node-032","toSide":"left"},
+		{"id":"edge-140","fromNode":"node-020","fromSide":"bottom","toNode":"node-040","toSide":"top"},
+		{"id":"edge-141","fromNode":"node-021","fromSide":"bottom","toNode":"node-040","toSide":"top"},
+		{"id":"edge-150","fromNode":"node-040","fromSide":"bottom","toNode":"node-050","toSide":"top"},
+		{"id":"edge-120","fromNode":"node-012","fromSide":"bottom","toNode":"node-020","toSide":"top","label":"額外候選"},
+		{"id":"edge-160","fromNode":"node-010","fromSide":"top","toNode":"node-060","toSide":"left","label":"另一路徑"},
+		{"id":"edge-161","fromNode":"node-060","fromSide":"right","toNode":"node-012","toSide":"top"},
+		{"id":"edge-170","fromNode":"node-012","fromSide":"bottom","toNode":"node-021","toSide":"top","label":"LP 候選"},
+		{"id":"edge-132","fromNode":"node-031","fromSide":"bottom","toNode":"node-033","toSide":"top"}
 	]
 }

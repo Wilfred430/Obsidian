@@ -15,7 +15,7 @@
 			"x": -70,
 			"y": -100,
 			"width": 480,
-			"height": 780,
+			"height": 1440,
 			"label": "初始化來源（依優先序退回：Dirichlet → ML → Random，非各自獨立選一）"
 		},
 		{
@@ -24,8 +24,8 @@
 			"text": "**Random init**\n（三者都關閉/失敗時的\n最終備援）\n\n`ELECTRO_DIRICHLET_INIT=0`\n且 `ELECTRO_ML_INIT=0`\n才會真的用到",
 			"x": 0,
 			"y": -40,
-			"width": 340,
-			"height": 170,
+			"width": 380,
+			"height": 360,
 			"color": "5"
 		},
 		{
@@ -33,9 +33,9 @@
 			"type": "text",
 			"text": "**Dirichlet 調和延拓初始化**\n（生產預設，取代舊版 Jacobi）\n\n`ELECTRO_DIRICHLET_INIT=1`\ngraph Laplacian 封閉解\n只開 boundary 訊號\n(bnd_weight=2.0，grp/mib=0)\n\n全 100 案 Neutral\n1.4018 → 1.3776 (-1.73%)",
 			"x": 0,
-			"y": 180,
-			"width": 340,
-			"height": 260,
+			"y": 360,
+			"width": 380,
+			"height": 480,
 			"color": "5"
 		},
 		{
@@ -73,9 +73,9 @@
 			"type": "text",
 			"text": "**ML 暖啟動**\n（`ELECTRO_ML_INIT=1`，生產預設\nDirichlet 停用/失敗時的退回）\n\n只在 `seeds>1` 才使用\nTransformer 預測\n每個方塊的中心點",
 			"x": 0,
-			"y": 420,
-			"width": 340,
-			"height": 220,
+			"y": 880,
+			"width": 380,
+			"height": 360,
 			"color": "5"
 		},
 		{
@@ -152,7 +152,7 @@
 			"id": "node-060",
 			"type": "text",
 			"x": 630,
-			"y": 400,
+			"y": 510,
 			"width": 380,
 			"height": 480,
 			"color": "2",
@@ -161,7 +161,7 @@
 		{
 			"id": "node-021",
 			"type": "text",
-			"x": 1830,
+			"x": 1900,
 			"y": 350,
 			"width": 760,
 			"height": 280,
@@ -174,7 +174,7 @@
 			"x": 1830,
 			"y": 1330,
 			"width": 1030,
-			"height": 740,
+			"height": 1210,
 			"label": "研究方向紀錄（2026-08-03～08-04）：3 個負面結果 + 1 個驗證正面但未預設"
 		},
 		{
@@ -183,7 +183,7 @@
 			"x": 1860,
 			"y": 1430,
 			"width": 460,
-			"height": 280,
+			"height": 510,
 			"color": "1",
 			"text": "**L-BFGS 打磨階段**（負面）\n\n`frac>=0.7` 時凍結所有 schedule\n權重、Adam 切換到 L-BFGS 收尾\n\n3 組切換點全部**更慢**（3.35-6.54×）\n且品質更差。`ELECTRO_LBFGS`\n預設維持關閉，不進生產"
 		},
@@ -193,7 +193,7 @@
 			"x": 2360,
 			"y": 1430,
 			"width": 460,
-			"height": 280,
+			"height": 510,
 			"color": "1",
 			"text": "**Per-RMAP 可行性追尋**（負面）\n\n拿現有 repair 函式當投影運算子，\n加擾動＋重設的交替投影外迴圈\n\n20 案平均 V_rel **變差 28.2%**\n（且慢 33 倍），15 輪上限內\n全部沒收斂到零違規。獨立標準腳本，\n未整合進生產管線"
 		},
@@ -201,9 +201,9 @@
 			"id": "node-073",
 			"type": "text",
 			"x": 1860,
-			"y": 1730,
+			"y": 1980,
 			"width": 460,
-			"height": 280,
+			"height": 510,
 			"color": "1",
 			"text": "**ADMM 邊界一致性**（負面）\n\n把 `lam_bnd*bnd` 換成有號殘差的\n增廣拉格朗日二次拉力（`electro_v21/`）\n\n20 案：Neutral **變差 +8.1%**，\nVgrp/Vmib/Vbnd **全部變差**\n（連沒被動到的 grp/mib 都變差——\n本 session 反覆驗證的「共用梯度\n預算耦合」再次出現）。`ELECTRO_ADMM_BND`\n預設維持關閉"
 		},
@@ -211,9 +211,9 @@
 			"id": "node-074",
 			"type": "text",
 			"x": 2360,
-			"y": 1730,
+			"y": 1980,
 			"width": 460,
-			"height": 280,
+			"height": 510,
 			"color": "4",
 			"text": "**對照：對偶上升 boundary**（驗證正面，尚未預設）\n\n`ELECTRO_DUAL_ASCENT_BND=1 ELECTRO_DA_K=40`\n同一個 bnd loss 槽位，跟 ADMM 互斥\n\n全 100 案 Neutral 1.3776→**1.3691**\n（-0.62%），Vbnd 174→**140**，\n跑得還更快（2.044s→1.84s/案）\n尚未寫進 `electro_optimizer.py` 的\n`setdefault`——目前最強已知配置，\n但要手動加旗標才能重現"
 		}
@@ -339,9 +339,9 @@
 		{
 			"id": "edge-171",
 			"fromNode": "node-021",
-			"fromSide": "bottom",
+			"fromSide": "left",
 			"toNode": "node-040",
-			"toSide": "left"
+			"toSide": "top"
 		}
 	]
 }

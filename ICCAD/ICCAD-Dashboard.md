@@ -12,26 +12,29 @@ date: 2026-07-01
 > [!info] **說明**
 > 彙整 ICCAD 2026 各項問題規格、演算法研究與 EDA 理論背景，作為參賽的戰略中心。
 
-> [!success] **現況（2026-07-29 更新）**
-> **主力路線已換成隊友的 slice_pack 切割式打包**（`collaborate/electro_v5/`），
-> 我們自己原本的 `electro_optimized/` 路線（1.7279）與生成式 B*-tree（3.3185）
-> 都已被超越。
+> [!success] **現況（2026-08-06 更新）**
+> **主力路線是 electro_v19**（slice_pack 切割式打包 + electro_optimized 的
+> MIB anchor 兩段式機制 + Dirichlet 調和延拓初始化 + LP 位移候選的融合版，
+> `collaborate/electro_v19/`），我們自己原本的 `electro_optimized/` 路線
+> （1.7279）與生成式 B*-tree（3.3185）都已被超越。
 >
 > | 指標 | 數值 |
 > |---|---|
-> | **真實 Total Score**（含 runtime 因子 R） | **1.1567** |
-> | 中性 Total Score（只算品質） | 1.4127 |
-> | 快過官方逐案中位數 | **95/100 案** |
+> | **真實 Total Score**（含 runtime 因子 R） | **0.9801** |
+> | 中性 Total Score（只算品質） | 1.3776 |
+> | 快過官方逐案中位數 | **99/100 案** |
 > | Feasible | 100/100 |
 >
-> 對照 Alpha Top5（0.879 / 0.955 / 1.020 / 1.028 / 1.100）→ 已逼近第 5 名。
+> 對照 Alpha Top5（0.879 / 0.955 / 1.020 / 1.028 / 1.100）→ 已逼近第 2 名。
 >
-> **本輪（7/29）最大突破**：發現全專題數週以來都在用「中性 RT」比較，
-> **完全忽略了真實 Cost 公式裡的 `R` 因子**。修正後方向翻轉——runtime 優化
-> 成為投報比最高的方向，一個增量式 `_cleanup` 改動就拿到 **真實分數 −12.2%**，
-> 且**品質逐位元不變**。詳見
-> [[ICCAD_code/8_Winning_Strategy_and_Roadmap|第 8 篇]] §8.38-§8.39，
-> 架構現況見 [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]] +
+> **8/3-8/6 這輪**：依序驗證 5 個更大方向（L-BFGS 打磨、Per-RMAP、ADMM 邊界
+> 變數分裂、對偶上升 boundary、合法化長寬比彈性），3 個負面、1 個驗證正面
+> 但未預設、1 個 Neutral 改善最多（-2.1%）但 REAL 分數打平。過程中也修好
+> 一個 WSL-only 的浮點精度 bug。詳見
+> [[ICCAD_code/8x_Research_Log/2026-07_Research_Log|2026-07 研究日誌]] §8.38-§8.39
+> （R 因子被忽略的發現）與
+> [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]]「研究方向紀錄」，
+> 架構現況見同一份 Pipeline 說明 +
 > [[Electronic_Pipeline.canvas|畫布]]。
 
 > [!abstract] **🔰 新手從這裡開始（零基礎閱讀動線）**

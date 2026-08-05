@@ -178,7 +178,7 @@ ELECTRO_LP_DISPLACEMENT_TOPK=1
 | `_cut_options` 面積提早否決 | 逐位元等價但 **1.01×** | 空結果不是面積不足造成的，是剛性尺寸/preplaced 卡住 |
 | 切點偏好（cluster / boundary） | 全部淨負 | `_order` 的軟性偏置已在良好局部最佳 |
 
-### 研究方向紀錄（2026-08-03～08-04）：3 個負面結果 + 1 個驗證正面但未預設
+### 研究方向紀錄（2026-08-03～08-06）：3 個負面結果 + 1 個驗證正面但未預設 + 1 個 Neutral 佳但 REAL 打平
 
 這一輪依序嘗試三個更大方向（RT 改善 → Per-RMAP 可行性追尋 → 完整 ADMM
 變數分裂），全部收斂到乾淨的負面結論，代表 `electro_v19` 目前的配置大概
@@ -190,6 +190,7 @@ ELECTRO_LP_DISPLACEMENT_TOPK=1
 | **Per-RMAP 可行性追尋** | 負面 | 拿現有 repair 函式當投影運算子＋擾動＋重設外迴圈。20 案平均 V_rel 變差 28.2%、慢 33 倍，15 輪上限內全部沒收斂到零違規。獨立標準腳本，未整合進生產管線 |
 | **ADMM 邊界一致性** | 負面 | `electro_v21/`，把 `lam_bnd*bnd` 換成有號殘差增廣拉格朗日二次拉力。20 案 Neutral 變差 +8.1%，**Vgrp/Vmib/Vbnd 全部變差**（連沒被動到的 grp/mib 都變差——「共用梯度預算耦合」再次出現，只是換了數學形式）。`ELECTRO_ADMM_BND` 預設關閉 |
 | **對照：對偶上升 boundary** | **驗證正面，但尚未預設** | `ELECTRO_DUAL_ASCENT_BND=1 ELECTRO_DA_K=40`（跟 ADMM 用同一個 bnd loss 槽位，互斥）。全 100 案 Neutral 1.3776→**1.3691**（-0.62%），Vbnd 174→**140**，跑得更快（2.044s→1.84s/案）。**尚未寫進 `electro_optimizer.py` 的 `setdefault`**——要手動加旗標才能重現 |
+| **合法化長寬比彈性** | **Neutral 佳，REAL 打平** | `legalize_qinfer_reshape`：新 legalizer，讓非 MIB 群組的軟方塊在合法化階段也能微調長寬比（面積精確保留），取代單純位移。全 100 案 Neutral 1.3776→**1.3485**（-2.1%，本輪最佳），但多養一個 portfolio 候選要花 ~12-14% 額外 runtime，換算成 REAL Total Score 幾乎打平（0.9801→**0.9816**）。過程中意外揪出一個 **WSL-only 浮點精度 bug**：非可調形狀方塊的 log/exp 往返運算讓形狀漂移 ~4e-6，剛好重新打開一個跟鄰居緊貼的重疊（`config_75` 在 WSL 上 `Cost=10`，原生 Windows 上正常）——已修復。`ELECTRO_RESHAPE_PORTFOLIO` 預設關閉 |
 
 > [!info] 為什麼 ADMM/L-BFGS/Per-RMAP 這三個更「先進」的機制反而都輸給
 > 簡單的對偶上升（dual ascent）？

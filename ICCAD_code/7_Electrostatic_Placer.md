@@ -6,19 +6,21 @@ date: 2026-07-01
 
 # 7. 電靜力法擺放器 (Electrostatic Placer)
 
-> [!success] **現況（2026-07-29）—— 本篇描述的是早期版本，主力已換路線**
-> 電靜力法這條線目前的主力是**隊友的 slice_pack 切割式打包**
-> （`collaborate/electro_v5/`），不是本篇描述的 `electro_submission/`。
+> [!success] **現況（2026-08-06）—— 本篇描述的是早期版本，主力已換路線**
+> 電靜力法這條線目前的主力是 **electro_v19**（slice_pack 切割式打包 +
+> electro_optimized 的 MIB anchor 血緣 + LP 位移候選的融合版，
+> `collaborate/electro_v19/`），不是本篇描述的 `electro_submission/`。
 >
 > | 指標 | 數值 |
 > |---|---|
-> | **真實 Total Score**（含 R 因子） | **1.1567** |
-> | 中性 Total（只算品質） | 1.4127 |
-> | 快過官方中位數 | 95/100 案 |
+> | **真實 Total Score**（含 RT 因子） | **0.9801** |
+> | 中性 Total（只算品質） | 1.3776 |
+> | 快過官方中位數 | 99/100 案 |
 >
 > 架構現況請看 [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]] +
 > [[Electronic_Pipeline.canvas|畫布]]；逐日推導見
-> [[ICCAD_code/8_Winning_Strategy_and_Roadmap|第 8 篇]] §8.36-§8.39。
+> [[ICCAD_code/8x_Research_Log/2026-07_Research_Log|2026-07 研究日誌]]
+> §8.36-§8.39（slice_pack 三方獨立驗證、R 因子被忽略的發現）。
 > 本篇保留作為電靜力法**原理**的說明（loss 各項、legalize 三步驟等仍然適用）。
 
 

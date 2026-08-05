@@ -345,7 +345,7 @@
 - **Deep Search 文獻查證**: TCG、UFO、"Placement Constraints in Floorplan
   Design"、QinFer 全部確認真實存在；但 DREAMPlace 3.0 的密度權重公式是編造的、
   AutoDMP 被誤植為 RL/MDP（實際是貝葉斯優化）。
-- **Output**: 全記進 [[ICCAD_code/8_Winning_Strategy_and_Roadmap|8.34 節]]；
+- **Output**: 全記進 [[ICCAD_code/8x_Research_Log/2026-07_Research_Log|8.34 節（已搬到 2026-07 研究日誌）]]；
   `d:\ICCAD-2026-C\AI-deep-search\research_notes.md` 是完整查證紀錄。
 
 ## [2026-07-23] Refactor | 新增研究工具分工流程筆記 + 專案合作模式轉為蘇格拉底式導師
@@ -403,3 +403,8 @@
 - **Context**: 使用者要求依序把 RT 改善（L-BFGS 打磨）、Per-RMAP 可行性追尋、完整 ADMM 邊界一致性變數分裂這三個更大方向都試過一輪（不用 Antigravity，自主 subagent-driven-development，及時止損）。三個方向全部收斂到乾淨的負面結果。趁此機會把畫布/文件從舊版 electro_v5（slice_pack 單一路線）更新成現行真正的生產配置——electro_v19（slice_pack + electro_optimized 的 MIB anchor 血緣 + LP 位移候選的融合版），已經跟畫布上次更新（2026-07-29）時的架構有明顯落差（Jacobi 暖啟動已被 Dirichlet 調和延拓初始化取代、新增 MIB_ANCHOR/MIB_ANCHOR_SNAP、LP_DISPLACEMENT_PORTFOLIO、SLICE_ALIGN_PORTFOLIO 三個新機制）。
 - **關鍵發現**: ADMM/L-BFGS/Per-RMAP 三者全部輸給更簡單的既有機制（對偶上升 boundary，`ELECTRO_DUAL_ASCENT_BND=1 K=40`，Neutral 1.3776→1.3691）。三個「更先進」方向失敗模式高度相似——不只目標項變差，連沒被直接動到的其他軟約束項也一起變差——因為它們都還是在同一個 `analytical_place()` 主迴圈裡跟其他 loss 項共用同一份梯度預算，只是換了懲罰項的數學包裝，不是真的把子問題拆成獨立變數。這是本 session 反覆驗證過的「共用梯度預算耦合」結構性發現，在第三種不同的數學形式下再次出現。
 - **Output**: 全面改寫 [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]]（新增 Dirichlet init、MIB anchor 兩段式機制、LP 位移候選、slice align portfolio 四個小節；新增「研究方向紀錄」表格）與 [[Electronic_Pipeline.canvas|畫布]]（重寫初始化鏈三個節點、Stage 1/2b 追加機制說明、新增 LP 位移候選節點、新增研究方向紀錄群組含 4 張卡片）。
+
+## [2026-08-06] Refactor | 拆分過度肥大的 8. 奪冠策略總覽（228KB → 4.5KB + 月份研究日誌）
+- **Context**: 使用者發現 [[ICCAD_code/8_Winning_Strategy_and_Roadmap|8. 奪冠策略總覽]] 已經膨脹到 228KB／3419 行（其他篇都是 4-12KB），因為原本只該放策略總覽的 §8.1-8.5（約 100 行）之後，被逐次實驗日誌（§8.6-§8.53，2026-07-09 到 08-02）一路往下加，違反 vault schema 的「原子化筆記」原則。
+- **做法**: 用腳本依 §8.N 標題切開，按月份分桶（每個區塊的日期取自標題或內文，找不到就沿用前一區塊的月份），寫成新資料夾 `ICCAD_code/8x_Research_Log/` 底下的 `2026-07_Research_Log.md`（46 節，含已被 §8.7 取代的舊版 §8.6 stub）與 `2026-08_Research_Log.md`（7 節）；每個月份檔案開頭自動生成「本月做了哪些變更」目錄。切割前後對照 `## ` 標題總數（53）逐一核對，確認沒有內容遺失或重複。
+- **Output**: `8_Winning_Strategy_and_Roadmap.md` 瘦身回 §8.1-8.5（策略本身）+ 一段指向兩篇月份日誌的索引；全 vault 掃描過 wikilink，確認沒有其他筆記連到 8 的特定章節錨點（`#8.34` 之類），只有本檔案自己一處用別名文字提到「8.34 節」，已改指到 2026-07 日誌並更新別名文字。

@@ -1,0 +1,17 @@
+/* 調整浮動大綱視窗內的文字大小 */
+.dynamic-outline,
+.floating-toc,
+.quiet-outline {
+    font-size: 14px !important;
+    /* 設為 11px，幾乎最小 */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 調整列表項目間距（讓每一行看起來更緊湊） */
+.dynamic-outline .list-tree-item,
+.floating-toc .list-tree-item,
+.quiet-outline .list-tree-item {
+    line-height: 1.4;
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+}

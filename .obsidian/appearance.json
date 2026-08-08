@@ -5,6 +5,7 @@
   "baseFontSizeAction": true,
   "baseFontSize": 20,
   "enabledCssSnippets": [
-    "line-spacing"
+    "line-spacing",
+    "outline-style"
   ]
 }

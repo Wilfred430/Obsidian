@@ -6,15 +6,14 @@ date: 2026-07-01
 
 # 7. 電靜力法擺放器 (Electrostatic Placer)
 
-> [!success] **現況（2026-08-06）—— 本篇描述的是早期版本，主力已換路線**
-> 電靜力法這條線目前的主力是 **electro_v19**（slice_pack 切割式打包 +
-> electro_optimized 的 MIB anchor 血緣 + LP 位移候選的融合版，
-> `collaborate/electro_v19/`），不是本篇描述的 `electro_submission/`。
+> [!success] **現況（2026-08-11）—— 本篇描述的是早期版本，主力已換路線**
+> 電靜力法這條線目前的主力是 **electro_v20**（`electro_v19` 的安全超集，
+> `collaborate/electro_v20/`），不是本篇描述的 `electro_submission/`。
 >
 > | 指標 | 數值 |
 > |---|---|
-> | **真實 Total Score**（含 RT 因子） | **0.9801** |
-> | 中性 Total（只算品質） | 1.3776 |
+> | **真實 Total Score**（含 RT 因子，同批次背靠背量測） | **0.9987** |
+> | 中性 Total（只算品質） | **1.3260**（本 session 至今最佳） |
 > | 快過官方中位數 | 99/100 案 |
 >
 > 架構現況請看 [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]] +

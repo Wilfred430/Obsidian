@@ -7,7 +7,7 @@
       "y": 560,
       "width": 980,
       "height": 780,
-      "label": "研究方向（2026-08-03～06）"
+      "label": "研究方向（2026-08-03～11，✅=已納入生產預設）"
     },
     {
       "id": "node-002",
@@ -71,7 +71,7 @@
     {
       "id": "node-001",
       "type": "text",
-      "text": "# Electro Pipeline v19\n**生產預設** Neutral=1.3776, 100/100 合法, 99/100 快過中位數",
+      "text": "# Electro Pipeline v20\n**生產預設** Neutral=1.3260, REAL=0.9987, 100/100 合法, 99/100 快過中位數",
       "x": -20,
       "y": -480,
       "width": 600,
@@ -131,7 +131,7 @@
     {
       "id": "node-074",
       "type": "text",
-      "text": "**對偶上升 boundary**\n(驗證正面，未預設)\nELECTRO_DUAL_ASCENT_BND=1 K=40\nNeutral -0.62%, Vbnd 174→140",
+      "text": "**對偶上升 boundary ✅ 已納入生產預設**\nELECTRO_DUAL_ASCENT_BND=1 K=40\n（v19無此程式碼，之前設了無聲失效）\n獨立量測：Neutral 1.3642→1.3612, Vbnd 164→133",
       "x": 950,
       "y": 810,
       "width": 450,
@@ -215,7 +215,8 @@
       "y": 1080,
       "width": 940,
       "height": 220,
-      "text": "**合法化長寬比彈性（Neutral 佳，REAL 打平）**\nlegalize_qinfer_reshape，非MIB方塊形狀可調\nNeutral 1.3776→1.3485（−2.1%，本session最佳）\nREAL 0.9801→0.9816（+12%runtime抵銷），維持關閉"
+      "text": "**合法化長寬比彈性 ✅ 已納入生產預設**\nlegalize_qinfer_reshape，8/11移植v19→v20\n跟對偶上升疊加背靠背：Neutral 1.3612→1.3260(-2.6%)\nREAL 1.0005→0.9987（不降反升），Vgrp/Vbnd↓ Vmib+16%",
+      "color": "4"
     }
   ],
   "edges": [

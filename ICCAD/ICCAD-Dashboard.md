@@ -12,30 +12,31 @@ date: 2026-07-01
 > [!info] **說明**
 > 彙整 ICCAD 2026 各項問題規格、演算法研究與 EDA 理論背景，作為參賽的戰略中心。
 
-> [!success] **現況（2026-08-06 更新）**
-> **主力路線是 electro_v19**（slice_pack 切割式打包 + electro_optimized 的
-> MIB anchor 兩段式機制 + Dirichlet 調和延拓初始化 + LP 位移候選的融合版，
-> `collaborate/electro_v19/`），我們自己原本的 `electro_optimized/` 路線
-> （1.7279）與生成式 B*-tree（3.3185）都已被超越。
+> [!success] **現況（2026-08-11 更新）**
+> **主力路線升級為 electro_v20**（`electro_v19` 的安全超集——關掉新機制時
+> 逐位元輸出相同，`collaborate/electro_v20/`）。這一輪是「RT/預設值調校
+> campaign」：不發明新演算法，純粹靠重新量測既有設定 + 找回沒進生產的機制
+> （邊界對偶上升早就驗證正面卻只存在 v20，從沒被設成預設），外加把
+> 8/4 那輪在 v19 上測出「session 當時最大單一機制改善」但因 REAL 打平而
+> 停用的 `legalize_qinfer_reshape()` 移植到 v20、跟對偶上升疊加重測。
 >
 > | 指標 | 數值 |
 > |---|---|
-> | **真實 Total Score**（含 runtime 因子 R） | **0.9801** |
-> | 中性 Total Score（只算品質） | 1.3776 |
-> | 快過官方逐案中位數 | **99/100 案** |
+> | **真實 Total Score**（含 runtime 因子 R，同批次背靠背量測） | **0.9987** |
+> | 中性 Total Score（只算品質） | **1.3260**（本 session 至今最佳） |
+> | 快過官方逐案中位數 | 99/100 案 |
 > | Feasible | 100/100 |
 >
 > 對照 Alpha Top5（0.879 / 0.955 / 1.020 / 1.028 / 1.100）→ 已逼近第 2 名。
 >
-> **8/3-8/6 這輪**：依序驗證 5 個更大方向（L-BFGS 打磨、Per-RMAP、ADMM 邊界
-> 變數分裂、對偶上升 boundary、合法化長寬比彈性），3 個負面、1 個驗證正面
-> 但未預設、1 個 Neutral 改善最多（-2.1%）但 REAL 分數打平。過程中也修好
-> 一個 WSL-only 的浮點精度 bug。詳見
-> [[ICCAD_code/8x_Research_Log/2026-07_Research_Log|2026-07 研究日誌]] §8.38-§8.39
-> （R 因子被忽略的發現）與
-> [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]]「研究方向紀錄」，
-> 架構現況見同一份 Pipeline 說明 +
-> [[Electronic_Pipeline.canvas|畫布]]。
+> **這輪新增生產預設**：`PLACE_COMPACT_ITERS` 400→150（調過頭，不是取捨）、
+> `REPAIR_ROUNDS` 3→2（第 3 輪逐位元無作用）、`DUAL_ASCENT_BND=1 DA_K=40`
+> （v19 一直沒有這段程式碼，設了也無聲失效）、`RESHAPE_PORTFOLIO=1`（新
+> 移植，Vgrp/Vbnd 都改善、REAL 不降反微升，代價是 Vmib +16%）。另外用同一
+> session 的參數掃描否決了 9 個方向（`TARGET_UTIL` 是乾淨的 Q/P 對撞盤、
+> `DA_BND_CEIL` 確認是死參數等），詳見
+> [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]]「研究方向紀錄」。
+> 架構現況見同一份 Pipeline 說明 + [[Electronic_Pipeline.canvas|畫布]]。
 
 > [!abstract] **🔰 新手從這裡開始（零基礎閱讀動線）**
 > 這個 vault 的其他筆記大多假設你已經懂晶片設計基礎——如果不是，照下面順序讀，不要跳著看：

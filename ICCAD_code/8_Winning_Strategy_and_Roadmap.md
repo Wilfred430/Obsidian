@@ -49,7 +49,7 @@ date: 2026-07-01
 |---|---|---|
 | **A（主力）** | [[ICCAD_code/2_SA_Optimizer_Engine\|B*-tree + Fast-SA]]，C++ 多執行緒多 seed | 穩定成熟，Alpha 已過 |
 | **B（ML 輔助）** | [[ICCAD_code/5_ML_Coordinate_Regression\|座標回歸 Warm-start]] | 已訓練 v1/v2/v3，**診斷出 mode collapse 病灶** |
-| **C（獨立路線，目前主力）** | [[ICCAD_code/7_Electrostatic_Placer\|電靜力法]]（electro_v19 融合版） | **目前分數最佳**（真實 Total 0.9801／中性 1.3776，100/100 feasible） |
+| **C（獨立路線，目前主力）** | [[ICCAD_code/7_Electrostatic_Placer\|電靜力法]]（electro_v20，v19 的安全超集） | **目前分數最佳**（真實 Total 0.9987／中性 1.3260，100/100 feasible） |
 
 ## 8.2 三個關鍵診斷（決定了整個策略方向）
 
@@ -99,6 +99,7 @@ graph LR
 | 2026-07-29 | 隊友的 slice_pack 路線經三方獨立驗證屬實，成本結構翻轉；發現 R 因子（runtime）長期被忽略，真正計分應以真實 Total Score 為主 |
 | 2026-08-02 | electro_v19 融合版定案：slice_pack + MIB anchor 兩段式機制 + Dirichlet 調和延拓初始化 + LP 位移候選，中性 1.3776／真實 0.9801，100/100 feasible |
 | 2026-08-04～06 | 依序驗證 L-BFGS 打磨、Per-RMAP、ADMM 邊界一致性三個更大方向（皆負面，見「共用梯度預算耦合」發現）；合法化階段長寬比彈性（`legalize_qinfer_reshape`）過程中揪出一個 WSL-only 的浮點精度 bug 並修復，全 100 案驗證：中性分數改善 −2.1%（本 session 最佳），但真實 Total Score 幾乎打平（0.9801→0.9816），機制維持預設關閉 |
+| 2026-08-11 | **RT/預設值調校 campaign + v20 定案為主力**：重新量測發現 `PLACE_COMPACT_ITERS`（400→150）、`REPAIR_ROUNDS`（3→2）兩組舊預設是調過頭，不是取捨；發現邊界對偶上升早就驗證正面卻只存在 `electro_v20` 程式碼裡（`electro_v19` 完全沒有這段，設旗標無聲失效），promote v20 為主力並開啟；把 8/4 停用的 `legalize_qinfer_reshape` 移植到 v20 跟對偶上升疊加重測，同批次背靠背驗證 Neutral -2.6%、REAL 不降反微升，一併設為預設。另用參數掃描否決 9 個方向，其中 `ELECTRO_TARGET_UTIL` 確認是乾淨的 Q/P 對撞盤（填越滿 area_gap 越好但 V_grouping 越差，淨值全部比預設差）。全 100 案：中性 1.3612→**1.3260**、真實 1.0005→**0.9987**。詳見 `docs/superpowers/2026-08-11-rt-and-default-retuning-campaign.md`（repo 內） |
 
 ## 8.6 研究日誌索引
 

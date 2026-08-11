@@ -7,41 +7,46 @@ date: 2026-08-04
 # Electro Pipeline 架構圖說明
 
 > 這篇是 **[[Electronic_Pipeline.canvas|Electronic_Pipeline 畫布]]** 的文字版對照。
-> **2026-08-04 更新**：主力路線已合併成 `electro_v19/`（凍結基準）——這是
-> 隊友 slice_pack 路線（前身 `electro_v5`）跟我們自己 `electro_optimized/`
-> 路線（MIB anchor 機制血緣）以及 LP 位移候選（v14）的**融合版**，不再是
-> 單一路線。`electro_v20/` 是 `electro_v19/` 的逐位元相同副本，專門拿來做
-> opt-in 的新機制實驗（對偶上升、ADMM…），不影響 `electro_v19` 這個凍結基準。
+> **2026-08-11 更新**：主力路線升級為 `electro_v20/`——不是另一條血緣，是
+> `electro_v19/` 的**安全超集**：新機制（對偶上升、reshape portfolio）全部
+> 關閉時，輸出跟 v19 逐位元相同（已用 `_dump_electro_geometry.py` 驗證）。
+> 這一輪是「RT/預設值調校 campaign」，不是新演算法：重新量測既有設定 +
+> 找回沒進生產的機制，見下方「研究方向紀錄」。`electro_v19/` 保留作凍結
+> 對照基準，之後開發都在 `electro_v20/` 進行。
 
-對應程式碼：`d:\ICCAD-2026-C\collaborate\electro_v19\`（`analytical_place.py` /
+對應程式碼：`d:\ICCAD-2026-C\collaborate\electro_v20\`（`analytical_place.py` /
 `dirichlet_init.py` / `legalize.py` / `lp_legalize.py` / `slice_pack.py` /
 `cluster_virtualize.py` / `soft_repair.py` / `electro_parallel.py` /
-`electro_optimizer.py`）。`electro_v20\` 是同一份程式碼的副本，見下方「研究
-方向紀錄」。
+`electro_optimizer.py`）。
 
 ---
 
 ## 現在的成績（一眼看懂進度）
 
-全 100 案驗證，`electro_v19` 生產預設（`reports/v19_bndonly.xlsx`）：
+全 100 案驗證，`electro_v20` 生產預設（官方 `iccad2026_evaluate.py --evaluate`
++ `ml.case_report_electro` 交叉驗證，同批次背靠背量測）：
 
 | 指標 | 數值 | 說明 |
 |---|---|---|
-| 中性 Total Score | **1.3776** | `Q·P`，忽略 runtime，過去所有比較的基準值 |
-| 平均 runtime | 2.044s/case | native/WSL 皆可（`ELECTRO_SEEDS=4`，比舊版 8/16 更省） |
+| 中性 Total Score | **1.3260** | `Q·P`，忽略 runtime，本 session 至今最佳 |
+| 真實 Total Score | **0.9987** | 含 `R=max(0.7,RT^0.3)` 因子，同批次背靠背量測 |
+| 平均 runtime | 2.2s/case | WSL（`ELECTRO_SEEDS=4`）；比 reshape 關閉時的 1.68-1.79s 慢，但省下的 Neutral 划算 |
 | 快過官方中位數 | 99/100 案 | |
 | Feasible | 100/100 | 全部合法，硬約束零違規 |
-| V_grouping / V_mib / V_boundary | 143 / 51 / 174 | 見下方各機制如何壓這三個數字 |
+| V_grouping / V_mib / V_boundary | 111 / 50 / 128 | 見下方各機制如何壓這三個數字 |
 
-> [!important] **這個工具（`ml.case_report_electro`）沒有算 REAL（含 RT）分數欄位**
-> 只有 Neutral Total 跟 runtime/faster-than-median 這兩組數字。想knowRT
-> 影響時，看 runtime 平均值跟「快過中位數」的案數，不要只看 Neutral 一項
-> （舊版 `iccad2026_evaluate.py --evaluate` 才有 REAL Total 欄位，兩個工具
-> 不能混用比較）。
+> [!info] **兩個驗證工具現在都能給 REAL 分數了**
+> `ml.case_report_electro` 用官方 Alpha per-case median CSV 當 RT 基準；
+> 官方 `iccad2026_evaluate.py --evaluate` 本身的 Total Score 欄位其實是
+> RT-neutral（`RuntimeFactor=1.0`）placeholder，不是真 RT 分數——兩者的
+> Neutral 數字應該互相印證（本輪 1.3260 vs 1.3280，差距在量測雜訊內），
+> 但只有前者算出的欄位叫「REAL」。
 
-**目前最強已知配置**（尚未寫進生產預設，見下方「研究方向紀錄」表格）：
-`ELECTRO_DUAL_ASCENT_BND=1 ELECTRO_DA_K=40` → Neutral **1.3691**（-0.62%），
-Vbnd 174→**140**，跑得更快（1.84s/案）。
+**目前最強已知配置就是生產預設**（不用額外設環境變數）。核心組合：
+`ELECTRO_DUAL_ASCENT_BND=1 ELECTRO_DA_K=40`（8/11 才確認 v19 完全沒有這段
+程式碼，之前設了也無聲失效）+ `ELECTRO_RESHAPE_PORTFOLIO=1`（8/4 在 v19 上
+驗證正面但因為 REAL 打平而停用的機制，這輪移植到 v20 跟對偶上升疊加，
+背靠背驗證兩者沒有互相拖累，一起設為預設）。
 
 ---
 
@@ -145,17 +150,22 @@ ELECTRO_PARALLEL=1
 ELECTRO_ML_INIT=1
 ELECTRO_ITERS=300
 ELECTRO_PLACE_COMPACT=1
-ELECTRO_PLACE_COMPACT_TOPK=3
+ELECTRO_PLACE_COMPACT_ITERS=150     # 新增（8/11），舊值 400 是調過頭不是取捨
+ELECTRO_PLACE_COMPACT_TOPK=3        # 死參數：ELECTRO_PLACE_COMPACT_BEST（預設1）分支永遠先命中，這個 elif 打不到
 ELECTRO_MIB_PORTFOLIO=1
 ELECTRO_FAST_CLEANUP=1
-ELECTRO_SLICE_ALIGN_PORTFOLIO=1     # 新增
-ELECTRO_MIB_ANCHOR_SNAP=1           # 新增（v11 血緣移植）
-ELECTRO_MIB_ANCHOR=1                # 新增（v11 血緣移植）
-ELECTRO_DIRICHLET_INIT=1            # 新增，取代 Jacobi
+ELECTRO_SLICE_ALIGN_PORTFOLIO=1
+ELECTRO_MIB_ANCHOR_SNAP=1
+ELECTRO_MIB_ANCHOR=1
+ELECTRO_DIRICHLET_INIT=1
 ELECTRO_DIRICHLET_GRP_WEIGHT=0
 ELECTRO_DIRICHLET_MIB_WEIGHT=0
 ELECTRO_DIRICHLET_BND_WEIGHT=2.0
-ELECTRO_LP_DISPLACEMENT_PORTFOLIO=1 # 新增（electro_parallel.py）
+ELECTRO_REPAIR_ROUNDS=2              # 新增（8/11），第3輪逐位元無作用，舊值3白花時間
+ELECTRO_DUAL_ASCENT_BND=1            # 新增（8/11），只存在 v20，v19 設了無聲失效
+ELECTRO_DA_K=40
+ELECTRO_RESHAPE_PORTFOLIO=1          # 新增（8/11），8/4 在 v19 上驗證正面的機制移植進來
+ELECTRO_LP_DISPLACEMENT_PORTFOLIO=1
 ELECTRO_LP_DISPLACEMENT_SEEDS=4
 ELECTRO_LP_DISPLACEMENT_MIN_BLOCKS=0
 ELECTRO_LP_DISPLACEMENT_TOPK=1
@@ -178,19 +188,46 @@ ELECTRO_LP_DISPLACEMENT_TOPK=1
 | `_cut_options` 面積提早否決 | 逐位元等價但 **1.01×** | 空結果不是面積不足造成的，是剛性尺寸/preplaced 卡住 |
 | 切點偏好（cluster / boundary） | 全部淨負 | `_order` 的軟性偏置已在良好局部最佳 |
 
-### 研究方向紀錄（2026-08-03～08-06）：3 個負面結果 + 1 個驗證正面但未預設 + 1 個 Neutral 佳但 REAL 打平
+### 研究方向紀錄（2026-08-03～08-06）：3 個負面結果 + 2 個之後被納入生產預設
 
 這一輪依序嘗試三個更大方向（RT 改善 → Per-RMAP 可行性追尋 → 完整 ADMM
-變數分裂），全部收斂到乾淨的負面結論，代表 `electro_v19` 目前的配置大概
-就是這條技術路線（梯度式 + 切割式 + portfolio 排名）目前的天花板：
+變數分裂），全部收斂到乾淨的負面結論，代表梯度式 + 切割式 + portfolio 排名
+這條技術路線在「同一個 `analytical_place()` 主迴圈裡加懲罰項」這個框架下
+大概已經到頂：
 
 | 方向 | 結果 | 關鍵數字 |
 |---|---|---|
 | **L-BFGS 打磨階段** | 負面 | `frac≥0.7` 凍結 schedule、Adam→L-BFGS 收尾。3 組切換點全部更慢（3.35-6.54×）且品質更差。`ELECTRO_LBFGS` 預設關閉 |
 | **Per-RMAP 可行性追尋** | 負面 | 拿現有 repair 函式當投影運算子＋擾動＋重設外迴圈。20 案平均 V_rel 變差 28.2%、慢 33 倍，15 輪上限內全部沒收斂到零違規。獨立標準腳本，未整合進生產管線 |
 | **ADMM 邊界一致性** | 負面 | `electro_v21/`，把 `lam_bnd*bnd` 換成有號殘差增廣拉格朗日二次拉力。20 案 Neutral 變差 +8.1%，**Vgrp/Vmib/Vbnd 全部變差**（連沒被動到的 grp/mib 都變差——「共用梯度預算耦合」再次出現，只是換了數學形式）。`ELECTRO_ADMM_BND` 預設關閉 |
-| **對照：對偶上升 boundary** | **驗證正面，但尚未預設** | `ELECTRO_DUAL_ASCENT_BND=1 ELECTRO_DA_K=40`（跟 ADMM 用同一個 bnd loss 槽位，互斥）。全 100 案 Neutral 1.3776→**1.3691**（-0.62%），Vbnd 174→**140**，跑得更快（2.044s→1.84s/案）。**尚未寫進 `electro_optimizer.py` 的 `setdefault`**——要手動加旗標才能重現 |
-| **合法化長寬比彈性** | **Neutral 佳，REAL 打平** | `legalize_qinfer_reshape`：新 legalizer，讓非 MIB 群組的軟方塊在合法化階段也能微調長寬比（面積精確保留），取代單純位移。全 100 案 Neutral 1.3776→**1.3485**（-2.1%，本輪最佳），但多養一個 portfolio 候選要花 ~12-14% 額外 runtime，換算成 REAL Total Score 幾乎打平（0.9801→**0.9816**）。過程中意外揪出一個 **WSL-only 浮點精度 bug**：非可調形狀方塊的 log/exp 往返運算讓形狀漂移 ~4e-6，剛好重新打開一個跟鄰居緊貼的重疊（`config_75` 在 WSL 上 `Cost=10`，原生 Windows 上正常）——已修復。`ELECTRO_RESHAPE_PORTFOLIO` 預設關閉 |
+| **對偶上升 boundary** | ✅ **8/11 納入生產預設** | `ELECTRO_DUAL_ASCENT_BND=1 ELECTRO_DA_K=40`。8/6 驗證正面時卡在「只存在 v20 程式碼、v19 完全沒有這段」——之前的「已驗證但未預設」其實是「不在生產版本裡，設了也無聲失效」。8/11 promote v20 為主力後正式啟用 |
+| **合法化長寬比彈性** | ✅ **8/11 移植到 v20 後納入生產預設** | `legalize_qinfer_reshape`：在 v19 上驗證 Neutral 改善最多（-2.1%）但 REAL 打平（0.9801→0.9816），當時停用。8/11 移植到 v20、跟對偶上升疊加，同批次背靠背重測：Neutral 1.3612→**1.3260**（-2.6%，比 v19 上更好），REAL **不降反微升**（1.0005→0.9987），Vgrp/Vbnd 都改善，代價是 Vmib +16%（43→50）——沒有淨負面，設為預設。過程中意外揪出一個 **WSL-only 浮點精度 bug** 並修復：非可調形狀方塊的 log/exp 往返運算讓形狀漂移 ~4e-6，重新打開跟鄰居的重疊（`config_75` 在 WSL 上曾誤判 `Cost=10`） |
+
+### 研究方向紀錄（2026-08-11 RT/預設值調校 campaign）：2 個確定改動 + 9 個否決方向
+
+不發明新演算法，純粹靠重新量測既有設定、找回沒進生產的機制。詳細證據見
+repo 內 `docs/superpowers/2026-08-11-rt-and-default-retuning-campaign.md`。
+
+**兩個確定的預設值改動**（獨立於上面的對偶上升/reshape）：
+
+| 改動 | 結果 |
+|---|---|
+| `PLACE_COMPACT_ITERS` 400→150 | 舊值是調過頭不是取捨——150 比 400 品質更好（Neutral 1.3776→1.3370）**還更快**（2.218s→2.156s） |
+| `REPAIR_ROUNDS` 3→2 | 第 3 輪逐位元無作用（全 100 案 Neutral 與三個違規數完全一致），只白花 ~3.5% 時間 |
+
+**9 個否決方向**（都測過，淨值全部比預設差）：
+
+| 方向 | 結果 |
+|---|---|
+| `ELECTRO_TARGET_UTIL` 0.90/0.92/0.95（預設 0.85） | **乾淨的 Q/P 對撞盤**：填越滿 area_gap 越好，但擠壓空間直接壓縮排 cluster 的自由度，V_grouping 系統性變差，淨 Neutral 全部輸給預設 |
+| `ELECTRO_HPWL_POLISH=1` | 生產路徑上根本不可達（`return_pair` 提早 return），強制打通後實測反而更差，不值得修 |
+| `ELECTRO_OV1` 3.5/1.8（預設 2.5） | 兩個方向都更差 |
+| `ELECTRO_GROW_END=0.85`（預設 0.7） | Neutral 更差，V_grouping 暴增 |
+| `ELECTRO_AREA_GROW=0.25`（預設 0.1） | 更差 |
+| `ELECTRO_DA_BND_CEIL=10.0`（預設 6.0） | **死參數**：違規數與 Neutral 逐位元不變，代表現有案例從沒真的撞到 6.0 這個上限，調高純粹白花 14% 時間 |
+| `DUAL_ASCENT_GRP=1` | Neutral 變差，V_mib 43→72——修 grouping 打壞 MIB，「共用梯度預算耦合」第四種數學形式再現 |
+| seeds 自適應 / seeds>8 | 無據可依 / REAL 反升 |
+| 5-way 參數掃描其餘方向 | 見 campaign 文件完整表格 |
 
 > [!info] 為什麼 ADMM/L-BFGS/Per-RMAP 這三個更「先進」的機制反而都輸給
 > 簡單的對偶上升（dual ascent）？
@@ -206,12 +243,15 @@ ELECTRO_LP_DISPLACEMENT_TOPK=1
 
 ## 下一步該往哪走
 
-> [!warning] **這條技術路線（梯度式 + 切割式 + portfolio）大概已經到頂**
-> 三個獨立方向都測過、都收斂到負面。剩餘的品質空間：`V_grouping=143`、
-> `V_mib=51`、`V_boundary=174`（生產預設）或 `140`（對偶上升，尚未預設）。
-> 如果還要繼續推進，大概需要跳出「同一個梯度迴圈裡加懲罰項」這個框架
-> ——例如真正的變數分裂（獨立的子問題、獨立的求解器，而不是換一種
-> 懲罰項包裝），或是換一種完全不同的搜尋範式。
+> [!warning] **「同一個梯度迴圈裡加懲罰項」這個框架大概已經到頂**
+> L-BFGS/Per-RMAP/ADMM/`DUAL_ASCENT_GRP` 四個獨立方向都測過、都收斂到
+> 「修好一個軟約束就拖累另一個」的負面結果（「共用梯度預算耦合」）。
+> `ELECTRO_TARGET_UTIL` 掃描也證實 Q（HPWL/area）跟 V_grouping 是同一份
+> 幾何自由度的兩端，不是能各自獨立優化的目標。剩餘品質空間：
+> `V_grouping=111`、`V_mib=50`、`V_boundary=128`（8/11 生產預設）。
+> 如果還要繼續推進，大概需要跳出這個框架——例如真正的變數分裂（獨立的
+> 子問題、獨立的求解器，而不是換一種懲罰項包裝），或是換一種完全不同的
+> 搜尋範式。
 
 ---
 **相關筆記**：[[ICCAD_code/7_Electrostatic_Placer|7. 電靜力法擺放器]] ·

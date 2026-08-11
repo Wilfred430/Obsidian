@@ -53,8 +53,10 @@ date: 2026-07-01
 
 ## 8.2 三個關鍵診斷（決定了整個策略方向）
 
-### 診斷一：$e^n$ 加權讓大 case 決定一切
-[[ICCAD_code/3_Cost_Function_and_Penalty|總分是 $\sum e^n \times \text{Cost}_n$]]，$n$ 從 21 到 120。一個 120-block case 權重是 21-block 的 $e^{99}{\approx}8{\times}10^{42}$ 倍。**小 case 全部滿分也贏不了大 case 輸一點**。
+### 診斷一：$e^{n/12}$ 加權讓大 case 決定一切
+> [!info] **訂正（2026-07-01，已核對官方 spec PDF）**：這裡原寫 $e^n$/$e^{99}\approx8\times10^{42}$ 倍是錯的，正確分母是 $n/12$——見上方 §8 開頭的總覽區塊與 [[ICCAD_code/3_Cost_Function_and_Penalty|3_Cost_Function_and_Penalty]] 已訂正版本。
+
+[[ICCAD_code/3_Cost_Function_and_Penalty|總分是 $\sum \lambda_n \times \text{Cost}_n$，$\lambda_n=e^{n/12}/\sum_j e^{j/12}$]]，$n$ 從 21 到 120。一個 120-block case 權重是 21-block 的 $e^{8.25}{\approx}3820$ 倍。**小 case 全部滿分也很難贏過大 case 輸一點**，但沒有到「完全無關緊要」的極端程度。
 
 ### 診斷二：純 SA 在大 case 數學上贏不了
 $n{=}120$ 的 B\*-tree 拓樸組合數約 $10^{250}$，SA 在時限內的評估次數約 $10^6$——搜到的比例是 $10^{-244}$，等於在太平洋裡憑運氣找一滴特定的水分子。**這不是調參數能解決的問題，是搜尋空間本身的物理限制。**
@@ -74,7 +76,7 @@ graph TD
 - **Stage 0**（[[ICCAD_code/6_ML_Generative_BTree|第 6 篇已完成部分]]）：用 1M 筆 `tree_sol` 訓練生成式模型模仿「近似最優但非最優」的示範。
 - **Stage 1**（尚未開始）：類比 AlphaGo → AlphaZero——用真實 contest Cost 當獎勵訊號做強化學習微調，目標是**超越**示範品質（訓練資料本身不是最優解，只是「還不錯的起點」）。
 - **Stage 2**：推論時不只採樣一個拓樸，採樣 K 個候選，各自用真正的 [[ICCAD_code/4_Packing_and_Evaluation|packer.cpp]] 精修 + legalize，挑 Cost 最低的送出。
-- **Stage 3**：善用 $e^n$ 加權——把算力（採樣數 K、精修迭代數）優先分給 n 大的 case。
+- **Stage 3**：善用 $e^{n/12}$ 加權——把算力（採樣數 K、精修迭代數）優先分給 n 大的 case。
 
 ## 8.4 兩條腿並存策略
 

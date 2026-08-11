@@ -2,6 +2,8 @@
 
 在進行晶片設計規劃時，根據晶片邊界的限制程度，主要分為 Outline-free 與 Fixed-outline 兩大類。
 
+> [!warning] **本篇是一般 VLSI 產業理論分類，不是 ICCAD 2026 FloorSet-Lite 本競賽的實際規則**——查證官方 spec PDF 後確認：本競賽既不是傳統 Outline-free（沒有「單純縮小面積」目標），也不是這裡定義的 Fixed-outline（沒有預先給定、不可超越的固定 $(W,H)$）。本競賽的畫布是**解出來後量出來的** bounding box，面積用跟 baseline 的差距（`Area_gap`）扣分，不是硬邊界。本競賽實際規則見 [[ICCAD/Problem/FloorSet-Detailed|FloorSet 規格詳解]]。
+
 ## 1. Outline-free Floorplanning (傳統型)
 
 這是最經典的平面規劃模式，主要目標是在滿足模組放置的前提下，盡可能縮小面積。

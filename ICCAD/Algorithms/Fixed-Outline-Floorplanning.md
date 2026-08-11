@@ -11,6 +11,8 @@ Cross_Domain: "Hierarchical Design, Optimization"
 
 在現代 SoC 設計中，佈局規劃 (Floorplanning) 已經從單純的「拼圖遊戲」演變成極其複雜的「餘裕空間管理」。本筆記基於 Adya & Markov (2003) 的研究，探討為何固定輪廓 (Fixed-Outline) 是階層化設計的基石。
 
+> [!warning] **這是產業界一般理論背景，不是 ICCAD 2026 FloorSet-Lite 本競賽的實際規則**——查證官方 spec PDF 後確認：本競賽**沒有**預先給定、不可超越的固定 $(W,H)$ 畫布輸入，也沒有「蓋出界」這條硬約束。晶片外框是解出來的 bounding box，用跟 baseline 的面積差距（`Area_gap`）扣分，不是判死題。本競賽實際的 4 個硬約束（Overlap-free / Area Tolerance / Fixed-shape / Preplaced）見 [[ICCAD/Problem/FloorSet-Detailed|規格詳解]]。
+
 ## 1. 思維轉換：從「最小化面積」到「餘裕最佳分配」
 
 傳統佈局與固定輪廓佈局在設計哲學上有本質的差異：
@@ -62,7 +64,7 @@ $$Penalty = \max(W - W_*, 0) + \max(H - H_*, 0)$$
 Whitespace 的掌控是實現 Top-down 流程的關鍵：
 
 1.  **空間預留**：頂層佈局時，必須為底層子模組預留約 $15\% \sim 20\%$ 的 Whitespace，以應對後續邏輯優化與時序修復的空間膨脹。
-2.  **形狀約定**：固定輪廓為子模組設定了「牆壁」。如果頂層沒規劃好餘裕分配，底層子模組將面臨 $M=10$ (Infeasible) 的困境。
+2.  **形狀約定**：固定輪廓為子模組設定了「牆壁」。如果頂層沒規劃好餘裕分配，底層子模組將面臨放不下、被迫超界的困境（$M=10$ 是本競賽 FloorSet-Lite 特有的無效解懲罰代號，本競賽的無效條件跟這裡講的「固定畫布超界」無關，見上方警告區塊）。
 3.  **並行開發**：正確的 Fixed-Outline 讓不同團隊能在各自的牆壁內並行工作，而不會干擾全域佈局。
 
 ---

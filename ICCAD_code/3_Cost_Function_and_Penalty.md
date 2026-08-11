@@ -18,7 +18,8 @@ date: 2026-06-17
 
 ### A. 面積 (Area_bbox)
 評估整個晶片的佔地面積。公式為所有 Block 的外接矩形 (Bounding Box) 面積：
-$$ \text{Area} = \max(x_i + w_i) \times \max(y_i + h_i) $$
+$$ \text{Area}_{bbox} = \big(\max_i(x_i+w_i) - \min_i(x_i)\big) \times \big(\max_i(y_i+h_i) - \min_i(y_i)\big) $$
+官方定義完整包含 $\min_i(x_i)/\min_i(y_i)$（見 Eq. bbox，[[ICCAD/Problem/FloorSet-Detailed|規格詳解]]）——常見寫法只留 $\max(x_i+w_i)\times\max(y_i+h_i)$，那是**假設所有座標已經在合法化階段被推到 $\ge 0$ 且至少一塊貼齊原點**時的簡化特例，不是官方公式本身，兩者在座標未貼原點時不等價。
 
 ### B. 半周長線長 (Half-Perimeter Wirelength, HPWL)
 用來評估模組間連線（Netlist）的擁擠程度。我們將 HPWL 拆分成內部與外部兩種，以分別賦予不同的權重 ($W_{int}$ 與 $W_{ext}$)：
@@ -26,6 +27,8 @@ $$ \text{Area} = \max(x_i + w_i) \times \max(y_i + h_i) $$
 - **外部連線 ($HPWL_{ext}$)**：Block 到外部固定腳位 (Terminal / Pin) 的連線。這是唯一能將整個 Floorplan「錨定 (Anchor)」在特定區域的力量。
 
 $$ HPWL = \sum_{net \in N} \left( \max_{i \in net}(x_i) - \min_{i \in net}(x_i) + \max_{i \in net}(y_i) - \min_{i \in net}(y_i) \right) $$
+
+> [!warning] **這是經典「net bounding-box」HPWL 模型，不是官方拿去評分的公式**——官方 Eq. 3 用的是**逐對模組中心點加權曼哈頓距離**：$HPWL_{int}=\sum_{i}\sum_{j>i} W^{(int)}_{ij}(|c_i^x-c_j^x|+|c_i^y-c_j^y|)$（$c_i=$ 中心點），外部連線再加一項 $HPWL_{ext}=\sum_i\sum_j W^{(ext)}_{ij}(|c_i^x-x_{t_j}|+|c_i^y-y_{t_j}|)$，完整公式見 [[ICCAD/Problem/FloorSet-Detailed|規格詳解 4.2 節]]。上面這條 net-bbox 公式是傳統多 pin net 的 half-perimeter 模型，兩者在 net 只有 2 個端點時等價，但官方是**逐對加權**、按 $W^{(int)}/W^{(ext)}$ 連續取值,不是「每個 net 一個 0/1 集合」——算 `HPWL_gap` 時務必用官方版本,不要拿這條當評分依據。
 
 ### C. 為什麼需要 Baseline (正規化)？
 **報告必考題**：如果直接相加 $\text{Cost} = W_a \cdot \text{Area} + W_h \cdot \text{HPWL}$，會發生什麼事？
@@ -50,9 +53,13 @@ ICCAD 2026 競賽有許多棘手的實體約束，如果違反，必須在 `sa_c
 $$ \text{Penalty}_{soft} = \exp\left( 2 \times \frac{V_g + V_m + V_b}{N_{soft}} \right) $$
 
 ### B. Hard Constraints (硬約束)
-違反這些項目，官方直接判出局 ($M=10$)：
+違反這些項目，官方直接判出局 ($M=10$)。官方規格明確只有 4 類（見 [[ICCAD/Problem/FloorSet-Detailed|規格詳解]]）：
 1. **Overlap (重疊)**：在 SA Cost 中，我們不只看「有沒有重疊」，而是計算「**重疊了多少面積 (overlap_area)**」，並乘上 $W_{overlap} = 5000$，迫使 SA 強烈排斥重疊狀態。
-2. **Area Tolerance (軟模組形變)**：Soft block 的面積誤差超過 $1\%$。我們計算誤差比例，乘上 $W_{softarea} = 5000$。
+2. **Area Tolerance / Dimensionality (面積與尺寸)**：Soft block 的面積誤差超過 $1\%$。我們計算誤差比例，乘上 $W_{softarea} = 5000$。
+3. **Fixed-shape Immutability**：**[V9 更新，原為軟約束]** `is_fixed=1` 的模組尺寸 $(w,h)$ 必須與輸入完全一致，不可縮放。
+4. **Preplaced Immutability**：**[V9 更新，原為軟約束]** `is_preplaced=1` 的模組位置與尺寸 $(x,y,w,h)$ 必須與輸入完全一致，不可移動。
+
+**沒有第 5 類「畫布外框 (W,H)」硬約束**——官方規格從未把畫布尺寸列為輸入或硬約束，`Area_bbox` 是解算出來的，用 gap 扣分而非判死。
 
 ### C. 固定輪廓 (Fixed-Outline / Aspect Ratio)
 在實體設計中，晶片長寬比 (Aspect Ratio) 也是痛點。雖然 v9 放寬了硬性 AR 限制，但我們可以透過 `w_outline` 權重介入：
@@ -72,6 +79,6 @@ $$ \text{Cost} = \big(1 + 0.5 \cdot (\text{HPWL\_gap} + \text{Area\_gap})\big) \
 - **$V_{rel} = \min\big(1,\ (V_{group}+V_{mib}+V_{boundary}) / N_{soft}\big)$**：所有軟約束違規的「比例」，被限制在 $[0,1]$，所以 $\exp(2 V_{rel}) \in [1, e^2{\approx}7.39]$——最慘也就是 7.39 倍，不會無限爆炸（跟 SA 內部那個 $W_{group}=500$ 的做法完全不同邏輯）。
 - **$RT$ (RuntimeFactor)**：跑得快有獎勵，但封頂在 0.7（最多省 30%）；跑得慢的懲罰**沒有上限**。
 
-### e^n 總分加權：大 case 才是真正戰場
+### e^(n/12) 總分加權：大 case 才是真正戰場
 
-比賽總分不是各 case 平均，而是 $\sum_n e^n \times \text{Cost}_n$，$n$ 從 21 到 120。一個 120-block 的 case 權重是 21-block case 的 $e^{99} \approx 8\times10^{42}$ 倍。**這代表：小 case 分數再漂亮都無關緊要，整場比賽事實上只由 n≈90–120 的少數幾個 case 決定。** 詳見 [[ICCAD_code/8_Winning_Strategy_and_Roadmap|8_Winning_Strategy_and_Roadmap]] 的搜尋空間分析。
+比賽總分不是各 case 平均，而是 $\sum_n \lambda_n \times \text{Cost}_n$，其中 $\lambda_n = e^{n/12}/\sum_j e^{j/12}$，$n$ 從 21 到 120。**分母是 $n/12$，不是單純 $n$**——一個 120-block 的 case 權重是 21-block case 的 $e^{(120-21)/12}=e^{8.25}\approx 3820$ 倍（不是誤植成純 $e^n$ 才會算出的 $e^{99}\approx 8\times10^{42}$ 倍，那是錯誤數字，2026-07-01 已用官方 spec PDF 截圖核對訂正）。**即便訂正後的倍率沒那麼誇張，結論方向仍成立**：小 case 分數再漂亮也扭轉不了大 case 的失分，n≈60–120 的中大型 case 仍是主戰場，只是不到「小 case 完全無關緊要」的程度。詳見 [[ICCAD_code/8_Winning_Strategy_and_Roadmap|8_Winning_Strategy_and_Roadmap]] 的搜尋空間分析。

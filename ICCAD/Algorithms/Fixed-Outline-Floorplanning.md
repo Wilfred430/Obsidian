@@ -5,7 +5,7 @@ Confidence: 5
 Cross_Domain: "Hierarchical Design, Optimization"
 ---
 
-> [!abstract] **導航**：[[index|🌐 全域索引]] | [[ICCAD/Algorithms/Wong-Liu-Algorithm|📑 經典 SA 算法]] | [[ICCAD/FloorSet-Detailed|📚 FloorSet 規格]]
+> [!abstract] **導航**：[[index|🌐 全域索引]] | [[ICCAD/Algorithms/Wong-Liu-Algorithm|📑 經典 SA 算法]] | [[ICCAD/Problem/FloorSet-Detailed|📚 FloorSet 規格]]
 
 # Fixed-Outline Floorplanning: 餘裕空間的藝術與約束
 

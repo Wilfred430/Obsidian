@@ -188,7 +188,11 @@ ELECTRO_ITERS=300
 ELECTRO_PLACE_COMPACT=1
 ELECTRO_PLACE_COMPACT_ITERS=150     # 新增（8/11），舊值 400 是調過頭不是取捨
 ELECTRO_PLACE_COMPACT_TOPK=3        # 死參數：ELECTRO_PLACE_COMPACT_BEST（預設1）分支永遠先命中，這個 elif 打不到
-ELECTRO_MIB_PORTFOLIO=1
+ELECTRO_MIB_PORTFOLIO=0              # 改為關閉（8/15）：MIB_UNIFY 開啟後它只產生重複品，
+                                     # 關掉反而更好（1.2277→1.2270）且候選更少
+ELECTRO_MIB_UNIFY=1                  # 新增（8/15），必須跟 POST_SNAP 成對
+ELECTRO_MIB_POST_SNAP=1              # 新增（8/15），修 mib_unify 造成的 boundary 位移
+ELECTRO_MIB_BOTH=1                   # 新增（8/15），統一前的版本也進候選池讓 proxy 挑
 ELECTRO_FAST_CLEANUP=1
 ELECTRO_SLICE_ALIGN_PORTFOLIO=1
 ELECTRO_MIB_ANCHOR_SNAP=1

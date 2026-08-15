@@ -49,7 +49,7 @@ date: 2026-07-01
 |---|---|---|
 | **A（主力）** | [[ICCAD_code/2_SA_Optimizer_Engine\|B*-tree + Fast-SA]]，C++ 多執行緒多 seed | 穩定成熟，Alpha 已過 |
 | **B（ML 輔助）** | [[ICCAD_code/5_ML_Coordinate_Regression\|座標回歸 Warm-start]] | 已訓練 v1/v2/v3，**診斷出 mode collapse 病灶** |
-| **C（獨立路線，目前主力）** | [[ICCAD_code/7_Electrostatic_Placer\|電靜力法]]（electro_v20，v19 的安全超集） | **目前分數最佳**（真實 Total 0.9987／中性 1.3260，100/100 feasible） |
+| **C（獨立路線，目前主力）** | [[ICCAD_code/7_Electrostatic_Placer\|電靜力法]]（electro_v22） | **目前分數最佳**（中性 Total **1.2252**／真實 0.878–0.895，**100/100 feasible**）。代理分數與 Alpha 第 1 名（0.8789）同量級 |
 
 ## 8.2 三個關鍵診斷（決定了整個策略方向）
 

@@ -6,15 +6,21 @@ date: 2026-07-01
 
 # 7. 電靜力法擺放器 (Electrostatic Placer)
 
-> [!success] **現況（2026-08-11）—— 本篇描述的是早期版本，主力已換路線**
-> 電靜力法這條線目前的主力是 **electro_v20**（`electro_v19` 的安全超集，
-> `collaborate/electro_v20/`），不是本篇描述的 `electro_submission/`。
+> [!success] **現況（2026-08-15）—— 本篇描述的是早期版本，主力已換路線**
+> 電靜力法這條線目前的主力是 **electro_v22**（`collaborate/electro_v22/`），
+> 不是本篇描述的 `electro_submission/`。
 >
 > | 指標 | 數值 |
 > |---|---|
-> | **真實 Total Score**（含 RT 因子，同批次背靠背量測） | **0.9987** |
-> | 中性 Total（只算品質） | **1.3260**（本 session 至今最佳） |
-> | 快過官方中位數 | 99/100 案 |
+> | 中性 Total（只算品質） | **1.2252**（七次獨立全 100 案量測都精確落在此值） |
+> | 真實 Total（對官方 Alpha 逐案中位數） | 0.878 – 0.895 |
+> | Feasible | **100/100** |
+>
+> > [!danger] **本篇的「電靜力」名稱有誤導性**
+> > 程式碼裡確實有 ePlace 式的 FFT 靜電密度場，但 `ELECTRO_EDENSITY` **預設是
+> > 0.0，沒有啟用**。實際把方塊推開的是**逐對可微重疊面積懲罰**，搭配一個隨迭代
+> > 從 0.1 線性升到 2.5 的權重（延續法／homotopy）。名字是歷史遺留。
+> > 同理 `ELECTRO_WL_SMOOTH` 預設 0，線長用的是**精確 L1** 而非平滑近似。
 >
 > 架構現況請看 [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]] +
 > [[Electronic_Pipeline.canvas|畫布]]；逐日推導見

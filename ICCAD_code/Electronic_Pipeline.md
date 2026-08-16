@@ -35,8 +35,8 @@ date: 2026-08-04
 
 | 指標 | 數值 | 說明 |
 |---|---|---|
-| 中性 Total Score | **1.2252** | `Q·P`，忽略 runtime。**七次獨立全 100 案量測都精確落在這個值** |
-| 真實 Total Score | 0.878 – 0.895 | 含 `R=max(0.7,RT^0.3)`。給範圍不給單一值，理由見下方 danger |
+| 中性 Total Score | **1.2230** | `Q·P`，忽略 runtime。確定性——同設定重跑必定同值 |
+| 真實 Total Score | 0.861 – 0.866 | 含 `R=max(0.7,RT^0.3)`。給範圍不給單一值，理由見下方 danger |
 | Feasible | **100/100** | 全部合法，硬約束零違規 |
 | 平均 runtime | 1.91 – 2.12s | 散布 10%，**不應該當成演算法的屬性報告** |
 
@@ -185,6 +185,10 @@ prerank 前 3 名重拍，砍 75% 計算量而品質幾乎無損。
 
 ## 目前的旗標設定（生產預設，寫在 `electro_optimizer.py` 的 `setdefault`）
 
+> [!tip] **看不懂某個參數在講什麼?**
+> 逐項白話解釋、為什麼是這個值、以及踩過的坑,見
+> **[[ICCAD_code/Electro_Parameters_Reference|electro_v22 參數速查表]]**。
+
 ```bash
 ELECTRO_CLAMP=1
 ELECTRO_NONNEG=1
@@ -200,6 +204,9 @@ ELECTRO_MIB_PORTFOLIO=0              # 改為關閉（8/15）：MIB_UNIFY 開啟
 ELECTRO_MIB_UNIFY=1                  # 新增（8/15），必須跟 POST_SNAP 成對
 ELECTRO_MIB_POST_SNAP=1              # 新增（8/15），修 mib_unify 造成的 boundary 位移
 ELECTRO_MIB_BOTH=1                   # 新增（8/15），統一前的版本也進候選池讓 proxy 挑
+ELECTRO_HPWL_ANCHOR=1                # 新增（8/16），校準過的線長排名錨點。舊錨點比真實
+                                     # H_baseline 大 2079 倍，讓 proxy 幾乎看不見線長。
+                                     # 只有在 MIB_BOTH 開著時才贏（見參數速查表）
 ELECTRO_FAST_CLEANUP=1
 ELECTRO_SLICE_ALIGN_PORTFOLIO=1
 ELECTRO_MIB_ANCHOR_SNAP=1

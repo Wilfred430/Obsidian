@@ -1,376 +1,47 @@
 {
-  "nodes": [
-    {
-      "id": "node-001",
-      "type": "text",
-      "text": "# Electro Pipeline v22 全管線架構圖\n**SOTA 生產架構** | 100/100 Feasible | 中性總分: **1.2230** (確定性品質指標)\n• 核心哲學：多候選生成 (Portfolio) + 確定性修復 + 安全護欄防崩潰\n• 完整文字說明請參照同目錄 `Electronic_Pipeline.md`",
-      "x": 0,
-      "y": -480,
-      "width": 1160,
-      "height": 190,
-      "color": "6"
-    },
-    {
-      "id": "node-002",
-      "type": "group",
-      "x": 0,
-      "y": -240,
-      "width": 520,
-      "height": 780,
-      "label": "階段 0：初始化來源（優先序退回：Dirichlet → ML → Random）"
-    },
-    {
-      "id": "node-004",
-      "type": "text",
-      "text": "### 1. Dirichlet 調和延拓初始化 (生產首選)\n`ELECTRO_DIRICHLET_INIT=1`\n• 晶片視為電阻網格，解 Laplacian 封閉解\n• 僅啟用 Boundary 錨定訊號 (`bnd_weight=2.0`)\n• 100 案 Neutral: 1.4018 → 1.3776 (-1.73%)",
-      "x": 30,
-      "y": -120,
-      "width": 460,
-      "height": 230,
-      "color": "5"
-    },
-    {
-      "id": "node-005",
-      "type": "text",
-      "text": "### 2. ML 暖啟動 (次選備援)\n`ELECTRO_ML_INIT=1`\n• Dirichlet 關閉/失敗或多種子 (seeds > 1) 時啟用\n• Transformer 預測各方塊中心點座標",
-      "x": 30,
-      "y": 140,
-      "width": 460,
-      "height": 170,
-      "color": "5"
-    },
-    {
-      "id": "node-003",
-      "type": "text",
-      "text": "### 3. Random Init (保底備援)\n• 前兩者皆關閉或異常時的均勻隨機分佈",
-      "x": 30,
-      "y": 340,
-      "width": 460,
-      "height": 140,
-      "color": "5"
-    },
-    {
-      "id": "node-010",
-      "type": "text",
-      "text": "## Stage 1: analytical_place()\n**連續解析全域擺放** (Adam 300 迭代優化)\n• **eDensity 靜電場**：2D DCT 求解 Poisson 方程 (∇²Φ = -ρ)\n• **MIB 兩段式形狀導引**：\n  ① `MIB_ANCHOR_SNAP`：訓練中漸增 L2 引導長寬比\n  ② `MIB_ANCHOR`：輸出前精確覆寫錨點尺寸\n• **對偶上升邊界**：`ELECTRO_DUAL_ASCENT_BND=1` (K=40)\n• **自適應剪枝**：第 60 步剪除 50% 劣質種子 + 動態早停",
-      "x": 640,
-      "y": -240,
-      "width": 520,
-      "height": 440,
-      "color": "4"
-    },
-    {
-      "id": "node-011",
-      "type": "text",
-      "text": "## Stage 2a: legalize()\n**梯度推擠合法化** (保底路徑)\n• 順序抽取 → 貪婪/LP 壓實 → `_cleanup()` 去重疊\n• ⚡ `FAST_CLEANUP` (增量式 O(|動過|·n)，加速 2.4×)\n• 支援長寬比彈性調配 (`legalize_qinfer_reshape`)",
-      "x": 1280,
-      "y": -240,
-      "width": 520,
-      "height": 260,
-      "color": "4"
-    },
-    {
-      "id": "node-060",
-      "type": "text",
-      "text": "## Stage 2b: slice_pack()\n**Slicing 切割樹合法化** (主力生成路徑)\n• **Cluster 虛擬化子樹** (`cluster_virtualize.py` / `COMPOUND=1`)：\n  群組先縮聚為單一原子複合巨集 Mc，子樹內 W=0 展開\n  ──【Subtree Enclosure 定理保證 V_grp ≡ 0】\n• **Guillotine 遞迴切割** (Otten 1982)：100% 無重疊保證\n• `SLICE_ALIGN_PORTFOLIO=1`：保留水平/垂直雙向候選",
-      "x": 1280,
-      "y": 60,
-      "width": 520,
-      "height": 360,
-      "color": "2"
-    },
-    {
-      "id": "node-012",
-      "type": "text",
-      "text": "## Stage 3: soft_repair()\n**確定性軟約束幾何修復** (SpatialGrid 空間網格加速)\n• **Boundary Snap**：沿外框掃描滑移貼齊，修復貼邊約束\n• **Grouping Push-Past**：聚合修復微小離散斷裂\n• **MIB 統一與防護配對**：\n  ✅ `MIB_UNIFY` + `MIB_POST_SNAP` (成對套用，修復位移)\n  ✅ `MIB_BOTH=1`：統一前/後版本同時輸出進候選池",
-      "x": 1280,
-      "y": 600,
-      "width": 520,
-      "height": 380,
-      "color": "4"
-    },
-    {
-      "id": "node-032",
-      "type": "text",
-      "text": "### 候選 1：MIB 雙版本分岔 (`MIB_BOTH=1`)\n• `_finish` 同時產出「統一前」與「統一後」兩份解\n• 兩份皆進入候選池由 Proxy Cost 逐案評選\n• 避免無條件變換損害極端案例 (Case 99 零退步)\n• ⛔ `MIB_PORTFOLIO` 已關閉 (UNIFY 後避免冗餘品)",
-      "x": 640,
-      "y": 600,
-      "width": 520,
-      "height": 240,
-      "color": "1"
-    },
-    {
-      "id": "node-020",
-      "type": "text",
-      "text": "### 候選 2：place-compact (`ELECTRO_PLACE_COMPACT=1`)\n• 將壓實佈局中心點作為全新初始化起點\n• 執行 150 步短版 `analytical_place` 重新合法化\n• 限制 `TOPK=3`：砍 75% 計算量且品質無損",
-      "x": 640,
-      "y": 870,
-      "width": 520,
-      "height": 210,
-      "color": "2"
-    },
-    {
-      "id": "node-021",
-      "type": "text",
-      "text": "### 候選 3：Convex Sizing LP 聯合壓實 (`convex_sizing.py`)\n• 基於 Slicing 切割拓撲建立水平/垂直無重疊偏序 DAG\n• HiGHS 線性規劃求解 (`ELECTRO_CONVEX_HIGHSPY=1`)\n• 同時優化模組長寬比與幾何壓實，最小化 Area + HPWL (γ=1.0)\n• 支援多執行緒並行求解 (`ELECTRO_CS_THREADS=4`)",
-      "x": 640,
-      "y": 1110,
-      "width": 520,
-      "height": 260,
-      "color": "2"
-    },
-    {
-      "id": "node-040",
-      "type": "text",
-      "text": "## Proxy Cost 逐案快速排名\n$$\\text{Proxy} = \\exp(2 \\cdot V_{\\text{rel}}) \\cdot \\left(\\frac{\\text{HPWL}}{H_a} + \\frac{\\text{Area}}{A_a}\\right)$$\n• **池無關錨點設計** (`ha`, `aa`)：基準與候選池規模無關，杜絕相對排名擾動\n• 從多種子與多路徑中快速篩選最具競爭力解",
-      "x": 0,
-      "y": 600,
-      "width": 520,
-      "height": 270,
-      "color": "3"
-    },
-    {
-      "id": "node-050",
-      "type": "text",
-      "text": "## Portfolio 最終決策與輸出\n• **多候選綜合競爭**：集結 Slicing、Push、MIB-Both、Place-Compact、LP 候選\n• 套用官方正式指標 $\\text{Cost} = Q \\times P \\times R$\n• 100% 產出無重疊、滿足所有硬約束之最佳可行解 (`.sol`)",
-      "x": 0,
-      "y": 910,
-      "width": 520,
-      "height": 250,
-      "color": "6"
-    },
-    {
-      "id": "node-080",
-      "type": "group",
-      "x": 0,
-      "y": 1450,
-      "width": 1800,
-      "height": 650,
-      "label": "系統級安全護欄（防崩潰 / 防不可行，✅=已納入生產預設）"
-    },
-    {
-      "id": "node-082",
-      "type": "text",
-      "text": "### place() 輸出 NaN 防護 ✅\n• `electro_parallel.py` 輸出後立即執行 `torch.isfinite()` 檢查\n• 若梯度異常產生 NaN 立即丟棄該候選\n• 徹底阻斷數值爆炸向下游傳染",
-      "x": 30,
-      "y": 1570,
-      "width": 530,
-      "height": 210,
-      "color": "4"
-    },
-    {
-      "id": "node-083",
-      "type": "text",
-      "text": "### Push-Candidate 重疊複驗 ✅\n• `legalize()` 後調用 `_overlap_pairs()` 嚴格複驗\n• 沒清乾淨重疊的候選直接作廢\n• 補齊演算法對 preplaced 剛性模組的防護盲區",
-      "x": 610,
-      "y": 1570,
-      "width": 550,
-      "height": 210,
-      "color": "4"
-    },
-    {
-      "id": "node-081",
-      "type": "text",
-      "text": "### Fallback Ladder 重排救援 ✅\n• 將 Push Candidate 提到第一級救援階梯\n• 避免 3 級全滅後才進入慢速 fallback\n• 同步降低尾端延遲 (RT ~7s → 4.7s) 與異常成本",
-      "x": 1210,
-      "y": 1570,
-      "width": 550,
-      "height": 210,
-      "color": "4"
-    },
-    {
-      "id": "node-084",
-      "type": "text",
-      "text": "### AREA GUARD 面積硬約束主動校正 ✅ (`ELECTRO_AREA_TOL_GUARD=0.0098`)\n• 嚴格落實 $|w_i \\cdot h_i - a_i| / a_i \\le 0.01$ 硬約束：從「依賴上游無漂移假設」改為「輸出前主動等比例縮放校正」\n• 根治 2026-08-15 真實隱藏測資 10/100 不可行缺陷（10 個失敗案 max_area_drift 全超標，修復後迴歸測試 40/40 案全部合法且 0 超標）\n• 搭配 `ELECTRO_MIB_PERBLOCK_AREA=1` 使硬矯正觸發率下降 99.65%",
-      "x": 30,
-      "y": 1820,
-      "width": 1730,
-      "height": 240,
-      "color": "4"
-    },
-    {
-      "id": "node-070",
-      "type": "group",
-      "x": 0,
-      "y": 2160,
-      "width": 1800,
-      "height": 650,
-      "label": "研究方向與關鍵結論（✅=已納入生產預設，⛔=負面結論及時止損）"
-    },
-    {
-      "id": "node-074",
-      "type": "text",
-      "text": "### 對偶上升 Boundary ✅ (已轉正)\n`ELECTRO_DUAL_ASCENT_BND=1` (K=40)\n• 動態調整邊界對偶乘子\n• 獨立評測：Neutral 1.3642 → 1.3612\n• V_bnd 違規數 164 → 133 顯著改善",
-      "x": 30,
-      "y": 2280,
-      "width": 530,
-      "height": 210,
-      "color": "4"
-    },
-    {
-      "id": "node-075",
-      "type": "text",
-      "text": "### 合法化長寬比彈性 ✅ (已轉正)\n`legalize_qinfer_reshape` (移植至 v20)\n• 與對偶上升疊加：Neutral 1.3612 → 1.3260 (-2.6%)\n• 修復 WSL-only 浮點精度漂移 bug",
-      "x": 610,
-      "y": 2280,
-      "width": 550,
-      "height": 210,
-      "color": "4"
-    },
-    {
-      "id": "node-033",
-      "type": "text",
-      "text": "### 已測不採用小型調參 ⛔\n• `SLICE_WALLS/BUDGET`：中位數變動時結論反轉\n• `REPAIR_ROUNDS` (3→2)：第 3 輪無作用，省 3.5% RT\n• `PLACE_COMPACT_ITERS` (400→150)：品質更好且更快",
-      "x": 1210,
-      "y": 2280,
-      "width": 550,
-      "height": 210,
-      "color": "1"
-    },
-    {
-      "id": "node-071",
-      "type": "text",
-      "text": "### L-BFGS 打磨階段 ⛔ (負面)\n• 後期凍結 schedule 由 Adam 轉 L-BFGS\n• 實測 3.35~6.54× 顯著變慢且品質變差\n• 預設維持關閉",
-      "x": 30,
-      "y": 2530,
-      "width": 530,
-      "height": 220,
-      "color": "1"
-    },
-    {
-      "id": "node-072",
-      "type": "text",
-      "text": "### Per-RMAP 可行性搜尋 ⛔ (負面)\n• 交替投影 + 擾動重設外迴圈\n• 20 案平均 V_rel 惡化 28.2%，慢 33 倍\n• 15 輪內無法收斂至零違規",
-      "x": 610,
-      "y": 2530,
-      "width": 550,
-      "height": 220,
-      "color": "1"
-    },
-    {
-      "id": "node-073",
-      "type": "text",
-      "text": "### ADMM 邊界一致性 ⛔ (負面)\n• 增廣拉格朗日有號殘差二次拉力\n• Neutral 惡化 8.1%，V_grp/V_mib/V_bnd 全面惡化\n• 證實「共用梯度預算耦合」瓶頸",
-      "x": 1210,
-      "y": 2530,
-      "width": 550,
-      "height": 220,
-      "color": "1"
-    }
-  ],
-  "edges": [
-    {
-      "id": "edge-104",
-      "fromNode": "node-004",
-      "fromSide": "right",
-      "toNode": "node-010",
-      "toSide": "left"
-    },
-    {
-      "id": "edge-105",
-      "fromNode": "node-005",
-      "fromSide": "right",
-      "toNode": "node-010",
-      "toSide": "left"
-    },
-    {
-      "id": "edge-103",
-      "fromNode": "node-003",
-      "fromSide": "right",
-      "toNode": "node-010",
-      "toSide": "left"
-    },
-    {
-      "id": "edge-110",
-      "fromNode": "node-010",
-      "fromSide": "right",
-      "toNode": "node-011",
-      "toSide": "left",
-      "label": "梯度推擠保底"
-    },
-    {
-      "id": "edge-160",
-      "fromNode": "node-010",
-      "fromSide": "right",
-      "toNode": "node-060",
-      "toSide": "left",
-      "label": "Slicing 切割主力"
-    },
-    {
-      "id": "edge-111",
-      "fromNode": "node-011",
-      "fromSide": "bottom",
-      "toNode": "node-012",
-      "toSide": "top"
-    },
-    {
-      "id": "edge-161",
-      "fromNode": "node-060",
-      "fromSide": "bottom",
-      "toNode": "node-012",
-      "toSide": "top",
-      "label": "送交幾何修復"
-    },
-    {
-      "id": "edge-131",
-      "fromNode": "node-012",
-      "fromSide": "left",
-      "toNode": "node-032",
-      "toSide": "right",
-      "label": "MIB 雙版本"
-    },
-    {
-      "id": "edge-120",
-      "fromNode": "node-012",
-      "fromSide": "left",
-      "toNode": "node-020",
-      "toSide": "right",
-      "label": "短版再優化"
-    },
-    {
-      "id": "edge-170",
-      "fromNode": "node-012",
-      "fromSide": "left",
-      "toNode": "node-021",
-      "toSide": "right",
-      "label": "HiGHS 凸壓實"
-    },
-    {
-      "id": "edge-142",
-      "fromNode": "node-032",
-      "fromSide": "left",
-      "toNode": "node-040",
-      "toSide": "right"
-    },
-    {
-      "id": "edge-140",
-      "fromNode": "node-020",
-      "fromSide": "left",
-      "toNode": "node-040",
-      "toSide": "right"
-    },
-    {
-      "id": "edge-141",
-      "fromNode": "node-021",
-      "fromSide": "left",
-      "toNode": "node-040",
-      "toSide": "right"
-    },
-    {
-      "id": "edge-150",
-      "fromNode": "node-040",
-      "fromSide": "bottom",
-      "toNode": "node-050",
-      "toSide": "top",
-      "label": "Top-K 評選"
-    },
-    {
-      "id": "edge-180",
-      "fromNode": "node-050",
-      "fromSide": "bottom",
-      "toNode": "node-084",
-      "toSide": "top",
-      "label": "面積硬約束主動矯正"
-    }
-  ]
+	"nodes":[
+		{"id":"node-070","type":"group","x":0,"y":2160,"width":1800,"height":650,"label":"研究方向與關鍵結論（✅=已納入生產預設，⛔=負面結論及時止損）"},
+		{"id":"node-080","type":"group","x":0,"y":1450,"width":1800,"height":650,"label":"系統級安全護欄（防崩潰 / 防不可行，✅=已納入生產預設）"},
+		{"id":"node-002","type":"group","x":0,"y":-240,"width":520,"height":780,"label":"階段 0：初始化來源（優先序退回：Dirichlet → ML → Random）"},
+		{"id":"node-004","type":"text","text":"### 1. Dirichlet 調和延拓初始化 (生產首選)\n`ELECTRO_DIRICHLET_INIT=1`\n• 晶片視為電阻網格，解 Laplacian 封閉解\n• 僅啟用 Boundary 錨定訊號 (`bnd_weight=2.0`)\n• 100 案 Neutral: 1.4018 → 1.3776 (-1.73%)","x":30,"y":-120,"width":460,"height":230,"color":"5"},
+		{"id":"node-005","type":"text","text":"### 2. ML 暖啟動 (次選備援)\n`ELECTRO_ML_INIT=1`\n• Dirichlet 關閉/失敗或多種子 (seeds > 1) 時啟用\n• Transformer 預測各方塊中心點座標","x":30,"y":140,"width":460,"height":170,"color":"5"},
+		{"id":"node-001","type":"text","text":"# Electro Pipeline v22 全管線架構圖\n**SOTA 生產架構** | 100/100 Feasible | 中性總分: **1.2230** (確定性品質指標)\n• 核心哲學：多候選生成 (Portfolio) + 確定性修復 + 安全護欄防崩潰\n• 完整文字說明請參照同目錄 `Electronic_Pipeline.md`","x":0,"y":-480,"width":1160,"height":190,"color":"6"},
+		{"id":"node-074","type":"text","text":"### 對偶上升 Boundary ✅ (已轉正)\n`ELECTRO_DUAL_ASCENT_BND=1` (K=40)\n• 動態調整邊界對偶乘子\n• 獨立評測：Neutral 1.3642 → 1.3612\n• V_bnd 違規數 164 → 133 顯著改善","x":30,"y":2280,"width":530,"height":210,"color":"4"},
+		{"id":"node-075","type":"text","text":"### 合法化長寬比彈性 ✅ (已轉正)\n`legalize_qinfer_reshape` (移植至 v20)\n• 與對偶上升疊加：Neutral 1.3612 → 1.3260 (-2.6%)\n• 修復 WSL-only 浮點精度漂移 bug","x":610,"y":2280,"width":550,"height":210,"color":"4"},
+		{"id":"node-082","type":"text","text":"### place() 輸出 NaN 防護 ✅\n• `electro_parallel.py` 輸出後立即執行 `torch.isfinite()` 檢查\n• 若梯度異常產生 NaN 立即丟棄該候選\n• 徹底阻斷數值爆炸向下游傳染","x":30,"y":1570,"width":530,"height":210,"color":"4"},
+		{"id":"node-003","type":"text","text":"### 3. Random Init (保底備援)\n• 前兩者皆關閉或異常時的均勻隨機分佈","x":30,"y":340,"width":460,"height":140,"color":"5"},
+		{"id":"node-040","type":"text","text":"## Proxy Cost 逐案快速排名\n$$\\text{Proxy} = \\exp(2 \\cdot V_{\\text{rel}}) \\cdot \\left(\\frac{\\text{HPWL}}{H_a} + \\frac{\\text{Area}}{A_a}\\right)$$\n• **池無關錨點設計** (`ha`, `aa`)：基準與候選池規模無關，杜絕相對排名擾動\n• 從多種子與多路徑中快速篩選最具競爭力解","x":0,"y":600,"width":520,"height":270,"color":"3"},
+		{"id":"node-050","type":"text","text":"## Portfolio 最終決策與輸出\n• **多候選綜合競爭**：集結 Slicing、Push、MIB-Both、Place-Compact、LP 候選\n• 套用官方正式指標 $\\text{Cost} = Q \\times P \\times R$\n• 100% 產出無重疊、滿足所有硬約束之最佳可行解 (`.sol`)","x":0,"y":910,"width":520,"height":250,"color":"6"},
+		{"id":"node-083","type":"text","text":"### Push-Candidate 重疊複驗 ✅\n• `legalize()` 後調用 `_overlap_pairs()` 嚴格複驗\n• 沒清乾淨重疊的候選直接作廢\n• 補齊演算法對 preplaced 剛性模組的防護盲區","x":610,"y":1570,"width":550,"height":210,"color":"4"},
+		{"id":"node-081","type":"text","text":"### Fallback Ladder 重排救援 ✅\n• 將 Push Candidate 提到第一級救援階梯\n• 避免 3 級全滅後才進入慢速 fallback\n• 同步降低尾端延遲 (RT ~7s → 4.7s) 與異常成本","x":1210,"y":1570,"width":550,"height":210,"color":"4"},
+		{"id":"node-084","type":"text","text":"### AREA GUARD 面積硬約束主動校正 ✅ (`ELECTRO_AREA_TOL_GUARD=0.0098`)\n• 嚴格落實 $|w_i \\cdot h_i - a_i| / a_i \\le 0.01$ 硬約束：從「依賴上游無漂移假設」改為「輸出前主動等比例縮放校正」\n• 根治 2026-08-15 真實隱藏測資 10/100 不可行缺陷（10 個失敗案 max_area_drift 全超標，修復後迴歸測試 40/40 案全部合法且 0 超標）\n• 搭配 `ELECTRO_MIB_PERBLOCK_AREA=1` 使硬矯正觸發率下降 99.65%","x":30,"y":1820,"width":1730,"height":240,"color":"4"},
+		{"id":"node-033","type":"text","text":"### 已測不採用小型調參 ⛔\n• `SLICE_WALLS/BUDGET`：中位數變動時結論反轉\n• `REPAIR_ROUNDS` (3→2)：第 3 輪無作用，省 3.5% RT\n• `PLACE_COMPACT_ITERS` (400→150)：品質更好且更快","x":1210,"y":2280,"width":550,"height":210,"color":"1"},
+		{"id":"node-071","type":"text","text":"### L-BFGS 打磨階段 ⛔ (負面)\n• 後期凍結 schedule 由 Adam 轉 L-BFGS\n• 實測 3.35~6.54× 顯著變慢且品質變差\n• 預設維持關閉","x":30,"y":2530,"width":530,"height":220,"color":"1"},
+		{"id":"node-072","type":"text","text":"### Per-RMAP 可行性搜尋 ⛔ (負面)\n• 交替投影 + 擾動重設外迴圈\n• 20 案平均 V_rel 惡化 28.2%，慢 33 倍\n• 15 輪內無法收斂至零違規","x":610,"y":2530,"width":550,"height":220,"color":"1"},
+		{"id":"node-073","type":"text","text":"### ADMM 邊界一致性 ⛔ (負面)\n• 增廣拉格朗日有號殘差二次拉力\n• Neutral 惡化 8.1%，V_grp/V_mib/V_bnd 全面惡化\n• 證實「共用梯度預算耦合」瓶頸","x":1210,"y":2530,"width":550,"height":220,"color":"1"},
+		{"id":"node-021","type":"text","text":"### 候選 3：Convex Sizing LP 聯合壓實 (`convex_sizing.py`)\n• 基於 Slicing 切割拓撲建立水平/垂直無重疊偏序 DAG\n• HiGHS 線性規劃求解 (`ELECTRO_CONVEX_HIGHSPY=1`)\n• 同時優化模組長寬比與幾何壓實，最小化 Area + HPWL (γ=1.0)\n• 支援多執行緒並行求解 (`ELECTRO_CS_THREADS=4`)","x":787,"y":1110,"width":520,"height":260,"color":"2"},
+		{"id":"node-010","type":"text","text":"## Stage 1: analytical_place()\n**連續解析全域擺放** (Adam 300 迭代優化)\n• **eDensity 靜電場**：2D DCT 求解 Poisson 方程 (∇²Φ = -ρ)\n• **MIB 兩段式形狀導引**：\n  ① `MIB_ANCHOR_SNAP`：訓練中漸增 L2 引導長寬比\n  ② `MIB_ANCHOR`：輸出前精確覆寫錨點尺寸\n• **對偶上升邊界**：`ELECTRO_DUAL_ASCENT_BND=1` (K=40)\n• **自適應剪枝**：第 60 步剪除 50% 劣質種子 + 動態早停","x":787,"y":-240,"width":520,"height":440,"color":"4"},
+		{"id":"node-032","type":"text","text":"### 候選 1：MIB 雙版本分岔 (`MIB_BOTH=1`)\n• `_finish` 同時產出「統一前」與「統一後」兩份解\n• 兩份皆進入候選池由 Proxy Cost 逐案評選\n• 避免無條件變換損害極端案例 (Case 99 零退步)\n• ⛔ `MIB_PORTFOLIO` 已關閉 (UNIFY 後避免冗餘品)","x":787,"y":600,"width":520,"height":240,"color":"1"},
+		{"id":"node-020","type":"text","text":"### 候選 2：place-compact (`ELECTRO_PLACE_COMPACT=1`)\n• 將壓實佈局中心點作為全新初始化起點\n• 執行 150 步短版 `analytical_place` 重新合法化\n• 限制 `TOPK=3`：砍 75% 計算量且品質無損","x":787,"y":870,"width":520,"height":210,"color":"2"},
+		{"id":"node-011","type":"text","text":"## Stage 2a: legalize()\n**梯度推擠合法化** (保底路徑)\n• 順序抽取 → 貪婪/LP 壓實 → `_cleanup()` 去重疊\n• ⚡ `FAST_CLEANUP` (增量式 O(|動過|·n)，加速 2.4×)\n• 支援長寬比彈性調配 (`legalize_qinfer_reshape`)","x":1760,"y":-240,"width":520,"height":260,"color":"4"},
+		{"id":"node-012","type":"text","text":"## Stage 3: soft_repair()\n**確定性軟約束幾何修復** (SpatialGrid 空間網格加速)\n• **Boundary Snap**：沿外框掃描滑移貼齊，修復貼邊約束\n• **Grouping Push-Past**：聚合修復微小離散斷裂\n• **MIB 統一與防護配對**：\n  ✅ `MIB_UNIFY` + `MIB_POST_SNAP` (成對套用，修復位移)\n  ✅ `MIB_BOTH=1`：統一前/後版本同時輸出進候選池","x":1760,"y":600,"width":520,"height":380,"color":"4"},
+		{"id":"node-060","type":"text","text":"## Stage 2b: slice_pack()\n**Slicing 切割樹合法化** (主力生成路徑)\n• **Cluster 虛擬化子樹** (`cluster_virtualize.py` / `COMPOUND=1`)：\n  群組先縮聚為單一原子複合巨集 Mc，子樹內 W=0 展開\n  ──【Subtree Enclosure 定理保證 V_grp ≡ 0】\n• **Guillotine 遞迴切割** (Otten 1982)：100% 無重疊保證\n• `SLICE_ALIGN_PORTFOLIO=1`：保留水平/垂直雙向候選","x":1760,"y":110,"width":520,"height":360,"color":"2"}
+	],
+	"edges":[
+		{"id":"edge-103","fromNode":"node-003","fromSide":"right","toNode":"node-010","toSide":"left"},
+		{"id":"edge-104","fromNode":"node-004","fromSide":"right","toNode":"node-010","toSide":"left"},
+		{"id":"edge-105","fromNode":"node-005","fromSide":"right","toNode":"node-010","toSide":"left"},
+		{"id":"edge-110","fromNode":"node-010","fromSide":"right","toNode":"node-011","toSide":"left","label":"梯度推擠保底"},
+		{"id":"edge-111","fromNode":"node-011","fromSide":"bottom","toNode":"node-012","toSide":"top"},
+		{"id":"edge-140","fromNode":"node-020","fromSide":"left","toNode":"node-040","toSide":"right"},
+		{"id":"edge-141","fromNode":"node-021","fromSide":"left","toNode":"node-040","toSide":"right"},
+		{"id":"edge-150","fromNode":"node-040","fromSide":"bottom","toNode":"node-050","toSide":"top","label":"Top-K 評選"},
+		{"id":"edge-120","fromNode":"node-012","fromSide":"left","toNode":"node-020","toSide":"right","label":"短版再優化"},
+		{"id":"edge-160","fromNode":"node-010","fromSide":"right","toNode":"node-060","toSide":"left","label":"Slicing 切割主力"},
+		{"id":"edge-161","fromNode":"node-060","fromSide":"bottom","toNode":"node-012","toSide":"top","label":"送交幾何修復"},
+		{"id":"edge-170","fromNode":"node-012","fromSide":"left","toNode":"node-021","toSide":"right","label":"HiGHS 凸壓實"},
+		{"id":"edge-142","fromNode":"node-032","fromSide":"left","toNode":"node-040","toSide":"right"},
+		{"id":"edge-180","fromNode":"node-050","fromSide":"bottom","toNode":"node-084","toSide":"top","label":"面積硬約束主動矯正"},
+		{"id":"edge-131","fromNode":"node-012","fromSide":"left","toNode":"node-032","toSide":"right","label":"MIB 雙版本"}
+	]
 }

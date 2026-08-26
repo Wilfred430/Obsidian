@@ -119,26 +119,29 @@ date: 2026-08-04
 > 過的方塊 × 全部」，成本從 O(n²) 降到 O(|動過的|·n)。legalize 階段
 > **2.4× 加速**，品質逐位元不變。
 
-### Stage 2b：`slice_pack()` — 切割式打包（**主力機制之一**）
+### Stage 2b：`slice_pack()` — Slicing 切割樹合法化（**主力生成機制**）
 
 用一個矩形，依子樹面積比例**遞迴 guillotine 切割**（Otten 1982）。官方對
 軟方塊只查面積 ±1% 容差、無長寬比限制，切割式因此填充率可近 100%。切割
 順序繼承自 `analytical_place` 收斂後的座標，任何一步無法保證合法就整套
 回傳 `None`，呼叫端沿用梯度式路徑——**不可能產出不合法的解**。
 
+> [!success] **Cluster 虛擬化複合子樹展開（`cluster_virtualize.py` / `ELECTRO_SLICE_COMPOUND=1`）**
+> 在全域切割前，將同群組成員預先縮聚為單一原子複合超級塊 $M_C$；切割抵達
+> 該空間後，在內部子樹依面積比例以 $W=0$（零空白）展開，
+> **從結構上證明滿足 Subtree Enclosure 定理，保證 $V_{grp} \equiv 0$**。
+
 > [!success] **`ELECTRO_SLICE_ALIGN_PORTFOLIO=1`（生產預設）**
 > `slice_pack` 有兩種切割方向（沿哪一軸優先切），舊版只能挑一種固定用；
 > 現在 `return_pair=True` 讓兩種方向都各自產生一份候選丟進同一個池，交給
 > 後面的 proxy cost 排名逐案挑，不用預先猜哪個方向比較好。
 
-### LP 位移最小化候選（`ELECTRO_LP_DISPLACEMENT_PORTFOLIO=1`，生產預設）
+### Convex Sizing LP 凸優化聯合壓實（`convex_sizing.py`，生產預設）
 
-對每個種子，先跑一般的梯度式 legalize 路徑拿到候選，再對排名前段
-（`TOPK=1`）的候選額外跑一次 **LP（線性規劃）式最小位移 legalize**
-（`lp_legalize.py`），把結果當**獨立的額外候選**丟進同一個排名池——嚴格
-加法式，LP 求解失敗就什麼都不做，永遠不會比不開這個機制差。這是「v14 LP
-all sizes / 4 seeds」這個配置的沿用，是這個檔案存在前已知最佳可重現的
-全 100 案配置。
+基於 Slicing 切割拓撲，建立水平與垂直方向的無重疊偏序 DAG（傳遞約簡 + CSR 稀疏矩陣）。
+調用 HiGHS 線性規劃求解（`ELECTRO_CONVEX_HIGHSPY=1`，`scipy.optimize.linprog`）：
+**同時優化模組長寬比分配與幾何壓實**，目標函數聯合最小化 Area Slack 與 HPWL（$\gamma=1.0$）。
+支援多執行緒並行加速（`ELECTRO_CS_THREADS=4`），為 Top-K 候選提供全域最優幾何微調。
 
 ### Stage 3：`soft_repair()` — 軟約束修復
 

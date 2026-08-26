@@ -455,3 +455,18 @@
 - **同一輪 2026-08-18～26 累積的其他防護機制**（詳見 [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]] 新增段落）：Fallback Ladder 重排（push candidate 提到第一級，同時省 RT + 提升品質）、`place()` 輸出 NaN 防護（`isfinite()` 檢查）、Push-Candidate 二次重疊驗證（補 `legalize.py` 承諾裡漏未排除的 preplaced-preplaced 重疊洞）。另外 highspy LP 熱啟動也在同一輪升格為生產預設（Neutral 1.2249→1.2236，非防崩潰，是品質+RT 雙贏）。
 - **方法論**: 三個防護機制（AREA GUARD、NaN 防護、殘留重疊二次驗證）是同一種修法：**原本靠上游步驟的隱含數學保證，換成輸出前的主動檢查+校正**——因為那個隱含保證在沒見過的資料分布（隱藏測資）上會失守，訓練集上測不出來是因為訓練集剛好落在假設成立的範圍內。
 - **Update**: [[ICCAD_code/Electronic_Pipeline|Pipeline 說明]]——新增「研究方向紀錄（2026-08-18～26 防崩潰/穩健性 campaign）」段落（含機制表格 + 針對性迴歸驗證數字）、頂部新增日期更新提示、旗標清單新增 3 項（`ELECTRO_AREA_TOL_GUARD`、`ELECTRO_MIB_PERBLOCK_AREA`、`ELECTRO_CONVEX_HIGHSPY`）。[[Electronic_Pipeline.canvas|畫布]]新增一個群組節點「保護機制」+ 4 個機制節點（node-081～084）+ 4 條邊（edge-180～183），連到既有的 Portfolio 選擇（node-050）與 Stage 1（node-010）節點；其餘既有節點座標/尺寸完全未動，遵守「手動修正過的版面是基準」的鐵則。
+
+## [2026-08-26] Refactor | 畫布視覺排版重構與全管線內容補齊（舒適對齊 + Cluster 虛擬化 + Convex Sizing LP）
+
+- **Context**: 使用者要求改善 Obsidian Canvas 排版佈局並補齊內容，提升視覺舒適度與架構完整性。
+- **排版優化 (Layout Grid)**:
+  - 確立**自左向右 6 欄標準幾何網格**（初始化鏈 → Stage 1 連續擺放 → Stage 2a/2b 雙合法化分流 → Stage 3 確定性修復 → 多候選生成池 → Proxy 排名與 Portfolio 最終決策）。
+  - 下方整齊配置兩大群組：左側「保護機制（4 卡）」、右側「研究方向與關鍵結論（6 卡）」。
+  - 嚴格落實群組頂部 $\ge 100\text{px}$ 邊界（防止 Obsidian group-tab 遮擋子卡片）、卡片間 $180\text{px}\sim200\text{px}$ 呼吸間距、卡片 0 重疊（經 Python 幾何檢驗通過）。
+- **內容補齊 (Content Completeness)**:
+  - **Stage 2b (`slice_pack.py`)**：正式補入 **Cluster 虛擬化複合子樹展開 (`cluster_virtualize.py` / `ELECTRO_SLICE_COMPOUND=1`)**，明確標註 Subtree Enclosure 定理與結構性保證 $V_{grp} \equiv 0$。
+  - **Convex Sizing LP (`convex_sizing.py`)**：升級 LP 節點為 **HiGHS 凸優化聯合壓實 (`ELECTRO_CONVEX_HIGHSPY=1`)**，包含 DAG 偏序關係、長寬比分配與 HPWL 聯合優化 ($\gamma=1.0$) 及多執行緒並行加速 (`ELECTRO_CS_THREADS=4`)。
+- **Output**: 
+  - 更新 [[Electronic_Pipeline.canvas|Electronic_Pipeline.canvas]]（26 節點、18 條語意明確的連線）。
+  - 同步更新 [[ICCAD_code/Electronic_Pipeline|Electronic_Pipeline.md]] 的 Stage 2b 與 Convex Sizing LP 章節。
+

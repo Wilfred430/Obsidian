@@ -21,6 +21,14 @@ date: 2026-08-04
 > 「研究方向紀錄（2026-08-15 MIB campaign）」。
 > 同一輪也把 FloorSet 評測器同步到上游 `aadddcc`／規格 **v10**。
 
+> **2026-08-18～26 更新**：轉向**防崩潰/穩健性 campaign**——不再只追訓練集
+> 100 案的 Neutral，而是拿 2026-08-15 真實送測隱藏測資的執行紀錄（100 案，
+> 10 案不可行）回頭反查根因，補齊生產路徑的安全洞。新增 AREA GUARD（面積
+> 硬約束從「上游預算假設」改成「主動檢查+校正」）、push-candidate fallback
+> 重排、NaN/殘留重疊二次防護，另外也把 highspy LP 熱啟動升格為預設
+> （Neutral 1.2249→**1.2236**）。詳見下方「研究方向紀錄（2026-08-18～26
+> 防崩潰/穩健性 campaign）」，畫布上對應新的「保護機制」群組。
+
 對應程式碼：`d:\ICCAD-2026-C\collaborate\electro_v22\`（`analytical_place.py` /
 `dirichlet_init.py` / `legalize.py` / `lp_legalize.py` / `slice_pack.py` /
 `cluster_virtualize.py` / `soft_repair.py` / `electro_parallel.py` /
@@ -223,7 +231,13 @@ ELECTRO_LP_DISPLACEMENT_PORTFOLIO=1
 ELECTRO_LP_DISPLACEMENT_SEEDS=4
 ELECTRO_LP_DISPLACEMENT_MIN_BLOCKS=0
 ELECTRO_LP_DISPLACEMENT_TOPK=1
+ELECTRO_AREA_TOL_GUARD=0.0098        # 新增（8/18），面積硬約束最終強制執行門檻
+ELECTRO_MIB_PERBLOCK_AREA=1          # 新增（8/25），AREA GUARD 觸發率降 99.65%
+ELECTRO_CONVEX_HIGHSPY=1             # 新增（8/26），LP 熱啟動，Neutral 1.2249→1.2236
 ```
+
+> [!info] NaN 防護（`isfinite` 檢查）和 push-candidate 二次重疊驗證不是
+> 環境變數旗標，是寫死在 `electro_parallel.py` 裡的無條件檢查，沒有開關。
 
 > [!danger] **`ELECTRO_PARALLEL=1` 只在 Linux/WSL 有真平行**
 > Windows 沒有 `fork()`，會**靜默**退回循序執行。所有跟 runtime 有關的
@@ -323,6 +337,37 @@ repo 內 `docs/superpowers/2026-08-11-rt-and-default-retuning-campaign.md`。
 > RT 的每個雜訊源（時鐘倒退、負 runtime 被夾到速度下限）都偏向讓分數變好。
 > 規則:**確定性的指標拿來下判斷,帶雜訊的指標只在儀器被驗證過之後才拿來報數字。**
 > 驗證儀器的兩個方法:讓它重現一個已知真值、以及把同一設定跑兩次建立雜訊底線。
+
+---
+
+### 研究方向紀錄（2026-08-18～26 防崩潰/穩健性 campaign）
+
+觸發點：`official guidelines/` 裡有 2026-08-15 一次真實送測隱藏測資
+（100 案）留下的完整執行紀錄（`beta_evaluation_results.json` +
+`eval_op_wrapper.log`），Total Score 1.5766，**10/100 不可行**。這一輪不是
+在訓練集上調參數，是拿這份真實失敗紀錄逐一回查根因、補洞。
+
+| 機制 | 觸發條件 / 保護內容 | 結果 |
+|---|---|---|
+| **AREA GUARD**（`electro_optimizer.py` ~1235-1280，2026-08-18） | 面積硬約束 `\|w·h−a\|/a≤0.01` 原本只靠「上游預算假設」（`area_tol + iters·delta² ≤ 0.0098`）保證，沒人真正檢查。改成主動檢查：超標的軟方塊等比例縮放（`s=√(a/(w·h))`，以中心為錨、長寬比不變）回精確目標面積 | 比對隱藏測資紀錄：**10 個不可行案例的 `max_area_drift` 100% 全部 >0.01（10 對 10），其餘 90 案全部精確等於 0**——不是巧合，是這個假設在隱藏測資上失守。本地 100 案 0 案觸發（純加法式 no-op），訓練集配對驗證觸發率隨下一項機制再降 99.65% |
+| **MIB 群組面積互斥性門檻鬆弛**（`ELECTRO_MIB_PERBLOCK_AREA=1`，2026-08-25） | 放寬 MIB 群組 ρ_M>1.0202 的面積互斥性門檻，從根本減少會逼近面積上限的佈局 | 訓練集 2,000 案配對驗證：AREA GUARD 觸發率 1149/2000 → **4/2000（-99.65%）**，Vbnd/Vgrp 大幅改善、Vmib 持平、可行性維持 100% |
+| **Fallback Ladder 重排** — push candidate 提到第一級 | `slice_pack` 在所有 seed/aspect/wall 組合都失敗時的救援路徑，原本要等 3 級全部 fallback 完才會嘗試 push candidate，浪費 RT 又晚救援 | 2 個真實抓到的崩潰案例：cost 2.32/2.24→**1.99/2.00**，RT ~7s→**4.7-4.8s**（同時省 RT + 提升品質） |
+| **`place()` 輸出 NaN 防護**（`electro_parallel.py`） | `place()` 輸出後立即 `isfinite()` 檢查，不通過就丟棄該候選，阻斷 NaN 往下游 `legalize()` 傳染 | 關掉一條理論上可能的靜默壞資料路徑 |
+| **Push-Candidate 二次重疊驗證** | `legalize()` 後補 `_overlap_pairs()` 檢查，沒清乾淨的候選整個作廢——補上 `legalize.py`「保證零重疊」承諾裡漏未排除的 preplaced-preplaced 重疊 | 關掉一條 push-candidate 專屬的重疊逃逸路徑 |
+| **highspy LP 熱啟動**（`ELECTRO_CONVEX_HIGHSPY=1`，2026-08-26） | 同一候選內相鄰兩輪 SLP 重用上一輪單純形法基底（不是防崩潰，是品質+RT 雙贏，一併升格） | Neutral 1.2249→**1.2236**（確定性），RT 中位數降約 6.6% |
+
+**2026-08-26 針對性迴歸驗證**：從訓練集在那 10 個歷史不可行的 block_count
+（23, 25, 27, 28, 34, 37, 45, 53, 64, 76）各抓 4 案（共 40 案，新增進
+`collaborate/scripts/default_stress_cases.json` 的 `beta_hidden_known_risky_n`
+類別），用現在的生產程式碼跑：**40 案全部可行，`max_area_drift` 全部乾淨
+落在門檻（0.0098）下方的 0.0091**，沒有一案觸發 AREA GUARD 硬矯正。第一次
+能對著真實隱藏測資的失敗案例做直接迴歸驗證，不只是訓練集配對統計。
+
+> [!success] **AREA GUARD 是本輪的核心心法**：把「假設」換成「檢查」
+> 硬約束不能只靠上游步驟的數學預算保證（那個預算在沒見過的資料分布上會
+> 失守），必須在輸出前有一道主動驗證+校正。這條原則同樣適用於
+> NaN 防護和殘留重疊二次驗證——三者都是「原本靠上游步驟的隱含保證，
+> 現在補一道明確檢查」的同一種修法。
 
 ---
 

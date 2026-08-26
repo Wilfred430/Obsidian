@@ -21,7 +21,12 @@
 		{"id":"node-020","type":"text","text":"**place-compact**\n`ELECTRO_PLACE_COMPACT=1`\n中心點新初始化 + 短版\nTOPK=3 (75% 省計算)","x":2085,"y":380,"width":360,"height":160,"color":"2"},
 		{"id":"node-050","type":"text","text":"## Portfolio 選擇\n每個候選都算 proxy cost，逐案挑最低者送出","x":2260,"y":870,"width":480,"height":120,"color":"6"},
 		{"id":"node-040","type":"text","text":"**Proxy Cost 排名**\nexp(2·V_rel)·(hpwl/ha + area/aa)\n錨點跟候選池無關","x":2310,"y":660,"width":380,"height":140,"color":"3"},
-		{"id":"node-032","type":"text","text":"**MIB 候選分岔**\n✅ MIB_BOTH=1(新,生產預設)\n_finish 同時輸出「統一前 / 統一後」\n兩份都進池,proxy 逐案挑\n⛔ MIB_PORTFOLIO 改為預設關閉\n(UNIFY 開啟後它只產生重複品)","x":2265,"y":-410,"width":440,"height":290,"color":"1"}
+		{"id":"node-032","type":"text","text":"**MIB 候選分岔**\n✅ MIB_BOTH=1(新,生產預設)\n_finish 同時輸出「統一前 / 統一後」\n兩份都進池,proxy 逐案挑\n⛔ MIB_PORTFOLIO 改為預設關閉\n(UNIFY 開啟後它只產生重複品)","x":2265,"y":-410,"width":440,"height":290,"color":"1"},
+		{"id":"node-080","type":"group","x":-20,"y":1420,"width":1460,"height":650,"label":"保護機制（2026-08-18～26，防崩潰/防不可行，✅=已納入生產預設）"},
+		{"id":"node-081","type":"text","text":"**Fallback Ladder 重排 ✅ 已納入生產預設**\npush candidate 提到第一級嘗試\n原本要 3 級全部 fallback 才觸發，\n浪費 RT 又晚才救援\n重排後同時省 RT + 提升品質\n(2 個真實崩潰案例: cost 2.32/2.24→1.99/2.00,\nRT ~7s→4.7-4.8s)","x":10,"y":1540,"width":420,"height":340,"color":"4"},
+		{"id":"node-082","type":"text","text":"**place() 輸出 NaN 防護 ✅**\nelectro_parallel.py\nplace() 輸出後立即 isfinite() 檢查\n不通過就直接丟棄該候選\n阻斷 NaN 往下游 legalize 傳染","x":470,"y":1540,"width":420,"height":260,"color":"4"},
+		{"id":"node-083","type":"text","text":"**Push-Candidate 二次重疊驗證 ✅**\nlegalize() 後補 _overlap_pairs() 檢查\n沒清乾淨的候選整個作廢\n補上 legalize.py「保證零重疊」\n漏未排除的 preplaced-preplaced\n重疊洞","x":930,"y":1540,"width":420,"height":300,"color":"4"},
+		{"id":"node-084","type":"text","text":"**AREA GUARD 面積硬約束強制執行 ✅**\n|w·h−a|/a≤0.01，從「上游預算假設」\n改成「主動檢查 + 等比例縮放校正」\n2026-08-15 真實隱藏測資：10/100 不可行\n案例的 max_area_drift 100% 全部超標\n(10 對 10，無一例外)\n2026-08-26 用同尺寸訓練集驗證(40案，\nn=23/25/27/28/34/37/45/53/64/76)：\n現行生產碼 0 不可行，全部落在門檻下","x":10,"y":1920,"width":900,"height":420,"color":"4"}
 	],
 	"edges":[
 		{"id":"edge-103","fromNode":"node-003","fromSide":"right","toNode":"node-010","toSide":"left"},
@@ -39,6 +44,10 @@
 		{"id":"edge-161","fromNode":"node-060","fromSide":"right","toNode":"node-012","toSide":"bottom"},
 		{"id":"edge-170","fromNode":"node-012","fromSide":"right","toNode":"node-021","toSide":"top","label":"LP 候選"},
 		{"id":"edge-132","fromNode":"node-031","fromSide":"bottom","toNode":"node-033","toSide":"top"},
-		{"id":"edge-142","fromNode":"node-032","fromSide":"bottom","toNode":"node-040","toSide":"top","label":"兩份候選"}
+		{"id":"edge-142","fromNode":"node-032","fromSide":"bottom","toNode":"node-040","toSide":"top","label":"兩份候選"},
+		{"id":"edge-180","fromNode":"node-050","fromSide":"bottom","toNode":"node-081","toSide":"top","label":"候選池全空時的救援"},
+		{"id":"edge-181","fromNode":"node-081","fromSide":"right","toNode":"node-083","toSide":"top","label":"push-candidate 路徑"},
+		{"id":"edge-182","fromNode":"node-010","fromSide":"bottom","toNode":"node-082","toSide":"top","label":"NaN 防護"},
+		{"id":"edge-183","fromNode":"node-050","fromSide":"bottom","toNode":"node-084","toSide":"top","label":"輸出前最終校正"}
 	]
 }
